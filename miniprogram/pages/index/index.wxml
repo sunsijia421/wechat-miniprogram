@@ -1,0 +1,117 @@
+<!-- 首页 - 校园物资公益流转 -->
+<view class="container">
+
+  <!-- 用户协议弹窗 -->
+  <view class="agreement-modal" wx:if="{{showAgreement}}">
+    <view class="agreement-content">
+      <view class="agreement-title">🌿 公益互助公约</view>
+      <scroll-view scroll-y class="agreement-text">
+        <text>欢迎加入校园物资公益流转平台！\n\n</text>
+        <text>1. 本平台仅用于校园内闲置物品的免费流转，禁止任何形式的金钱交易。\n\n</text>
+        <text>2. 请如实描述物品状况，不得发布违禁物品（如烟酒、管制刀具等）。\n\n</text>
+        <text>3. 物品流转由双方自行协商交接，本平台仅提供信息展示服务。\n\n</text>
+        <text>4. 发布物品即视为同意无偿赠送给有需要的人。\n\n</text>
+        <text>5. 以物易物需双方自愿协商，不得强制交易。\n\n</text>
+        <text>6. 如发现违规行为，可通过举报功能反馈，我们致力于维护良好的公益氛围。\n\n</text>
+        <text>7. 每次成功捐赠，您将获得10点公益积分。</text>
+      </scroll-view>
+      <view class="agreement-buttons">
+        <button class="btn-disagree" bindtap="onDisagree">不同意</button>
+        <button class="btn-agree" bindtap="onAgree">同意并继续</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 未登录提示 -->
+  <view class="login-prompt card" wx:if="{{!isLoggedIn && !showAgreement}}">
+    <view class="login-tip">
+      <text class="login-icon">👤</text>
+      <text>请先授权登录后使用</text>
+    </view>
+    <button class="btn-primary login-btn" bindtap="getUserProfile">授权登录</button>
+  </view>
+
+  <!-- 主内容（登录后显示） -->
+  <block wx:if="{{isLoggedIn && !showAgreement}}">
+
+    <!-- 统计面板 -->
+    <view class="stats-panel">
+      <view class="stats-row">
+        <view class="stats-item">
+          <view class="stats-number">{{completedCount}}</view>
+          <view class="stats-label">件闲置物品获新生</view>
+        </view>
+        <view class="stats-divider"></view>
+        <view class="stats-item">
+          <view class="stats-number">{{availableCount}}</view>
+          <view class="stats-label">件物品等待有缘人</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 视图切换按钮 -->
+    <view class="view-toggle">
+      <view class="toggle-btn {{viewMode === 'list' ? 'active' : ''}}" bindtap="switchViewMode">📋 列表视图</view>
+      <view class="toggle-btn {{viewMode === 'map' ? 'active' : ''}}" bindtap="switchViewMode">🗺️ 地图视图</view>
+    </view>
+
+    <!-- 分类标签（列表视图显示） -->
+    <scroll-view scroll-x class="category-tabs" wx:if="{{viewMode === 'list'}}">
+      <view class="category-tab {{currentCategory === categoryKeys[index] ? 'active' : ''}}"
+        wx:for="{{categories}}" wx:key="*this" wx:for-index="index" wx:for-item="cat"
+        data-category="{{categoryKeys[index]}}"
+        bindtap="onCategoryChange">
+        {{cat}}
+      </view>
+    </scroll-view>
+
+    <!-- 列表视图 -->
+    <block wx:if="{{viewMode === 'list'}}">
+      <view wx:if="{{displayItems.length === 0}}" class="empty-state">
+        <view class="icon">📭</view>
+        <view class="text">暂无物品</view>
+        <view class="text sub">去发布第一件物品吧~</view>
+      </view>
+
+      <view class="item-list" wx:else>
+        <view class="item-card card" wx:for="{{displayItems}}" wx:key="id"
+          data-id="{{item.id}}" bindtap="onItemTap">
+          <view class="item-card-row">
+            <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="item-info flex-1">
+              <view class="item-title text-ellipsis">{{item.title}}</view>
+              <view class="item-desc text-ellipsis-2">{{item.description}}</view>
+              <view class="item-meta">
+                <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                <text class="item-publisher">{{item.publisherNickName || '匿名'}}</text>
+                <text class="item-time">{{item.createTimeStr}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{displayItems.length > 0}}">
+        {{hasMore ? '上拉加载更多' : '—— 已显示全部物品 ——'}}
+      </view>
+    </block>
+
+    <!-- 地图视图 -->
+    <block wx:if="{{viewMode === 'map'}}">
+      <map
+        class="map-view"
+        latitude="{{mapLat}}"
+        longitude="{{mapLng}}"
+        scale="{{mapScale}}"
+        markers="{{mapMarkers}}"
+        bindmarkertap="onMarkerTap"
+        show-location="{{true}}"
+      />
+      <view class="map-tip" wx:if="{{mapMarkers.length === 0}}">
+        <text>暂无带位置信息的物品</text>
+      </view>
+    </block>
+
+  </block>
+</view>

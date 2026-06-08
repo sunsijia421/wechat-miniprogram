@@ -1,0 +1,265 @@
+/* 首页样式 */
+.container {
+  padding-bottom: 40rpx;
+}
+
+/* ========== 协议弹窗 ========== */
+.agreement-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agreement-content {
+  background-color: #ffffff;
+  border-radius: 16rpx;
+  width: 85%;
+  max-height: 75%;
+  padding: 40rpx 30rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.agreement-title {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20rpx;
+  color: #4CAF50;
+}
+
+.agreement-text {
+  flex: 1;
+  max-height: 500rpx;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #555;
+  margin-bottom: 30rpx;
+  padding: 16rpx;
+  background-color: #f9f9f9;
+  border-radius: 8rpx;
+}
+
+.agreement-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.btn-disagree {
+  flex: 1;
+  background-color: #f0f0f0;
+  color: #666;
+  border-radius: 40rpx;
+  font-size: 15px;
+  padding: 20rpx 0;
+}
+
+.btn-agree {
+  flex: 1;
+  background-color: #4CAF50;
+  color: #ffffff;
+  border-radius: 40rpx;
+  font-size: 15px;
+  padding: 20rpx 0;
+}
+
+/* ========== 登录提示 ========== */
+.login-prompt {
+  text-align: center;
+  padding: 80rpx 30rpx;
+  margin-top: 100rpx;
+}
+
+.login-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+  font-size: 16px;
+  color: #666;
+}
+
+.login-icon {
+  font-size: 40rpx;
+  margin-right: 12rpx;
+}
+
+.login-btn {
+  width: 400rpx;
+  margin: 0 auto;
+  border-radius: 40rpx;
+}
+
+/* ========== 统计面板 ========== */
+.stats-panel {
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+  color: #ffffff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.3);
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.stats-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stats-number {
+  font-size: 40px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.stats-label {
+  font-size: 13px;
+  opacity: 0.9;
+  margin-top: 8rpx;
+}
+
+.stats-divider {
+  width: 2rpx;
+  height: 60rpx;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ========== 视图切换 ========== */
+.view-toggle {
+  display: flex;
+  margin: 0 20rpx 16rpx;
+  background-color: #ffffff;
+  border-radius: 40rpx;
+  padding: 6rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.toggle-btn {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: 36rpx;
+  font-size: 14px;
+  color: #666;
+}
+
+.toggle-btn.active {
+  background-color: #4CAF50;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+/* ========== 分类标签 ========== */
+.category-tabs {
+  white-space: nowrap;
+  padding: 10rpx 20rpx;
+  margin-bottom: 10rpx;
+}
+
+.category-tab {
+  display: inline-block;
+  padding: 10rpx 28rpx;
+  margin-right: 12rpx;
+  background-color: #ffffff;
+  border-radius: 30rpx;
+  font-size: 13px;
+  color: #666;
+  border: 2rpx solid #e8e8e8;
+}
+
+.category-tab.active {
+  background-color: #4CAF50;
+  color: #ffffff;
+  border-color: #4CAF50;
+}
+
+/* ========== 物品列表 ========== */
+.item-list {
+  padding: 0 20rpx;
+}
+
+.item-card {
+  margin: 0 0 16rpx 0;
+  padding: 20rpx;
+}
+
+.item-card-row {
+  display: flex;
+  align-items: center;
+}
+
+.item-thumb {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 12rpx;
+  margin-right: 20rpx;
+  background-color: #f0f0f0;
+  flex-shrink: 0;
+}
+
+.item-info {
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.item-desc {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+
+.item-publisher {
+  font-size: 11px;
+  color: #999;
+}
+
+.item-time {
+  font-size: 11px;
+  color: #ccc;
+}
+
+/* ========== 地图视图 ========== */
+.map-view {
+  width: 100%;
+  height: 700rpx;
+  margin-top: 10rpx;
+}
+
+.map-tip {
+  text-align: center;
+  padding: 60rpx;
+  color: #999;
+  font-size: 14px;
+}
+
+/* ========== 空状态 ========== */
+.sub {
+  font-size: 12px;
+  color: #bbb;
+  margin-top: 8rpx;
+}

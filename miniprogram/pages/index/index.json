@@ -1,0 +1,6 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "校园物资公益流转",
+  "enablePullDownRefresh": true,
+  "onReachBottomDistance": 50
+}

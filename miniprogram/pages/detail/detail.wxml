@@ -1,0 +1,165 @@
+<!-- 物品详情页 -->
+<view class="container" wx:if="{{item}}">
+
+  <!-- 图片轮播 -->
+  <swiper class="image-swiper" wx:if="{{item.images.length > 0}}" indicator-dots="{{true}}" autoplay="{{false}}" circular="{{true}}">
+    <swiper-item wx:for="{{item.images}}" wx:key="*this" wx:for-index="index">
+      <image class="swiper-image" src="{{item}}" mode="aspectFill"
+        data-index="{{index}}" bindtap="previewImage" />
+    </swiper-item>
+  </swiper>
+
+  <!-- 默认图片 -->
+  <view class="default-image" wx:if="{{item.images.length === 0}}">
+    <image class="swiper-image" src="/images/default-item.png" mode="aspectFill" />
+  </view>
+
+  <!-- 物品信息 -->
+  <view class="detail-content">
+
+    <!-- 标题和状态 -->
+    <view class="detail-header card">
+      <view class="flex-between">
+        <view class="detail-title">{{item.title}}</view>
+        <view class="status-{{item.status === 'completed' ? 'completed' : 'available'}}">
+          {{item.status === 'completed' ? '已被领取' : '可领取'}}
+        </view>
+      </view>
+      <view class="tag tag-{{item.category}} detail-category">{{item.categoryName}}</view>
+    </view>
+
+    <!-- 描述 -->
+    <view class="card">
+      <view class="section-title">📝 物品描述</view>
+      <view class="section-content">{{item.description}}</view>
+    </view>
+
+    <!-- 详细信息 -->
+    <view class="card">
+      <view class="section-title">📋 详细信息</view>
+      <view class="info-row">
+        <text class="info-label">分类</text>
+        <text class="info-value">{{item.categoryName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">以物易物</text>
+        <text class="info-value">{{item.allowBarter ? '✅ 支持' : '❌ 不支持'}}</text>
+      </view>
+      <view class="info-row" wx:if="{{item.locationName}}">
+        <text class="info-label">位置</text>
+        <text class="info-value">📍 {{item.locationName}}</text>
+      </view>
+      <view class="info-row">
+        <text class="info-label">发布时间</text>
+        <text class="info-value">{{item.createTimeStr}}</text>
+      </view>
+    </view>
+
+    <!-- 发布者信息 -->
+    <view class="card">
+      <view class="section-title">👤 发布者</view>
+      <view class="publisher-info">
+        <image class="avatar-md" src="{{item.publisherAvatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+        <view class="publisher-detail">
+          <view class="publisher-name">{{item.publisherNickName || '匿名'}}</view>
+          <view class="publisher-stats" wx:if="{{currentUser}}">
+            公益积分: {{currentUser.points}} | 已捐赠: {{currentUser.donateCount}}次
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 申请记录列表 -->
+    <view class="card" wx:if="{{applications.length > 0}}">
+      <view class="section-title">📨 申请记录（{{applications.length}}条）</view>
+      <view class="application-list">
+        <view class="application-item" wx:for="{{applications}}" wx:key="id">
+          <view class="app-header flex-between">
+            <view class="flex-row">
+              <image class="avatar-sm" src="{{item.applicantAvatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+              <view class="app-name">{{item.applicantNickName}}</view>
+            </view>
+            <view class="app-status app-status-{{item.status}}">
+              {{item.status === 'pending' ? '待确认' : item.status === 'approved' ? '已送出' : '未选中'}}
+            </view>
+          </view>
+          <view class="app-message">"{{item.message}}"</view>
+          <!-- 发布者可见的确认按钮 -->
+          <view wx:if="{{isOwner && item.status === 'pending' && !isCompleted}}"
+            class="approve-btn" data-id="{{item.id}}" bindtap="approveApplication">
+            确认送给TA
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部占位 -->
+    <view style="height: 140rpx;"></view>
+
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <!-- 自己发布的 & 可领取状态 -->
+    <block wx:if="{{isOwner && !isCompleted}}">
+      <button class="btn-primary bottom-btn" bindtap="confirmComplete">
+        ✅ 确认已送出
+      </button>
+    </block>
+
+    <!-- 自己发布的 & 已完成状态 -->
+    <block wx:if="{{isOwner && isCompleted}}">
+      <button class="btn-disabled bottom-btn" disabled>
+        物品已成功送出
+      </button>
+    </block>
+
+    <!-- 不是自己发布的 & 可领取 -->
+    <block wx:if="{{!isOwner && !isCompleted}}">
+      <button class="btn-primary bottom-btn" bindtap="openApply">
+        🙋 我要申请
+      </button>
+    </block>
+
+    <!-- 不是自己发布的 & 已完成 -->
+    <block wx:if="{{!isOwner && isCompleted}}">
+      <button class="btn-disabled bottom-btn" disabled>
+        已被他人领取
+      </button>
+    </block>
+
+    <!-- 举报按钮（所有人都可见） -->
+    <view class="report-btn" bindtap="openReport">
+      ⚠️ 举报
+    </view>
+  </view>
+
+  <!-- 申请弹窗 -->
+  <view class="modal-overlay" wx:if="{{showApplyModal}}" catchtap="closeApply">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">申请领取</view>
+      <view class="modal-subtitle">请简要说明您需要此物品的原因</view>
+      <textarea class="modal-textarea" placeholder="写一段话给发布者吧~（如：我是XX专业的学生，正需要这本书...）"
+        value="{{applyMessage}}" bindinput="onApplyMessageInput" maxlength="200" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeApply">取消</button>
+        <button class="modal-btn-confirm" bindtap="submitApply">提交申请</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 举报弹窗 -->
+  <view class="modal-overlay" wx:if="{{showReportModal}}" catchtap="closeReport">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">举报物品</view>
+      <view class="modal-subtitle">如发现违规物品，请填写举报理由</view>
+      <textarea class="modal-textarea" placeholder="请描述举报原因（必填）"
+        value="{{reportReason}}" bindinput="onReportReasonInput" maxlength="300" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeReport">取消</button>
+        <button class="modal-btn-confirm" style="background-color: #f44336;" bindtap="submitReport">提交举报</button>
+      </view>
+    </view>
+  </view>
+
+</view>

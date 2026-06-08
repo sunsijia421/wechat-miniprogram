@@ -1,0 +1,111 @@
+<!-- 个人中心页面 -->
+<view class="container">
+
+  <!-- 未登录 -->
+  <view class="login-prompt card" wx:if="{{!userInfo}}">
+    <view class="empty-state">
+      <view class="icon">🔐</view>
+      <view class="text">请先在首页授权登录</view>
+    </view>
+  </view>
+
+  <!-- 已登录 -->
+  <block wx:if="{{userInfo}}">
+    <!-- 用户信息卡片 -->
+    <view class="user-card">
+      <view class="user-bg"></view>
+      <view class="user-info">
+        <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+        <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
+      </view>
+      <view class="user-stats">
+        <view class="user-stat-item">
+          <view class="stat-num">{{userInfo.points || 0}}</view>
+          <view class="stat-label">公益积分</view>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="user-stat-item">
+          <view class="stat-num">{{userInfo.donateCount || 0}}</view>
+          <view class="stat-label">捐赠次数</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- Tab 切换 -->
+    <view class="tab-bar">
+      <view class="tab-item {{activeTab === 'published' ? 'active' : ''}}"
+        data-tab="published" bindtap="switchTab">
+        📦 我发布的
+      </view>
+      <view class="tab-item {{activeTab === 'applied' ? 'active' : ''}}"
+        data-tab="applied" bindtap="switchTab">
+        📋 我申请的
+      </view>
+    </view>
+
+    <!-- 我发布的 -->
+    <view wx:if="{{activeTab === 'published'}}">
+      <view wx:if="{{publishedItems.length === 0}}" class="empty-state">
+        <view class="icon">📭</view>
+        <view class="text">还没有发布过物品</view>
+      </view>
+      <view class="item-list" wx:else>
+        <view class="item-card card" wx:for="{{publishedItems}}" wx:key="id"
+          data-id="{{item.id}}" bindtap="onItemTap">
+          <view class="item-card-row">
+            <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="item-info flex-1">
+              <view class="item-title text-ellipsis">{{item.title}}</view>
+              <view class="item-desc text-ellipsis-2">{{item.description}}</view>
+              <view class="item-meta">
+                <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                <view class="status-{{item.status === 'completed' ? 'completed' : 'available'}}">
+                  {{item.status === 'completed' ? '已送出' : '可领取'}}
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 我申请的 -->
+    <view wx:if="{{activeTab === 'applied'}}">
+      <view wx:if="{{appliedItems.length === 0}}" class="empty-state">
+        <view class="icon">📋</view>
+        <view class="text">还没有申请过物品</view>
+      </view>
+      <view class="item-list" wx:else>
+        <view class="item-card card" wx:for="{{appliedItems}}" wx:key="id"
+          data-id="{{item.id}}" bindtap="onItemTap">
+          <view class="item-card-row">
+            <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="item-info flex-1">
+              <view class="item-title text-ellipsis">{{item.title}}</view>
+              <view class="item-desc text-ellipsis-2">{{item.description}}</view>
+              <view class="item-meta">
+                <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                <view class="status-{{item.status === 'completed' ? 'completed' : 'available'}}">
+                  {{item.status === 'completed' ? '已送出' : '可领取'}}
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 设置区域 -->
+    <view class="settings-area">
+      <view class="setting-item" bindtap="logout">
+        <text>🚪 退出登录</text>
+        <text class="setting-arrow">›</text>
+      </view>
+      <view class="setting-item" bindtap="clearAllData">
+        <text>🗑️ 清除所有数据</text>
+        <text class="setting-arrow">›</text>
+      </view>
+    </view>
+
+  </block>
+</view>
