@@ -103,6 +103,11 @@
 .item-card {
   margin: 0 0 16rpx 0;
   padding: 20rpx;
+  transition: transform 0.12s ease;
+}
+
+.item-card:active {
+  transform: scale(0.985);
 }
 
 .item-card-row {
@@ -159,6 +164,11 @@
   border-bottom: 1rpx solid #f5f5f5;
   font-size: 15px;
   color: #333;
+  transition: background-color 0.12s ease;
+}
+
+.setting-item:active {
+  background-color: #f7f7f7;
 }
 
 .setting-item:last-child {

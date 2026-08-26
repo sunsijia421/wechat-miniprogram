@@ -98,12 +98,14 @@ async function login(event, openid) {
     await db.collection(COL.users).add({
       data: { nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, createTime: db.serverDate() }
     })
+    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0 }
   } else {
-    await db.collection(COL.users).doc(users.data[0]._id).update({
+    const u = users.data[0]
+    await db.collection(COL.users).doc(u._id).update({
       data: { nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '' }
     })
+    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', points: u.points || 0, donateCount: u.donateCount || 0 }
   }
-  return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '' }
 }
 
 // 发布物品（含内容安全审核）

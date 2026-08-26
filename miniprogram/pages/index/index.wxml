@@ -74,6 +74,16 @@
       <view class="toggle-btn {{viewMode === 'map' ? 'active' : ''}}" bindtap="switchViewMode">🗺️ 地图视图</view>
     </view>
 
+    <!-- 搜索栏（列表视图显示） -->
+    <view class="search-bar" wx:if="{{viewMode === 'list'}}">
+      <view class="search-input-wrap">
+        <text class="search-icon">🔍</text>
+        <input class="search-input" placeholder="搜索物品名称" value="{{keyword}}"
+          bindinput="onSearchInput" confirm-type="search" />
+        <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
+      </view>
+    </view>
+
     <!-- 分类标签（列表视图显示） -->
     <scroll-view scroll-x class="category-tabs" wx:if="{{viewMode === 'list'}}">
       <view class="category-tab {{currentCategory === categoryKeys[index] ? 'active' : ''}}"

@@ -19,25 +19,29 @@ page {
 
 /* 通用按钮 */
 .btn-primary {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, #43A047, #5CB85C);
   color: #ffffff;
   border: none;
-  border-radius: 8rpx;
-  padding: 20rpx 40rpx;
+  border-radius: 44rpx;
+  padding: 22rpx 44rpx;
   font-size: 16px;
+  font-weight: 600;
   text-align: center;
+  box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
+  transition: transform 0.12s ease, opacity 0.12s ease;
 }
 
 .btn-primary:active {
-  opacity: 0.8;
+  opacity: 0.85;
+  transform: scale(0.97);
 }
 
 .btn-outline {
   background-color: transparent;
   color: #4CAF50;
   border: 2rpx solid #4CAF50;
-  border-radius: 8rpx;
-  padding: 18rpx 38rpx;
+  border-radius: 44rpx;
+  padding: 20rpx 42rpx;
   font-size: 16px;
   text-align: center;
 }
@@ -46,8 +50,8 @@ page {
   background-color: #f44336;
   color: #ffffff;
   border: none;
-  border-radius: 8rpx;
-  padding: 16rpx 32rpx;
+  border-radius: 44rpx;
+  padding: 18rpx 34rpx;
   font-size: 14px;
 }
 
@@ -55,18 +59,18 @@ page {
   background-color: #cccccc;
   color: #ffffff;
   border: none;
-  border-radius: 8rpx;
-  padding: 20rpx 40rpx;
+  border-radius: 44rpx;
+  padding: 22rpx 44rpx;
   font-size: 16px;
 }
 
 /* 通用卡片 */
 .card {
   background-color: #ffffff;
-  border-radius: 12rpx;
+  border-radius: 20rpx;
   margin: 20rpx;
-  padding: 24rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+  padding: 26rpx;
+  box-shadow: 0 4rpx 18rpx rgba(0, 0, 0, 0.05);
 }
 
 /* 分类标签 */
@@ -85,18 +89,20 @@ page {
 
 /* 状态标签 */
 .status-available {
-  color: #4CAF50;
+  color: #43A047;
   font-size: 12px;
-  border: 2rpx solid #4CAF50;
-  padding: 4rpx 12rpx;
+  background-color: #E8F5E9;
+  border: none;
+  padding: 6rpx 16rpx;
   border-radius: 20rpx;
 }
 
 .status-completed {
   color: #999;
   font-size: 12px;
-  border: 2rpx solid #999;
-  padding: 4rpx 12rpx;
+  background-color: #f0f0f0;
+  border: none;
+  padding: 6rpx 16rpx;
   border-radius: 20rpx;
 }
 
@@ -106,12 +112,13 @@ page {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 100rpx 0;
+  padding: 120rpx 0;
 }
 
 .empty-state .icon {
-  font-size: 80rpx;
-  margin-bottom: 20rpx;
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.85;
 }
 
 .empty-state .text {

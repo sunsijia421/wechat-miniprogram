@@ -75,24 +75,24 @@
         <view class="icon">📋</view>
         <view class="text">还没有申请过物品</view>
       </view>
-      <view class="item-list" wx:else>
-        <view class="item-card card" wx:for="{{appliedItems}}" wx:key="id"
-          data-id="{{item.id}}" bindtap="onItemTap">
-          <view class="item-card-row">
-            <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
-            <view class="item-info flex-1">
-              <view class="item-title text-ellipsis">{{item.title}}</view>
-              <view class="item-desc text-ellipsis-2">{{item.description}}</view>
-              <view class="item-meta">
-                <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
-                <view class="status-{{item.status === 'completed' ? 'completed' : 'available'}}">
-                  {{item.status === 'completed' ? '已送出' : '可领取'}}
+        <view class="item-list" wx:else>
+          <view class="item-card card" wx:for="{{appliedItems}}" wx:key="id"
+            data-id="{{item.id}}" bindtap="onItemTap">
+            <view class="item-card-row">
+              <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+              <view class="item-info flex-1">
+                <view class="item-title text-ellipsis">{{item.title}}</view>
+                <view class="item-desc text-ellipsis-2">{{item.description}}</view>
+                <view class="item-meta">
+                  <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                  <view class="status-{{item.applyStatus === 'pending' ? 'available' : 'completed'}}">
+                    {{item.applyStatus === 'pending' ? '申请中' : item.applyStatus === 'approved' ? '已通过' : '未选中'}}
+                  </view>
                 </view>
               </view>
             </view>
           </view>
         </view>
-      </view>
     </view>
 
     <!-- 设置区域 -->

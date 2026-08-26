@@ -15,6 +15,9 @@ Page({
     categoryKeys: util.CATEGORY_KEYS,
     currentCategory: 'all',
 
+    // 关键词搜索
+    keyword: '',
+
     // 物品列表（云端）
     allItems: [],
     displayItems: [],
@@ -194,11 +197,17 @@ Page({
     wx.showToast({ title: '已使用默认信息', icon: 'none' })
   },
 
-  // 同步登录态到云端（获取并保存 openid）
+  // 同步登录态到云端（获取并保存 openid 与最新积分）
   syncLogin(nickName, avatarUrl) {
     util.callApi('login', { nickName, avatarUrl })
       .then(res => {
         app.setOpenid(res.openid)
+        const userInfo = app.getUserInfo() || {}
+        userInfo.points = res.points || 0
+        userInfo.donateCount = res.donateCount || 0
+        if (nickName) userInfo.nickName = nickName
+        if (avatarUrl) userInfo.avatarUrl = avatarUrl
+        app.saveUserInfo(userInfo)
       })
       .catch(e => {
         console.warn('云端登录同步失败：', e)
@@ -212,9 +221,9 @@ Page({
     }
     if (this.data.loading) return
 
-    const { currentCategory, page, pageSize } = this.data
+    const { currentCategory, page, pageSize, keyword } = this.data
     this.setData({ loading: true })
-    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize })
+    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize, keyword: keyword })
       .then(res => {
         const newItems = res.list.map(it => this.normalizeItem(it))
         const allItems = this.data.allItems.concat(newItems)
@@ -258,6 +267,23 @@ Page({
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
     this.setData({ currentCategory: category })
+    this.loadItems(true)
+  },
+
+  // 关键词搜索（防抖）
+  onSearchInput(e) {
+    const keyword = e.detail.value
+    this.setData({ keyword })
+    clearTimeout(this._searchTimer)
+    this._searchTimer = setTimeout(() => {
+      this.loadItems(true)
+    }, 400)
+  },
+
+  // 清空搜索
+  clearSearch() {
+    clearTimeout(this._searchTimer)
+    this.setData({ keyword: '' })
     this.loadItems(true)
   },
 

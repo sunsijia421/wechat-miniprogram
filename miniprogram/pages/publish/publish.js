@@ -67,13 +67,15 @@ Page({
       return
     }
 
-    wx.chooseImage({
+    wx.chooseMedia({
       count: remainCount,
-      sizeType: ['compressed'],
+      mediaType: ['image'],
       sourceType: ['album', 'camera'],
+      sizeType: ['compressed'],
       success: (res) => {
+        const paths = res.tempFiles.map(f => f.tempFilePath)
         this.setData({
-          images: [...images, ...res.tempFilePaths]
+          images: [...images, ...paths]
         })
       }
     })

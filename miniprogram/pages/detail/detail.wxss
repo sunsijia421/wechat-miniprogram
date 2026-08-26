@@ -156,11 +156,17 @@
 .approve-btn {
   margin-top: 12rpx;
   text-align: center;
-  padding: 12rpx 0;
-  background-color: #4CAF50;
+  padding: 14rpx 0;
+  background: linear-gradient(135deg, #43A047, #5CB85C);
   color: #ffffff;
   border-radius: 30rpx;
   font-size: 13px;
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.28);
+  transition: transform 0.12s ease;
+}
+
+.approve-btn:active {
+  transform: scale(0.97);
 }
 
 /* ========== 底部操作栏 ========== */
@@ -185,6 +191,11 @@
   font-size: 16px;
   font-weight: bold;
   padding: 24rpx 0;
+  box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
+}
+
+.bottom-btn:active {
+  transform: scale(0.97);
 }
 
 .report-btn {

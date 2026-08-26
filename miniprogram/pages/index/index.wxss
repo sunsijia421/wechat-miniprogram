@@ -161,6 +161,44 @@
   font-weight: bold;
 }
 
+/* ========== 搜索栏 ========== */
+.search-bar {
+  padding: 12rpx 20rpx 4rpx;
+}
+
+.search-input-wrap {
+  display: flex;
+  align-items: center;
+  height: 76rpx;
+  background-color: #ffffff;
+  border-radius: 38rpx;
+  padding: 0 24rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.search-icon {
+  font-size: 28rpx;
+  margin-right: 12rpx;
+  opacity: 0.5;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.search-clear {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 50%;
+  background-color: #e8e8e8;
+  color: #888;
+  font-size: 12px;
+}
+
 /* ========== 分类标签 ========== */
 .category-tabs {
   white-space: nowrap;
@@ -170,19 +208,21 @@
 
 .category-tab {
   display: inline-block;
-  padding: 10rpx 28rpx;
+  padding: 10rpx 30rpx;
   margin-right: 12rpx;
   background-color: #ffffff;
   border-radius: 30rpx;
   font-size: 13px;
   color: #666;
-  border: 2rpx solid #e8e8e8;
+  border: 2rpx solid #ececec;
+  transition: all 0.15s ease;
 }
 
 .category-tab.active {
-  background-color: #4CAF50;
+  background: linear-gradient(135deg, #43A047, #5CB85C);
   color: #ffffff;
-  border-color: #4CAF50;
+  border-color: transparent;
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.3);
 }
 
 /* ========== 物品列表 ========== */
@@ -193,6 +233,12 @@
 .item-card {
   margin: 0 0 16rpx 0;
   padding: 20rpx;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.item-card:active {
+  transform: scale(0.985);
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
 }
 
 .item-card-row {
@@ -203,9 +249,9 @@
 .item-thumb {
   width: 140rpx;
   height: 140rpx;
-  border-radius: 12rpx;
+  border-radius: 16rpx;
   margin-right: 20rpx;
-  background-color: #f0f0f0;
+  background: linear-gradient(135deg, #eef3ee, #e3ebe3);
   flex-shrink: 0;
 }
 

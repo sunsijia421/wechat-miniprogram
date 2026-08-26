@@ -16,6 +16,10 @@ function generateId() {
  * @returns {string} 格式化后的时间字符串
  */
 function formatTime(timestamp) {
+  // 兼容云数据库 serverDate 回传前端的 { $date: 毫秒数 } 结构，否则会变成 Invalid Date
+  if (timestamp && typeof timestamp === 'object' && timestamp.$date) {
+    timestamp = timestamp.$date
+  }
   var now = new Date()
   var date = new Date(timestamp)
   var diff = now - date
@@ -95,11 +99,11 @@ function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj))
 }
 
-// ==================== 内容安全审核（本地实现） ====================
+// ==================== 内容安全审核（本地兜底） ====================
 
 /**
- * 敏感词库（仅作演示，实际生产环境需接入微信内容安全API或云调用）
- * 由于本小程序不使用云服务，此处仅做简单的本地敏感词过滤
+ * 敏感词库（仅作前端快速预校验，权威审核在云函数 msgSecCheck）
+ * 仅保留明确的违规/金钱交易强相关词，避免误杀正常描述（如"原价30元赠送"）
  */
 var SENSITIVE_WORDS = [
   '广告', '推广', '加微信', '加QQ', '微信号', 'QQ号',
@@ -107,9 +111,7 @@ var SENSITIVE_WORDS = [
   '代考', '代写', '作弊',
   '贷款', '套现', '信用卡',
   '传销', '直销', '代理',
-  '赚钱', '兼职', '日结', '刷单',
-  '卖', '价格', '多少钱', '元', '块', '¥', '￥', '$',
-  '付款', '转账', '红包', '收款'
+  '兼职', '日结', '刷单'
 ]
 
 /**
@@ -121,8 +123,8 @@ function checkTextContent(text) {
   if (!text || typeof text !== 'string') {
     return { passed: true, word: null }
   }
-  // 禁止金钱交易关键词（根据项目定位）
-  var moneyWords = ['卖', '价格', '多少钱', '元', '块', '¥', '￥', '$', '付款', '转账', '红包', '收款', '购买']
+  // 仅拦截明确的金钱交易强相关词，中性词（元/块/¥等）不拦截，避免误杀
+  var moneyWords = ['出售', '购买', '付款', '转账', '红包', '收款', '多少钱', '收费', '现金交易', '一口价']
   for (var i = 0; i < moneyWords.length; i++) {
     if (text.indexOf(moneyWords[i]) !== -1) {
       return { passed: false, word: moneyWords[i] }
