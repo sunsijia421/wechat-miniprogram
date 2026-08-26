@@ -1,5 +1,5 @@
-// TODO: 替换为你的云开发环境ID（云开发控制台 -> 环境设置 -> 环境ID 复制）
-const CLOUD_ENV = 'your-cloud-env-id'
+// 已开通的云开发环境ID（微信公众平台后台 -> 云服务 -> 云开发）
+const CLOUD_ENV = 'cloudbase-d4ghpbagzd02ea714'
 
 App({
   globalData: {

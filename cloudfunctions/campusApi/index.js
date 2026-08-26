@@ -15,6 +15,20 @@ const COL = {
   users: 'users'
 }
 
+// 首次请求时确保集合存在（免去手动建库）。集合已存在时 createCollection 抛错，忽略即可。
+let collectionsReady = false
+async function ensureCollections() {
+  if (collectionsReady) return
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users]) {
+    try {
+      await db.createCollection(name)
+    } catch (e) {
+      // 已存在或权限受限，忽略
+    }
+  }
+  collectionsReady = true
+}
+
 // ===================== 工具函数 =====================
 
 // 内容安全 - 文本检测（微信 msgSecCheck）
@@ -291,6 +305,7 @@ exports.main = async (event, context) => {
   const openid = wxContext.OPENID
 
   try {
+    await ensureCollections()
     switch (action) {
       case 'login': return await login(event, openid)
       case 'publish': return await publish(event, openid)
