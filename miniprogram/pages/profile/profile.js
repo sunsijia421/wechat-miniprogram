@@ -55,7 +55,7 @@ Page({
 
     // 获取当前用户申请过的 itemId
     const appliedItemIds = applications
-      .filter(a => a.applicantNickName === userInfo.nickName)
+      .filter(a => a.applicantName === userInfo.nickName)
       .map(a => a.itemId)
 
     // 去重

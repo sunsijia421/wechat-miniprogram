@@ -76,8 +76,8 @@
         <view class="application-item" wx:for="{{applications}}" wx:key="id">
           <view class="app-header flex-between">
             <view class="flex-row">
-              <image class="avatar-sm" src="{{item.applicantAvatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
-              <view class="app-name">{{item.applicantNickName}}</view>
+              <image class="avatar-sm" src="{{item.applicantAvatar || '/images/default-item.png'}}" mode="aspectFill" />
+              <view class="app-name">{{item.applicantName}}</view>
             </view>
             <view class="app-status app-status-{{item.status}}">
               {{item.status === 'pending' ? '待确认' : item.status === 'approved' ? '已送出' : '未选中'}}

@@ -1,6 +1,17 @@
 <!-- 发布物品页面 -->
 <view class="container">
-  <view class="publish-form">
+
+  <!-- 未登录提示 -->
+  <view class="login-prompt card" wx:if="{{!isLoggedIn}}">
+    <view class="empty-state">
+      <view class="icon">🔐</view>
+      <view class="text">请先在首页授权登录</view>
+    </view>
+    <button class="btn-primary login-btn" bindtap="goToLogin">去登录</button>
+  </view>
+
+  <!-- 发布表单 -->
+  <view class="publish-form" wx:if="{{isLoggedIn}}">
 
     <!-- 物品标题 -->
     <view class="form-group">

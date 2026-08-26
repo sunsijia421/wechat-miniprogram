@@ -3,7 +3,7 @@
     "pages/index/index",
     "pages/publish/publish",
     "pages/detail/detail",
-    "pages/mine/mine"
+    "pages/profile/profile"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",
@@ -30,7 +30,7 @@
         "selectedIconPath": "images/tab-publish-active.png"
       },
       {
-        "pagePath": "pages/mine/mine",
+        "pagePath": "pages/profile/profile",
         "text": "我的",
         "iconPath": "images/tab-mine.png",
         "selectedIconPath": "images/tab-mine-active.png"

@@ -12,21 +12,26 @@ Page({
     location: null,
     locationName: '',
 
-    categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '📦 其他'],
+    categories: ['📚 书籍', '👔 衣物', '💻 数码产品' ,'日用品','📦 其他'],
     categoryValues: ['books', 'clothes', 'electronics', 'other'],
 
-    submitting: false
+    submitting: false,
+
+    // 关键：data 初始化时直接从 storage 读取，首次渲染就是正确状态，不需 setData 修正
+    isLoggedIn: !!wx.getStorageSync('userInfo')
   },
 
-  onLoad() {
-    // 检查登录状态
-    const userInfo = app.getUserInfo()
-    if (!userInfo) {
-      wx.showToast({ title: '请先登录', icon: 'none' })
-      setTimeout(() => {
-        wx.switchTab({ url: '/pages/index/index' })
-      }, 1500)
+  onShow() {
+    // 只在登录状态真正变化时才更新（如在个人中心退出登录后切回发布页）
+    const loggedIn = !!wx.getStorageSync('userInfo')
+    if (this.data.isLoggedIn !== loggedIn) {
+      this.setData({ isLoggedIn: loggedIn })
     }
+  },
+
+  // 跳转去登录
+  goToLogin() {
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   // 输入标题
@@ -123,8 +128,14 @@ Page({
 
   // 提交物品
   submitItem() {
+    // 先检查登录状态
+    if (!this.data.isLoggedIn) {
+      wx.showToast({ title: '请先在首页登录', icon: 'none' })
+      return
+    }
+
     // 校验
-    const { title, description, submitting } = this.data
+    const { title, description, images, submitting } = this.data
     if (submitting) return
 
     if (!title.trim()) {
@@ -140,27 +151,48 @@ Page({
       return
     }
 
+    // 内容安全审核 - 文本
+    var textCheck = util.checkTextContent(title + ' ' + description)
+    if (!textCheck.passed) {
+      wx.showModal({
+        title: '内容安全提醒',
+        content: '您的发布内容包含敏感词"' + textCheck.word + '"，请修改后再发布。\n\n本平台禁止任何形式的金钱交易。',
+        showCancel: false,
+        confirmText: '我知道了'
+      })
+      return
+    }
+
+    // 内容安全审核 - 图片
+    var imgCheck = util.checkImageContent(images)
+    if (!imgCheck.passed) {
+      wx.showToast({ title: imgCheck.message, icon: 'none' })
+      return
+    }
+
     this.setData({ submitting: true })
 
     const userInfo = app.getUserInfo()
 
     // 构建物品数据
+    var now = Date.now()
     const item = {
       id: util.generateId(),
       title: title.trim(),
       description: description.trim(),
       category: this.data.category,
       categoryName: util.getCategoryName(this.data.category),
-      allowBarter: this.data.allowBarter,
       images: this.data.images,
+      allowBarter: this.data.allowBarter,
       location: this.data.location,
-      locationName: this.data.locationName,
-      status: 'available', // available | completed
-      createTime: Date.now(),
-      createTimeStr: util.formatTime(Date.now()),
-      // 发布者信息（发布时记录，避免后续用户信息变更影响）
+      locationName: this.data.locationName || '',
+      status: 'available',
+      publisherId: userInfo.nickName,
       publisherNickName: userInfo.nickName,
-      publisherAvatarUrl: userInfo.avatarUrl
+      publisherAvatarUrl: userInfo.avatarUrl,
+      createTime: now,
+      createTimeStr: util.formatTime(now),
+      completeTime: null
     }
 
     // 保存到本地存储

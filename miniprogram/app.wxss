@@ -5,6 +5,11 @@ page {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   color: #333;
+  /* 全局防闪烁：GPU 加速 + 避免重排导致的抖动 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* 通用容器 */

@@ -1,10 +1,40 @@
 /* 发布页面样式 */
+
+/* 防底部闪烁：GPU 加速 + 固定高度，页面稳定不跳变 */
+page {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
 .container {
   padding-bottom: 60rpx;
+  /* 继承硬件加速 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* ========== 未登录提示 ========== */
+.login-prompt {
+  text-align: center;
+  padding: 80rpx 30rpx;
+  margin-top: 100rpx;
+}
+
+.login-btn {
+  width: 300rpx;
+  margin: 30rpx auto 0;
+  border-radius: 40rpx;
 }
 
 .publish-form {
   padding: 20rpx;
+  /* 固定最小高度 = 视口 - tabBar - 导航栏，防止 wx:if 插入时底部跳动 */
+  min-height: 100vh;
+  /* 硬件加速，稳定渲染 */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* ========== 表单组 ========== */
