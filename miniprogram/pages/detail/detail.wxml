@@ -17,6 +17,11 @@
   <!-- 物品信息 -->
   <view class="detail-content">
 
+    <!-- 游客只读提示 -->
+    <view class="guest-banner" wx:if="{{!isLoggedIn}}">
+      👀 游客模式：当前仅可浏览，登录后可申请/发布物品
+    </view>
+
     <!-- 标题和状态 -->
     <view class="detail-header card">
       <view class="flex-between">
@@ -123,8 +128,13 @@
 
     <!-- 不是自己发布的 & 可领取 -->
     <block wx:if="{{!isOwner && !isCompleted}}">
-      <button class="btn-primary bottom-btn" bindtap="openApply">
+      <!-- 已登录：发起申请/交换 -->
+      <button wx:if="{{isLoggedIn}}" class="btn-primary bottom-btn" bindtap="openApply">
         🙋 我要申请
+      </button>
+      <!-- 未登录：游客只读，引导登录后才能交换 -->
+      <button wx:else class="btn-outline bottom-btn" bindtap="goLogin">
+        🔐 登录后可申请
       </button>
     </block>
 
@@ -135,8 +145,8 @@
       </button>
     </block>
 
-    <!-- 举报按钮（所有人都可见） -->
-    <view class="report-btn" bindtap="openReport">
+    <!-- 举报按钮（仅登录用户可见，游客只读） -->
+    <view wx:if="{{isLoggedIn}}" class="report-btn" bindtap="openReport">
       ⚠️ 举报
     </view>
   </view>

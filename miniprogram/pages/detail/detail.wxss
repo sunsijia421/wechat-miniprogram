@@ -23,6 +23,18 @@
   padding-top: 16rpx;
 }
 
+/* 游客只读提示横幅 */
+.guest-banner {
+  margin: 0 20rpx 16rpx;
+  padding: 18rpx 24rpx;
+  background: linear-gradient(135deg, #E3F2FD, #F1F8E9);
+  border: 1rpx solid #BBDEFB;
+  border-radius: 16rpx;
+  font-size: 13px;
+  color: #455A64;
+  line-height: 1.6;
+}
+
 .detail-header {
   margin-bottom: 0;
 }

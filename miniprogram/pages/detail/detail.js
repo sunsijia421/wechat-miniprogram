@@ -17,8 +17,11 @@ Page({
     showReportModal: false,
     reportReason: '',
 
-    // 当前用户
-    currentUser: null
+    // 当前用户（已登录才有值，游客为 null）
+    currentUser: null,
+
+    // 登录态（游客只能浏览，不能申请/交换/举报）
+    isLoggedIn: false
   },
 
   onLoad(options) {
@@ -28,11 +31,13 @@ Page({
       setTimeout(() => wx.navigateBack(), 1500)
       return
     }
-    this.setData({ itemId })
+    this.setData({ itemId, isLoggedIn: !!app.getUserInfo() })
     this.loadItem()
   },
 
   onShow() {
+    // 登录态可能在本页停留期间发生变化（如从首页登录后返回）
+    this.setData({ isLoggedIn: !!app.getUserInfo() })
     if (this.data.itemId) {
       this.loadItem()
     }
@@ -72,7 +77,7 @@ Page({
         item,
         isOwner: res.isOwner,
         isCompleted: item.status === 'completed',
-        currentUser: app.getUserInfo() || {}
+        currentUser: app.getUserInfo() || null
       })
       if (res.isOwner) this.loadApplications()
     } catch (e) {
@@ -104,7 +109,14 @@ Page({
 
   // ========== 申请流程 ==========
   openApply() {
+    // 游客只能浏览，必须先登录才能申请/交换
+    if (!util.requireLogin()) return
     this.setData({ showApplyModal: true, applyMessage: '' })
+  },
+
+  // 游客点击申请/交换占位按钮：跳首页引导登录
+  goLogin() {
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   closeApply() {
@@ -116,6 +128,7 @@ Page({
   },
 
   submitApply() {
+    if (!util.requireLogin()) return
     const message = this.data.applyMessage.trim()
     if (!message) {
       wx.showToast({ title: '请填写申请留言', icon: 'none' })
@@ -220,6 +233,8 @@ Page({
 
   // ========== 举报流程 ==========
   openReport() {
+    // 游客只能浏览，举报需先登录（避免匿名滥用）
+    if (!util.requireLogin()) return
     this.setData({ showReportModal: true, reportReason: '' })
   },
 
@@ -232,6 +247,7 @@ Page({
   },
 
   submitReport() {
+    if (!util.requireLogin()) return
     const reason = this.data.reportReason.trim()
     if (!reason) {
       wx.showToast({ title: '请填写举报理由', icon: 'none' })

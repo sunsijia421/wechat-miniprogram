@@ -162,6 +162,26 @@ function checkImageContent(filePaths) {
   return { passed: true, message: '' }
 }
 
+// ==================== 登录守卫 ====================
+
+/**
+ * 登录守卫：检查用户是否已登录（已同意公约并完善资料）
+ * 未登录时给出提示并跳转首页引导登录，返回 false；已登录返回 true。
+ * 用于拦截发布、申请、交换、举报等写操作，确保游客只能浏览。
+ * @returns {boolean}
+ */
+function requireLogin() {
+  const app = getApp()
+  if (app && typeof app.getUserInfo === 'function' && app.getUserInfo()) {
+    return true
+  }
+  wx.showToast({ title: '请先在首页登录后再操作', icon: 'none' })
+  setTimeout(function () {
+    wx.switchTab({ url: '/pages/index/index' })
+  }, 1200)
+  return false
+}
+
 // ==================== 云函数调用封装 ====================
 // 统一调用 campusApi 云函数：成功 resolve(result)，失败 reject(message)
 function callApi(action, data) {
@@ -196,5 +216,6 @@ module.exports = {
   checkTextContent: checkTextContent,
   checkImageContent: checkImageContent,
   SENSITIVE_WORDS: SENSITIVE_WORDS,
-  callApi: callApi
+  callApi: callApi,
+  requireLogin: requireLogin
 }
