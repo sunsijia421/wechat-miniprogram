@@ -84,6 +84,14 @@
       </view>
     </view>
 
+    <!-- 仅看可换 切换 -->
+    <view class="barter-toggle" wx:if="{{viewMode === 'list'}}">
+      <view class="barter-toggle-item {{barterOnly ? 'active' : ''}}" bindtap="onBarterToggle">
+        <text class="barter-check">{{barterOnly ? '✅' : '⬜'}}</text>
+        <text>仅看可交换</text>
+      </view>
+    </view>
+
     <!-- 分类标签（列表视图显示） -->
     <scroll-view scroll-x class="category-tabs" wx:if="{{viewMode === 'list'}}">
       <view class="category-tab {{currentCategory === categoryKeys[index] ? 'active' : ''}}"
@@ -125,6 +133,7 @@
               <view class="item-desc text-ellipsis-2">{{item.description}}</view>
               <view class="item-meta">
                 <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                <view wx:if="{{item.allowBarter}}" class="tag-barter">🔄 可交换</view>
                 <text class="item-publisher">{{item.publisherNickName || '匿名'}}</text>
                 <text class="item-time">{{item.createTimeStr}}</text>
               </view>

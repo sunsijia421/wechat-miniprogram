@@ -48,7 +48,7 @@
       </view>
       <view class="info-row">
         <text class="info-label">以物易物</text>
-        <text class="info-value">{{item.allowBarter ? '✅ 支持' : '❌ 不支持'}}</text>
+        <text class="info-value {{item.allowBarter ? 'barter-yes' : 'barter-no'}}">{{item.allowBarter ? '🔄 可交换' : '❌ 不支持交换'}}</text>
       </view>
       <view class="info-row" wx:if="{{item.locationName}}">
         <text class="info-label">位置</text>

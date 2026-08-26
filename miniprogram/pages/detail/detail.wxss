@@ -140,6 +140,16 @@
   color: #333;
 }
 
+/* 可交换标识 */
+.info-value.barter-yes {
+  color: #2E7D32;
+  font-weight: 600;
+}
+
+.info-value.barter-no {
+  color: #999;
+}
+
 /* ========== 发布者信息 ========== */
 .publisher-info {
   display: flex;

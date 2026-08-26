@@ -19,6 +19,9 @@ Page({
     // 关键词搜索
     keyword: '',
 
+    // 仅看可交换物品
+    barterOnly: false,
+
     // 物品列表（云端）
     allItems: [],
     displayItems: [],
@@ -222,9 +225,9 @@ Page({
     }
     if (this.data.loading) return
 
-    const { currentCategory, page, pageSize, keyword } = this.data
+    const { currentCategory, page, pageSize, keyword, barterOnly } = this.data
     this.setData({ loading: true })
-    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize, keyword: keyword })
+    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize, keyword: keyword, barterOnly: barterOnly })
       .then(res => {
         const newItems = res.list.map(it => this.normalizeItem(it))
         const allItems = this.data.allItems.concat(newItems)
@@ -301,6 +304,12 @@ Page({
   clearAllFilters() {
     clearTimeout(this._searchTimer)
     this.setData({ keyword: '', currentCategory: 'all', currentCategoryName: '全部' })
+    this.loadItems(true)
+  },
+
+  // 切换「仅看可换」
+  onBarterToggle() {
+    this.setData({ barterOnly: !this.data.barterOnly })
     this.loadItems(true)
   },
 

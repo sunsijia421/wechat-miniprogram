@@ -154,12 +154,13 @@ async function publish(event, openid) {
   return { success: true, id: res._id }
 }
 
-// 物品列表（分页 + 分类/关键词筛选），默认只返回 available
+// 物品列表（分页 + 分类/关键词/仅看可换筛选），默认只返回 available
 async function listItems(event) {
-  const { category = 'all', page = 1, pageSize = 10, status = 'available', keyword = '' } = event
+  const { category = 'all', page = 1, pageSize = 10, status = 'available', keyword = '', barterOnly = false } = event
   const conditions = []
   if (category !== 'all') conditions.push({ category })
   if (status) conditions.push({ status })
+  if (barterOnly) conditions.push({ allowBarter: true })
   if (keyword && keyword.trim()) {
     conditions.push({ title: db.RegExp({ regexp: keyword.trim(), options: 'i' }) })
   }
