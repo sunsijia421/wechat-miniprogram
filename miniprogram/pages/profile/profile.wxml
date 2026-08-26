@@ -59,8 +59,8 @@
               <view class="item-desc text-ellipsis-2">{{item.description}}</view>
               <view class="item-meta">
                 <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
-                <view class="status-{{item.status === 'completed' ? 'completed' : 'available'}}">
-                  {{item.status === 'completed' ? '已送出' : '可领取'}}
+                <view class="status-{{item.status === 'completed' ? 'completed' : (item.status === 'offline' ? 'offline' : 'available')}}">
+                  {{item.status === 'completed' ? '已送出' : item.status === 'offline' ? '已下架' : '可领取'}}
                 </view>
               </view>
             </view>
@@ -97,6 +97,14 @@
 
     <!-- 设置区域 -->
     <view class="settings-area">
+      <view class="setting-item" wx:if="{{isAdmin}}" bindtap="goAdmin">
+        <text>🛡️ 举报管理</text>
+        <text class="setting-arrow">›</text>
+      </view>
+      <view class="setting-item" wx:if="{{!isAdmin}}" bindtap="openAdminVerify">
+        <text>🔑 管理员验证</text>
+        <text class="setting-arrow">›</text>
+      </view>
       <view class="setting-item" bindtap="logout">
         <text>🚪 退出登录</text>
         <text class="setting-arrow">›</text>
@@ -108,4 +116,18 @@
     </view>
 
   </block>
+
+  <!-- 管理员验证弹窗 -->
+  <view class="modal-overlay" wx:if="{{showAdminVerify}}" catchtap="closeAdminVerify">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">管理员验证</view>
+      <view class="modal-subtitle">请输入管理密钥（用于举报处理）</view>
+      <input class="modal-input" type="text" placeholder="请输入管理密钥"
+        value="{{adminSecret}}" bindinput="onAdminSecretInput" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeAdminVerify">取消</button>
+        <button class="modal-btn-confirm" bindtap="submitAdminVerify">验证</button>
+      </view>
+    </view>
+  </view>
 </view>

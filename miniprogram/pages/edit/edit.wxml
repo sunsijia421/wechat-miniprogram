@@ -1,0 +1,88 @@
+<!-- 编辑物品页面 -->
+<view class="container">
+
+  <!-- 加载中 -->
+  <view class="loading-state" wx:if="{{loading}}">
+    <view class="icon">⏳</view>
+    <view class="text">加载中...</view>
+  </view>
+
+  <!-- 编辑表单 -->
+  <view class="publish-form" wx:if="{{!loading}}">
+
+    <!-- 物品标题 -->
+    <view class="form-group">
+      <view class="form-label">物品标题 <text class="required">*</text></view>
+      <input class="form-input" placeholder="请输入物品名称（30字以内）"
+        value="{{title}}" bindinput="onTitleInput" maxlength="30" />
+    </view>
+
+    <!-- 物品描述 -->
+    <view class="form-group">
+      <view class="form-label">物品描述 <text class="required">*</text></view>
+      <textarea class="form-textarea" placeholder="请详细描述物品的状况、新旧程度、使用年限等信息..."
+        value="{{description}}" bindinput="onDescInput" maxlength="500" />
+      <view class="char-count">{{description.length}}/500</view>
+    </view>
+
+    <!-- 分类选择 -->
+    <view class="form-group">
+      <view class="form-label">物品分类</view>
+      <picker mode="selector" range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategoryChange">
+        <view class="picker-value">
+          {{categories[categoryIndex]}}
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 是否允许以物易物 -->
+    <view class="form-group form-switch-row">
+      <view class="form-label">是否允许以物易物</view>
+      <switch checked="{{allowBarter}}" bindchange="onBarterChange" color="#4CAF50" />
+    </view>
+    <view class="form-hint" wx:if="{{allowBarter}}">
+      开启后，您可以用此物品与他人交换其他物品
+    </view>
+
+    <!-- 上传图片 -->
+    <view class="form-group">
+      <view class="form-label">上传图片（最多4张）</view>
+      <view class="image-upload-area">
+        <view class="image-item" wx:for="{{imageUrls}}" wx:key="*this" wx:for-index="index">
+          <image class="upload-image" src="{{item}}" mode="aspectFill"
+            data-index="{{index}}" bindtap="previewImage" />
+          <view class="image-delete" data-index="{{index}}" bindtap="deleteImage">✕</view>
+        </view>
+        <view class="image-add" wx:if="{{images.length < 4}}" bindtap="chooseImage">
+          <text class="add-icon">+</text>
+          <text class="add-text">{{images.length}}/4</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 位置选择 -->
+    <view class="form-group">
+      <view class="form-label">物品所在位置（选填）</view>
+      <view class="location-picker" bindtap="chooseLocation">
+        <text wx:if="{{locationName}}">📍 {{locationName}}</text>
+        <text wx:else class="placeholder">点击选择位置</text>
+        <text class="picker-arrow">›</text>
+      </view>
+      <view class="clear-location" wx:if="{{locationName}}" bindtap="clearLocation">
+        清除位置
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="submit-area">
+      <button class="btn-primary submit-btn" bindtap="submit" loading="{{submitting}}">
+        💾 保存修改
+      </button>
+      <view class="submit-hint">
+        保存后物品信息将立即更新
+      </view>
+    </view>
+
+  </view>
+</view>

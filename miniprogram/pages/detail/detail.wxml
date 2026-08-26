@@ -26,8 +26,8 @@
     <view class="detail-header card">
       <view class="flex-between">
         <view class="detail-title">{{item.title}}</view>
-        <view class="status-{{item.status === 'completed' ? 'completed' : 'available'}}">
-          {{item.status === 'completed' ? '已被领取' : '可领取'}}
+        <view class="status-{{item.status === 'completed' ? 'completed' : (item.status === 'offline' ? 'offline' : 'available')}}">
+          {{item.status === 'completed' ? '已被领取' : item.status === 'offline' ? '已下架' : '可领取'}}
         </view>
       </view>
       <view class="tag tag-{{item.category}} detail-category">{{item.categoryName}}</view>
@@ -74,6 +74,11 @@
       </view>
     </view>
 
+    <!-- 已下架提示（非发布者） -->
+    <view class="offline-banner" wx:if="{{isOffline && !isOwner}}">
+      📴 该物品已被发布者下架，暂不可申请
+    </view>
+
     <!-- 申请记录列表（仅发布者可见） -->
     <view class="card" wx:if="{{isOwner && applications.length > 0}}">
       <view class="section-title">📨 申请记录（{{applications.length}}条）</view>
@@ -98,6 +103,26 @@
       </view>
     </view>
 
+    <!-- 举报记录（仅发布者可见，可下架/忽略处理） -->
+    <view class="card" wx:if="{{isOwner && reports.length > 0}}">
+      <view class="section-title">🚨 举报记录（{{reports.length}}条）</view>
+      <view class="application-list">
+        <view class="application-item" wx:for="{{reports}}" wx:key="id" wx:for-item="report">
+          <view class="app-header flex-between">
+            <view class="app-message report-reason">"{{report.reason}}"</view>
+            <view class="app-status {{report.status === 'handled' ? 'app-status-approved' : 'app-status-pending'}}">
+              {{report.status === 'handled' ? (report.result === 'offline' ? '已下架' : '已忽略') : '待处理'}}
+            </view>
+          </view>
+          <view class="report-time">{{report.createTimeStr}}</view>
+          <view class="report-actions" wx:if="{{report.status === 'pending' && !isCompleted}}">
+            <view class="report-action danger" data-action="offline" data-id="{{report.id}}" bindtap="handleReport">下架物品</view>
+            <view class="report-action normal" data-action="ignore" data-id="{{report.id}}" bindtap="handleReport">忽略</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 底部占位 -->
     <view style="height: 140rpx;"></view>
 
@@ -105,29 +130,37 @@
 
   <!-- 底部操作栏 -->
   <view class="bottom-bar">
-    <!-- 自己发布的 & 可领取状态 -->
+    <!-- 自己发布的 & 未完成（可编辑/下架/送出） -->
     <block wx:if="{{isOwner && !isCompleted}}">
-      <button class="btn-primary bottom-btn" bindtap="confirmComplete">
-        ✅ 确认已送出
-      </button>
+      <button class="btn-outline bottom-btn" bindtap="goEdit">✏️ 编辑</button>
+      <button wx:if="{{isOffline}}" class="btn-primary bottom-btn" bindtap="toggleOffline">🔼 上架</button>
+      <button wx:else class="btn-outline bottom-btn" bindtap="toggleOffline">📴 下架</button>
+      <button wx:if="{{!isOffline}}" class="btn-primary bottom-btn" bindtap="confirmComplete">✅ 送出</button>
     </block>
 
     <!-- 自己发布的 & 已完成状态 -->
     <block wx:if="{{isOwner && isCompleted}}">
       <button class="btn-disabled bottom-btn" disabled>
-        物品已成功送出
+        已成功送出
       </button>
     </block>
 
     <!-- 发布者可见的删除 -->
     <block wx:if="{{isOwner}}">
       <button class="btn-danger bottom-btn" bindtap="deleteItem">
-        🗑️ 删除物品
+        🗑️ 删除
+      </button>
+    </block>
+
+    <!-- 不是自己发布的 & 已下架 -->
+    <block wx:if="{{!isOwner && isOffline}}">
+      <button class="btn-disabled bottom-btn" disabled>
+        已下架
       </button>
     </block>
 
     <!-- 不是自己发布的 & 可领取 -->
-    <block wx:if="{{!isOwner && !isCompleted}}">
+    <block wx:if="{{!isOwner && !isCompleted && !isOffline}}">
       <!-- 已登录：发起申请/交换 -->
       <button wx:if="{{isLoggedIn}}" class="btn-primary bottom-btn" bindtap="openApply">
         🙋 我要申请

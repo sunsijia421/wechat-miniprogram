@@ -16,12 +16,20 @@ function generateId() {
  * @returns {string} 格式化后的时间字符串
  */
 function formatTime(timestamp) {
-  // 兼容云数据库 serverDate 回传前端的 { $date: 毫秒数 } 结构，否则会变成 Invalid Date
-  if (timestamp && typeof timestamp === 'object' && timestamp.$date) {
-    timestamp = timestamp.$date
+  if (!timestamp) return ''
+  // 兼容云数据库 serverDate 回传前端的 { $date: 毫秒数 } 结构，以及 Date 对象
+  if (typeof timestamp === 'object') {
+    if (timestamp.$date) {
+      timestamp = timestamp.$date
+    } else if (timestamp instanceof Date) {
+      timestamp = timestamp.getTime()
+    } else {
+      return ''
+    }
   }
   var now = new Date()
   var date = new Date(timestamp)
+  if (isNaN(date.getTime())) return ''
   var diff = now - date
 
   if (diff < 60000) {
@@ -70,6 +78,33 @@ function formatFullTime(timestamp) {
   if (second.length === 1) second = '0' + second
 
   return year + '-' + month + '-' + day + ' ' + hour + ':' + minute + ':' + second
+}
+
+/**
+ * 将文本按关键词拆分为高亮分段（忽略大小写）
+ * @param {string} text 原文
+ * @param {string} keyword 关键词
+ * @returns {Array<{text:string, hl:boolean, k:number}>} 分段数组，hl 为 true 的片段需高亮
+ */
+function buildHighlightSegments(text, keyword) {
+  if (!text) return [{ text: '', hl: false, k: 0 }]
+  const kw = (keyword || '').trim()
+  if (!kw) return [{ text: text, hl: false, k: 0 }]
+
+  const lowerText = text.toLowerCase()
+  const lowerKw = kw.toLowerCase()
+  const segments = []
+  let start = 0
+  let idx = lowerText.indexOf(lowerKw)
+  while (idx !== -1) {
+    if (idx > start) segments.push({ text: text.slice(start, idx), hl: false })
+    segments.push({ text: text.slice(idx, idx + kw.length), hl: true })
+    start = idx + kw.length
+    idx = lowerText.indexOf(lowerKw, start)
+  }
+  if (start < text.length) segments.push({ text: text.slice(start), hl: false })
+  if (!segments.length) segments.push({ text: text, hl: false })
+  return segments.map((s, i) => ({ text: s.text, hl: s.hl, k: i }))
 }
 
 /**
@@ -209,6 +244,7 @@ module.exports = {
   generateId: generateId,
   formatTime: formatTime,
   formatFullTime: formatFullTime,
+  buildHighlightSegments: buildHighlightSegments,
   getCategoryName: getCategoryName,
   CATEGORY_LIST: CATEGORY_LIST,
   CATEGORY_KEYS: CATEGORY_KEYS,

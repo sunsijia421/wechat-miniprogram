@@ -94,6 +94,17 @@
       </view>
     </scroll-view>
 
+    <!-- 分类 + 搜索组合态提示 -->
+    <view class="filter-banner" wx:if="{{viewMode === 'list' && (currentCategory !== 'all' || keyword)}}">
+      <view class="filter-chip" wx:if="{{currentCategory !== 'all'}}" bindtap="clearCategory">
+        分类：{{currentCategoryName}} <text class="chip-x">✕</text>
+      </view>
+      <view class="filter-chip" wx:if="{{keyword}}" bindtap="clearSearch">
+        搜索：{{keyword}} <text class="chip-x">✕</text>
+      </view>
+      <view class="filter-clear-all" bindtap="clearAllFilters">清除全部</view>
+    </view>
+
     <!-- 列表视图 -->
     <block wx:if="{{viewMode === 'list'}}">
       <view wx:if="{{displayItems.length === 0}}" class="empty-state">
@@ -108,7 +119,9 @@
           <view class="item-card-row">
             <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
             <view class="item-info flex-1">
-              <view class="item-title text-ellipsis">{{item.title}}</view>
+              <view class="item-title text-ellipsis">
+                <text wx:for="{{item.titleSegments}}" wx:key="k" wx:for-item="seg" class="{{seg.hl ? 'hl' : ''}}">{{seg.text}}</text>
+              </view>
               <view class="item-desc text-ellipsis-2">{{item.description}}</view>
               <view class="item-meta">
                 <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>

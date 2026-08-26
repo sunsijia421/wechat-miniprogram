@@ -10,13 +10,19 @@ Page({
     publishedItems: [],
 
     // 我申请的
-    appliedItems: []
+    appliedItems: [],
+
+    // 管理员
+    isAdmin: false,
+    showAdminVerify: false,
+    adminSecret: ''
   },
 
   onShow() {
     this.loadUserInfo()
     this.loadPublishedItems()
     this.loadAppliedItems()
+    this.checkAdmin()
   },
 
   // 统一处理云端返回的物品字段
@@ -24,7 +30,7 @@ Page({
     return Object.assign({}, item, {
       id: item._id,
       categoryName: util.getCategoryName(item.category),
-      createTimeStr: util.formatTime(new Date(item.createTime).getTime()),
+      createTimeStr: util.formatTime(item.createTime),
       images: item.images || []
     })
   },
@@ -72,6 +78,51 @@ Page({
       url: `/pages/detail/detail?id=${id}`
     })
   },
+
+  // 检查管理员身份
+  checkAdmin() {
+    if (!app.getUserInfo()) return
+    util.callApi('isAdmin')
+      .then(res => this.setData({ isAdmin: res.isAdmin }))
+      .catch(() => {})
+  },
+
+  // 进入举报管理
+  goAdmin() {
+    wx.navigateTo({ url: '/pages/admin/admin' })
+  },
+
+  // 管理员验证弹窗
+  openAdminVerify() {
+    this.setData({ showAdminVerify: true, adminSecret: '' })
+  },
+
+  closeAdminVerify() {
+    this.setData({ showAdminVerify: false, adminSecret: '' })
+  },
+
+  onAdminSecretInput(e) {
+    this.setData({ adminSecret: e.detail.value })
+  },
+
+  submitAdminVerify() {
+    const secret = (this.data.adminSecret || '').trim()
+    if (!secret) {
+      wx.showToast({ title: '请输入管理密钥', icon: 'none' })
+      return
+    }
+    util.callApi('becomeAdmin', { secret: secret })
+      .then(() => {
+        this.setData({ showAdminVerify: false, adminSecret: '', isAdmin: true })
+        wx.showToast({ title: '验证成功，已成为管理员', icon: 'success' })
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '验证失败', icon: 'none' })
+      })
+  },
+
+  // 阻止弹窗冒泡
+  stopPropagation() {},
 
   // 退出登录
   logout() {

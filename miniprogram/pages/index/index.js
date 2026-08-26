@@ -14,6 +14,7 @@ Page({
     categories: util.CATEGORY_LIST,
     categoryKeys: util.CATEGORY_KEYS,
     currentCategory: 'all',
+    currentCategoryName: '全部',
 
     // 关键词搜索
     keyword: '',
@@ -241,13 +242,15 @@ Page({
       })
   },
 
-  // 统一处理云端返回的物品字段
+  // 统一处理云端返回的物品字段（含关键词高亮分段）
   normalizeItem(item) {
+    const keyword = (this.data.keyword || '').trim()
     return Object.assign({}, item, {
       id: item._id,
       categoryName: util.getCategoryName(item.category),
-      createTimeStr: util.formatTime(new Date(item.createTime).getTime()),
-      images: item.images || []
+      createTimeStr: util.formatTime(item.createTime),
+      images: item.images || [],
+      titleSegments: util.buildHighlightSegments(item.title, keyword)
     })
   },
 
@@ -266,7 +269,8 @@ Page({
   // 切换分类
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
-    this.setData({ currentCategory: category })
+    const categoryName = util.CATEGORY_LIST[util.CATEGORY_KEYS.indexOf(category)] || '全部'
+    this.setData({ currentCategory: category, currentCategoryName: categoryName })
     this.loadItems(true)
   },
 
@@ -284,6 +288,19 @@ Page({
   clearSearch() {
     clearTimeout(this._searchTimer)
     this.setData({ keyword: '' })
+    this.loadItems(true)
+  },
+
+  // 清除分类筛选
+  clearCategory() {
+    this.setData({ currentCategory: 'all', currentCategoryName: '全部' })
+    this.loadItems(true)
+  },
+
+  // 清除全部筛选（分类 + 关键词）
+  clearAllFilters() {
+    clearTimeout(this._searchTimer)
+    this.setData({ keyword: '', currentCategory: 'all', currentCategoryName: '全部' })
     this.loadItems(true)
   },
 

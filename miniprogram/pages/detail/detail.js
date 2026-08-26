@@ -21,7 +21,13 @@ Page({
     currentUser: null,
 
     // 登录态（游客只能浏览，不能申请/交换/举报）
-    isLoggedIn: false
+    isLoggedIn: false,
+
+    // 已下架（offline）状态
+    isOffline: false,
+
+    // 该物品的举报记录（仅发布者可见）
+    reports: []
   },
 
   onLoad(options) {
@@ -48,7 +54,15 @@ Page({
     return Object.assign({}, item, {
       id: item._id,
       categoryName: util.getCategoryName(item.category),
-      createTimeStr: util.formatTime(new Date(item.createTime).getTime())
+      createTimeStr: util.formatTime(item.createTime)
+    })
+  },
+
+  // 统一处理举报记录字段
+  normalizeReport(r) {
+    return Object.assign({}, r, {
+      id: r._id,
+      createTimeStr: util.formatTime(r.createTime)
     })
   },
 
@@ -73,11 +87,14 @@ Page({
       const res = await util.callApi('detail', { id: this.data.itemId })
       const item = this.normalizeItem(res.item)
       item.images = await this.getTempUrls(item.images)
+      const reports = (res.reports || []).map(r => this.normalizeReport(r))
       this.setData({
         item,
         isOwner: res.isOwner,
         isCompleted: item.status === 'completed',
-        currentUser: app.getUserInfo() || null
+        isOffline: item.status === 'offline',
+        currentUser: app.getUserInfo() || null,
+        reports
       })
       if (res.isOwner) this.loadApplications()
     } catch (e) {
@@ -93,7 +110,7 @@ Page({
         const list = res.list.map(a => Object.assign({}, a, {
           applicantName: a.applicantNickName || '匿名',
           applicantAvatar: a.applicantAvatarUrl || '',
-          createTimeStr: util.formatTime(new Date(a.createTime).getTime())
+          createTimeStr: util.formatTime(a.createTime)
         }))
         this.setData({ applications: list })
       })
@@ -226,6 +243,73 @@ Page({
           })
           .catch(e => {
             wx.showToast({ title: typeof e === 'string' ? e : '删除失败', icon: 'none' })
+          })
+      }
+    })
+  },
+
+  // ========== 编辑 / 下架（仅发布者） ==========
+  goEdit() {
+    wx.navigateTo({
+      url: '/pages/edit/edit?id=' + this.data.itemId
+    })
+  },
+
+  toggleOffline() {
+    const that = this
+    const isOffline = this.data.isOffline
+    wx.showModal({
+      title: isOffline ? '重新上架' : '下架物品',
+      content: isOffline
+        ? '确认将该物品重新上架（公开可见）吗？'
+        : '确认下架该物品吗？下架后将从公开列表隐藏，可在详情页重新上架。',
+      confirmText: isOffline ? '重新上架' : '确认下架',
+      confirmColor: isOffline ? '#4CAF50' : '#f44336',
+      cancelText: '取消',
+      success: function (res) {
+        if (!res.confirm) return
+        util.callApi('setStatus', {
+          id: that.data.itemId,
+          status: isOffline ? 'available' : 'offline'
+        })
+          .then(() => {
+            that.loadItem()
+            wx.showToast({ title: isOffline ? '已重新上架' : '已下架', icon: 'success' })
+          })
+          .catch(e => {
+            wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
+          })
+      }
+    })
+  },
+
+  // ========== 举报处理（发布者自见，可下架/忽略） ==========
+  handleReport(e) {
+    const action = e.currentTarget.dataset.action
+    const reportId = e.currentTarget.dataset.id || ''
+    const that = this
+    const isOffline = action === 'offline'
+    wx.showModal({
+      title: isOffline ? '下架该物品' : '忽略举报',
+      content: isOffline
+        ? '确认因该举报下架此物品吗？下架后将不在公开列表展示。'
+        : '确认忽略该举报（认为物品合规）吗？',
+      confirmText: isOffline ? '确认下架' : '确认忽略',
+      confirmColor: isOffline ? '#f44336' : '#4CAF50',
+      cancelText: '取消',
+      success: function (res) {
+        if (!res.confirm) return
+        util.callApi('handleReport', {
+          itemId: that.data.itemId,
+          reportId: reportId,
+          action: action
+        })
+          .then(() => {
+            that.loadItem()
+            wx.showToast({ title: isOffline ? '物品已下架' : '已忽略', icon: 'success' })
+          })
+          .catch(e => {
+            wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
           })
       }
     })

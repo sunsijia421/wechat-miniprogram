@@ -106,6 +106,15 @@ page {
   border-radius: 20rpx;
 }
 
+.status-offline {
+  color: #FF9800;
+  font-size: 12px;
+  background-color: #FFF3E0;
+  border: none;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;

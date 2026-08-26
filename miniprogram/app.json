@@ -3,6 +3,8 @@
     "pages/index/index",
     "pages/publish/publish",
     "pages/detail/detail",
+    "pages/edit/edit",
+    "pages/admin/admin",
     "pages/profile/profile"
   ],
   "window": {

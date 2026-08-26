@@ -1,0 +1,45 @@
+<!-- 举报管理页（仅管理员） -->
+<view class="container">
+
+  <!-- 非管理员 -->
+  <view class="empty-state" wx:if="{{checked && !isAdmin}}">
+    <view class="icon">🔒</view>
+    <view class="text">无管理员权限</view>
+    <view class="text sub">请先在「我的」中通过管理员验证</view>
+    <button class="btn-primary back-btn" bindtap="goBack">返回</button>
+  </view>
+
+  <!-- 管理员 -->
+  <block wx:if="{{isAdmin}}">
+    <view class="admin-header">
+      <view class="admin-title">举报管理</view>
+      <view class="admin-count">共 {{reports.length}} 条</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && reports.length === 0}}">
+      <view class="icon">✅</view>
+      <view class="text">暂无举报</view>
+    </view>
+
+    <!-- 举报列表 -->
+    <view class="report-list" wx:if="{{reports.length > 0}}">
+      <view class="report-card card" wx:for="{{reports}}" wx:key="id" wx:for-item="r">
+        <view class="report-head flex-between">
+          <view class="report-item-title" data-itemid="{{r.itemId}}" bindtap="goDetail">{{r.itemTitle}}</view>
+          <view class="status-tag status-{{r.status}}">{{r.statusText}}</view>
+        </view>
+        <view class="report-reason-text">举报理由：{{r.reason}}</view>
+        <view class="report-meta">
+          <text>物品状态：{{r.itemStatusText}}</text>
+          <text>{{r.createTimeStr}}</text>
+        </view>
+        <view class="report-actions" wx:if="{{r.status === 'pending'}}">
+          <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
+          <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+</view>
