@@ -1,5 +1,5 @@
-var app = getApp()
-var util = require('../../utils/util')
+const app = getApp()
+const util = require('../../utils/util')
 
 Page({
   data: {
@@ -21,149 +21,136 @@ Page({
     currentUser: null
   },
 
-  onLoad: function (options) {
-    var itemId = options.id
+  onLoad(options) {
+    const itemId = options.id
     if (!itemId) {
       wx.showToast({ title: '物品不存在', icon: 'none' })
-      setTimeout(function () { wx.navigateBack() }, 1500)
+      setTimeout(() => wx.navigateBack(), 1500)
       return
     }
-
-    this.setData({ itemId: itemId })
+    this.setData({ itemId })
     this.loadItem()
-    this.loadApplications()
   },
 
-  onShow: function () {
-    // 每次显示时重新加载
+  onShow() {
     if (this.data.itemId) {
       this.loadItem()
-      this.loadApplications()
     }
   },
 
-  // ========== 物品加载 ==========
-  loadItem: function () {
-    var items = wx.getStorageSync('items') || []
-    var item = null
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].id === this.data.itemId) {
-        item = items[i]
-        break
-      }
-    }
-
-    if (!item) {
-      wx.showToast({ title: '物品不存在', icon: 'none' })
-      setTimeout(function () { wx.navigateBack() }, 1500)
-      return
-    }
-
-    var userInfo = app.getUserInfo()
-    var currentUser = userInfo || {}
-    var isOwner = currentUser.nickName === item.publisherNickName
-    var isCompleted = item.status === 'completed'
-
-    this.setData({ item: item, isOwner: isOwner, isCompleted: isCompleted, currentUser: currentUser })
-  },
-
-  // ========== 申请记录加载 ==========
-  loadApplications: function () {
-    var applications = wx.getStorageSync('applications') || []
-    var itemApplications = []
-    for (var i = 0; i < applications.length; i++) {
-      if (applications[i].itemId === this.data.itemId) {
-        itemApplications.push(applications[i])
-      }
-    }
-    this.setData({ applications: itemApplications })
-  },
-
-  // ========== 图片预览 ==========
-  previewImage: function (e) {
-    var index = e.currentTarget.dataset.index
-    wx.previewImage({
-      current: this.data.item.images[index],
-      urls: this.data.item.images
+  // 统一处理云端返回的物品字段
+  normalizeItem(item) {
+    return Object.assign({}, item, {
+      id: item._id,
+      categoryName: util.getCategoryName(item.category),
+      createTimeStr: util.formatTime(new Date(item.createTime).getTime())
     })
   },
 
+  // 将云存储 fileID 转为临时 URL（供 image 组件与预览使用）
+  getTempUrls(fileIDs) {
+    if (!fileIDs || !fileIDs.length) return Promise.resolve([])
+    return new Promise((resolve) => {
+      wx.cloud.getTempFileURL({
+        fileList: fileIDs,
+        success: res => {
+          const urls = (res.fileList || []).map(f => f.tempFileURL || f.fileID)
+          resolve(urls)
+        },
+        fail: () => resolve(fileIDs)
+      })
+    })
+  },
+
+  // ========== 物品加载 ==========
+  async loadItem() {
+    try {
+      const res = await util.callApi('detail', { id: this.data.itemId })
+      const item = this.normalizeItem(res.item)
+      item.images = await this.getTempUrls(item.images)
+      this.setData({
+        item,
+        isOwner: res.isOwner,
+        isCompleted: item.status === 'completed',
+        currentUser: app.getUserInfo() || {}
+      })
+      if (res.isOwner) this.loadApplications()
+    } catch (e) {
+      wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
+      setTimeout(() => wx.navigateBack(), 1500)
+    }
+  },
+
+  // ========== 申请记录加载（仅发布者） ==========
+  loadApplications() {
+    util.callApi('applications', { itemId: this.data.itemId })
+      .then(res => {
+        const list = res.list.map(a => Object.assign({}, a, {
+          applicantName: a.applicantNickName || '匿名',
+          applicantAvatar: a.applicantAvatarUrl || '',
+          createTimeStr: util.formatTime(new Date(a.createTime).getTime())
+        }))
+        this.setData({ applications: list })
+      })
+      .catch(() => {})
+  },
+
+  // ========== 图片预览 ==========
+  previewImage(e) {
+    const index = e.currentTarget.dataset.index
+    const urls = this.data.item ? this.data.item.images : []
+    wx.previewImage({ current: urls[index], urls })
+  },
+
   // ========== 申请流程 ==========
-  openApply: function () {
+  openApply() {
     this.setData({ showApplyModal: true, applyMessage: '' })
   },
 
-  closeApply: function () {
+  closeApply() {
     this.setData({ showApplyModal: false, applyMessage: '' })
   },
 
-  onApplyMessageInput: function (e) {
+  onApplyMessageInput(e) {
     this.setData({ applyMessage: e.detail.value })
   },
 
-  submitApply: function () {
-    var message = this.data.applyMessage.trim()
+  submitApply() {
+    const message = this.data.applyMessage.trim()
     if (!message) {
       wx.showToast({ title: '请填写申请留言', icon: 'none' })
       return
     }
 
-    // 内容安全审核
-    var textCheck = util.checkTextContent(message)
+    const textCheck = util.checkTextContent(message)
     if (!textCheck.passed) {
       wx.showToast({ title: '留言包含敏感词，请修改', icon: 'none' })
       return
     }
 
-    var userInfo = app.getUserInfo()
-    var now = Date.now()
-    var application = {
-      id: util.generateId(),
+    const userInfo = app.getUserInfo() || {}
+    const item = this.data.item
+    util.callApi('apply', {
       itemId: this.data.itemId,
-      applicantId: userInfo.nickName,
-      applicantName: userInfo.nickName,
-      applicantAvatar: userInfo.avatarUrl,
       message: message,
-      status: 'pending',
-      createTime: now,
-      createTimeStr: util.formatTime(now)
-    }
-
-    var applications = wx.getStorageSync('applications') || []
-    applications.push(application)
-    wx.setStorageSync('applications', applications)
-
-    /*
-     * ========== 订阅消息（需自行替换模板ID） ==========
-     * 使用说明：
-     * 1. 在微信公众平台 → 功能 → 订阅消息，申请模板（如"申请通知"）
-     * 2. 将下面的 'YOUR_TEMPLATE_ID' 替换为实际模板ID
-     * 3. 取消注释以下代码即可生效
-     *
-     * wx.requestSubscribeMessage({
-     *   tmplIds: ['YOUR_TEMPLATE_ID'],
-     *   success: function(res) {
-     *     console.log('订阅消息授权：', res)
-     *   },
-     *   fail: function(err) {
-     *     console.log('订阅消息失败：', err)
-     *   }
-     * })
-     *
-     * 注意：由于本小程序不使用云服务，无法从服务端发送订阅消息。
-     * 实际项目中需配合服务端调用 subscribeMessage.send API。
-     */
-
-    this.setData({ showApplyModal: false, applyMessage: '' })
-    this.loadApplications()
-    wx.showToast({ title: '申请已提交', icon: 'success' })
+      itemTitle: item.title,
+      applicantNickName: userInfo.nickName || '公益参与者',
+      applicantAvatarUrl: userInfo.avatarUrl || ''
+    })
+      .then(() => {
+        this.setData({ showApplyModal: false, applyMessage: '' })
+        this.loadApplications()
+        wx.showToast({ title: '申请已提交', icon: 'success' })
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '提交失败', icon: 'none' })
+      })
   },
 
   // ========== 发布者确认送出 ==========
-  approveApplication: function (e) {
-    var applicationId = e.currentTarget.dataset.id
-    var that = this
-
+  approveApplication(e) {
+    const applicationId = e.currentTarget.dataset.id
+    const that = this
     wx.showModal({
       title: '确认送出',
       content: '确认将物品送给这位申请者吗？确认后物品状态将变为"已完成"。',
@@ -177,8 +164,8 @@ Page({
     })
   },
 
-  confirmComplete: function () {
-    var that = this
+  confirmComplete() {
+    const that = this
     wx.showModal({
       title: '确认已送出',
       content: '确认该物品已成功送出吗？确认后您将获得10点公益积分。',
@@ -193,88 +180,84 @@ Page({
   },
 
   // ========== 完成捐赠核心逻辑 ==========
-  doCompleteItem: function (approvedApplicationId) {
-    var items = wx.getStorageSync('items') || []
-    var itemIndex = -1
-    for (var i = 0; i < items.length; i++) {
-      if (items[i].id === this.data.itemId) {
-        itemIndex = i
-        break
+  doCompleteItem(applicationId) {
+    util.callApi('handleApply', {
+      itemId: this.data.itemId,
+      applicationId: applicationId || '',
+      action: applicationId ? 'approve' : 'complete'
+    })
+      .then(() => {
+        app.updateUserStats(10, 1)
+        this.loadItem()
+        wx.showToast({ title: '物品已确认送出，积分+10', icon: 'success' })
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
+      })
+  },
+
+  // ========== 删除物品（仅发布者） ==========
+  deleteItem() {
+    const that = this
+    wx.showModal({
+      title: '删除物品',
+      content: '确定要删除该物品吗？删除后不可恢复，相关申请与举报记录也会一并清除。',
+      confirmText: '删除',
+      confirmColor: '#f44336',
+      success: function (res) {
+        if (!res.confirm) return
+        util.callApi('delete', { id: that.data.itemId })
+          .then(() => {
+            wx.showToast({ title: '已删除', icon: 'success' })
+            setTimeout(() => wx.navigateBack(), 1000)
+          })
+          .catch(e => {
+            wx.showToast({ title: typeof e === 'string' ? e : '删除失败', icon: 'none' })
+          })
       }
-    }
-    if (itemIndex === -1) return
-
-    var now = Date.now()
-    items[itemIndex].status = 'completed'
-    items[itemIndex].completeTime = now
-
-    wx.setStorageSync('items', items)
-
-    // 更新申请状态
-    if (approvedApplicationId) {
-      var applications = wx.getStorageSync('applications') || []
-      for (var j = 0; j < applications.length; j++) {
-        if (applications[j].itemId === this.data.itemId) {
-          applications[j].status = applications[j].id === approvedApplicationId ? 'approved' : 'rejected'
-        }
-      }
-      wx.setStorageSync('applications', applications)
-    }
-
-    // 给发布者加积分
-    app.updateUserStats(10, 1)
-
-    this.loadItem()
-    this.loadApplications()
-    wx.showToast({ title: '物品已确认送出，积分+10', icon: 'success' })
+    })
   },
 
   // ========== 举报流程 ==========
-  openReport: function () {
+  openReport() {
     this.setData({ showReportModal: true, reportReason: '' })
   },
 
-  closeReport: function () {
+  closeReport() {
     this.setData({ showReportModal: false, reportReason: '' })
   },
 
-  onReportReasonInput: function (e) {
+  onReportReasonInput(e) {
     this.setData({ reportReason: e.detail.value })
   },
 
-  submitReport: function () {
-    var reason = this.data.reportReason.trim()
+  submitReport() {
+    const reason = this.data.reportReason.trim()
     if (!reason) {
       wx.showToast({ title: '请填写举报理由', icon: 'none' })
       return
     }
 
-    // 内容安全审核
-    var textCheck = util.checkTextContent(reason)
+    const textCheck = util.checkTextContent(reason)
     if (!textCheck.passed) {
       wx.showToast({ title: '举报理由包含敏感词', icon: 'none' })
       return
     }
 
-    var userInfo = app.getUserInfo()
-    var now = Date.now()
-    var report = {
-      id: util.generateId(),
+    util.callApi('report', {
       itemId: this.data.itemId,
-      reporterName: userInfo.nickName,
-      reason: reason,
-      createTime: now,
-      createTimeStr: util.formatTime(now)
-    }
-
-    var reports = wx.getStorageSync('reports') || []
-    reports.push(report)
-    wx.setStorageSync('reports', reports)
-
-    this.setData({ showReportModal: false, reportReason: '' })
-    wx.showToast({ title: '已收到举报，我们会尽快处理', icon: 'none' })
+      itemTitle: this.data.item ? this.data.item.title : '',
+      reason: reason
+    })
+      .then(() => {
+        this.setData({ showReportModal: false, reportReason: '' })
+        wx.showToast({ title: '已收到举报，我们会尽快处理', icon: 'none' })
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '提交失败', icon: 'none' })
+      })
   },
 
   // 阻止弹窗冒泡
-  stopPropagation: function () {}
+  stopPropagation() {}
 })

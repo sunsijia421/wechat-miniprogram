@@ -69,8 +69,8 @@
       </view>
     </view>
 
-    <!-- 申请记录列表 -->
-    <view class="card" wx:if="{{applications.length > 0}}">
+    <!-- 申请记录列表（仅发布者可见） -->
+    <view class="card" wx:if="{{isOwner && applications.length > 0}}">
       <view class="section-title">📨 申请记录（{{applications.length}}条）</view>
       <view class="application-list">
         <view class="application-item" wx:for="{{applications}}" wx:key="id">
@@ -111,6 +111,13 @@
     <block wx:if="{{isOwner && isCompleted}}">
       <button class="btn-disabled bottom-btn" disabled>
         物品已成功送出
+      </button>
+    </block>
+
+    <!-- 发布者可见的删除 -->
+    <block wx:if="{{isOwner}}">
+      <button class="btn-danger bottom-btn" bindtap="deleteItem">
+        🗑️ 删除物品
       </button>
     </block>
 

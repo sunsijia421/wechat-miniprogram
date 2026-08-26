@@ -1,6 +1,25 @@
 <!-- 首页 - 校园物资公益流转 -->
 <view class="container">
 
+  <!-- 微信隐私保护指引弹窗（合规必需） -->
+  <view class="agreement-modal" wx:if="{{showPrivacy}}">
+    <view class="agreement-content">
+      <view class="agreement-title">隐私保护指引</view>
+      <scroll-view scroll-y class="agreement-text">
+        <text>我们非常重视您的个人信息与隐私保护。\n\n</text>
+        <text>在使用本小程序前，请您阅读并同意《隐私保护指引》：\n\n</text>
+        <text>1. 我们会申请您的位置信息（scope.userLocation），用于发布物品时标记位置与地图展示。\n\n</text>
+        <text>2. 您发布的物品信息、头像与昵称将在平台内展示，用于公益流转匹配。\n\n</text>
+        <text>3. 我们不会向第三方出售您的个人信息。\n\n</text>
+        <text>4. 您可随时在「我的」中退出登录并清除本地数据。\n\n</text>
+        <text>点击「同意并继续」即表示您已阅读并同意上述条款。</text>
+      </scroll-view>
+      <view class="agreement-buttons">
+        <button class="btn-agree" bindtap="onAgreePrivacy">同意并继续</button>
+      </view>
+    </view>
+  </view>
+
   <!-- 用户协议弹窗 -->
   <view class="agreement-modal" wx:if="{{showAgreement}}">
     <view class="agreement-content">
@@ -28,7 +47,7 @@
       <text class="login-icon">👤</text>
       <text>请先授权登录后使用</text>
     </view>
-    <button class="btn-primary login-btn" bindtap="getUserProfile">授权登录</button>
+    <button class="btn-primary login-btn" bindtap="onSetupProfileTap">授权登录</button>
   </view>
 
   <!-- 主内容（登录后显示） -->
@@ -114,4 +133,23 @@
     </block>
 
   </block>
+
+  <!-- 完善公益身份弹窗（头像 + 昵称） -->
+  <view class="agreement-modal" wx:if="{{showProfileSetup}}">
+    <view class="agreement-content">
+      <view class="agreement-title">完善公益身份</view>
+      <view class="profile-setup">
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image wx:if="{{avatarUrl}}" class="setup-avatar" src="{{avatarUrl}}" mode="aspectFill" />
+          <view wx:else class="setup-avatar-placeholder">点击选择头像</view>
+        </button>
+        <input class="nickname-input" type="nickname" placeholder="请输入昵称" value="{{nickName}}" bindinput="onNicknameInput" />
+      </view>
+      <view class="agreement-buttons">
+        <button class="btn-disagree" bindtap="onSkipProfile">跳过</button>
+        <button class="btn-agree" bindtap="onSaveProfile">保存</button>
+      </view>
+    </view>
+  </view>
+
 </view>

@@ -1,4 +1,5 @@
 const app = getApp()
+const util = require('../../utils/util')
 
 Page({
   data: {
@@ -18,6 +19,16 @@ Page({
     this.loadAppliedItems()
   },
 
+  // 统一处理云端返回的物品字段
+  normalizeItem(item) {
+    return Object.assign({}, item, {
+      id: item._id,
+      categoryName: util.getCategoryName(item.category),
+      createTimeStr: util.formatTime(new Date(item.createTime).getTime()),
+      images: item.images || []
+    })
+  },
+
   // 加载用户信息
   loadUserInfo() {
     const userInfo = app.getUserInfo()
@@ -32,42 +43,26 @@ Page({
     this.setData({ activeTab: tab })
   },
 
-  // 加载我发布的物品
+  // 加载我发布的物品（云端）
   loadPublishedItems() {
-    const userInfo = app.getUserInfo()
-    if (!userInfo) return
-
-    const items = wx.getStorageSync('items') || []
-    const publishedItems = items
-      .filter(item => item.publisherNickName === userInfo.nickName)
-      .sort((a, b) => b.createTime - a.createTime)
-
-    this.setData({ publishedItems })
+    if (!app.getOpenid()) return
+    util.callApi('myPublish', {})
+      .then(res => {
+        const list = res.list.map(it => this.normalizeItem(it))
+        this.setData({ publishedItems: list })
+      })
+      .catch(() => {})
   },
 
-  // 加载我申请的物品
+  // 加载我申请的物品（云端）
   loadAppliedItems() {
-    const userInfo = app.getUserInfo()
-    if (!userInfo) return
-
-    const applications = wx.getStorageSync('applications') || []
-    const items = wx.getStorageSync('items') || []
-
-    // 获取当前用户申请过的 itemId
-    const appliedItemIds = applications
-      .filter(a => a.applicantName === userInfo.nickName)
-      .map(a => a.itemId)
-
-    // 去重
-    const uniqueItemIds = [...new Set(appliedItemIds)]
-
-    // 根据 itemId 获取物品信息
-    const appliedItems = uniqueItemIds
-      .map(id => items.find(item => item.id === id))
-      .filter(Boolean)
-      .sort((a, b) => b.createTime - a.createTime)
-
-    this.setData({ appliedItems })
+    if (!app.getOpenid()) return
+    util.callApi('myApply', {})
+      .then(res => {
+        const list = res.list.map(it => this.normalizeItem(it))
+        this.setData({ appliedItems: list })
+      })
+      .catch(() => {})
   },
 
   // 点击物品跳转详情
@@ -89,8 +84,10 @@ Page({
         if (res.confirm) {
           wx.removeStorageSync('userInfo')
           wx.removeStorageSync('isAgreed')
+          wx.removeStorageSync('openid')
           app.globalData.userInfo = null
           app.globalData.isAgreed = false
+          app.globalData.openid = ''
           this.setData({ userInfo: null })
           wx.showToast({ title: '已退出', icon: 'success' })
           setTimeout(() => {
@@ -101,25 +98,25 @@ Page({
     })
   },
 
-  // 清除所有数据（调试用）
+  // 清除本机缓存（仅本地登录信息，云端数据不受影响）
   clearAllData() {
     wx.showModal({
-      title: '清除所有数据',
-      content: '此操作将清除所有本地数据（包括物品、申请、举报等），不可恢复！',
+      title: '清除本地数据',
+      content: '此操作仅清除本机登录与缓存信息（云端数据不受影响），确定继续吗？',
       confirmText: '确认清除',
       cancelText: '取消',
-      confirmColor: '#f44336',
       success: (res) => {
         if (res.confirm) {
           wx.clearStorageSync()
           app.globalData.userInfo = null
           app.globalData.isAgreed = false
+          app.globalData.openid = ''
           this.setData({
             userInfo: null,
             publishedItems: [],
             appliedItems: []
           })
-          wx.showToast({ title: '数据已清除', icon: 'success' })
+          wx.showToast({ title: '本地数据已清除', icon: 'success' })
         }
       }
     })

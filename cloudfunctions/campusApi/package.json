@@ -1,0 +1,9 @@
+{
+  "name": "campusApi",
+  "version": "1.0.0",
+  "description": "校园物资公益流转 - 云函数后端",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

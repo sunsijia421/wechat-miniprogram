@@ -12,7 +12,7 @@ Page({
     location: null,
     locationName: '',
 
-    categories: ['📚 书籍', '👔 衣物', '💻 数码产品' ,'日用品','📦 其他'],
+    categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '📦 其他'],
     categoryValues: ['books', 'clothes', 'electronics', 'other'],
 
     submitting: false,
@@ -126,15 +126,13 @@ Page({
     })
   },
 
-  // 提交物品
+  // 提交物品（上传图片到云存储 + 云端发布）
   submitItem() {
-    // 先检查登录状态
     if (!this.data.isLoggedIn) {
       wx.showToast({ title: '请先在首页登录', icon: 'none' })
       return
     }
 
-    // 校验
     const { title, description, images, submitting } = this.data
     if (submitting) return
 
@@ -151,8 +149,8 @@ Page({
       return
     }
 
-    // 内容安全审核 - 文本
-    var textCheck = util.checkTextContent(title + ' ' + description)
+    // 本地文本预校验（主要依赖云端内容安全）
+    const textCheck = util.checkTextContent(title + ' ' + description)
     if (!textCheck.passed) {
       wx.showModal({
         title: '内容安全提醒',
@@ -163,63 +161,63 @@ Page({
       return
     }
 
-    // 内容安全审核 - 图片
-    var imgCheck = util.checkImageContent(images)
-    if (!imgCheck.passed) {
-      wx.showToast({ title: imgCheck.message, icon: 'none' })
-      return
-    }
-
     this.setData({ submitting: true })
 
     const userInfo = app.getUserInfo()
 
-    // 构建物品数据
-    var now = Date.now()
-    const item = {
-      id: util.generateId(),
-      title: title.trim(),
-      description: description.trim(),
-      category: this.data.category,
-      categoryName: util.getCategoryName(this.data.category),
-      images: this.data.images,
-      allowBarter: this.data.allowBarter,
-      location: this.data.location,
-      locationName: this.data.locationName || '',
-      status: 'available',
-      publisherId: userInfo.nickName,
-      publisherNickName: userInfo.nickName,
-      publisherAvatarUrl: userInfo.avatarUrl,
-      createTime: now,
-      createTimeStr: util.formatTime(now),
-      completeTime: null
-    }
-
-    // 保存到本地存储
-    const items = wx.getStorageSync('items') || []
-    items.push(item)
-    wx.setStorageSync('items', items)
-
-    // 提示成功
-    wx.showToast({
-      title: '发布成功！',
-      icon: 'success',
-      duration: 1500
-    })
-
-    // 重置表单
-    setTimeout(() => {
-      this.setData({
-        title: '',
-        description: '',
-        category: 'books',
-        categoryIndex: 0,
-        allowBarter: false,
-        images: [],
-        location: null,
-        locationName: '',
-        submitting: false
+    // 先上传图片到云存储
+    const uploadTasks = (images || []).map(p => this.uploadOne(p))
+    Promise.all(uploadTasks)
+      .then(fileIDs => {
+        return util.callApi('publish', {
+          title: title.trim(),
+          description: description.trim(),
+          category: this.data.category,
+          images: fileIDs,
+          allowBarter: this.data.allowBarter,
+          location: this.data.location,
+          locationName: this.data.locationName || '',
+          publisherNickName: (userInfo && userInfo.nickName) || '公益参与者',
+          publisherAvatarUrl: (userInfo && userInfo.avatarUrl) || ''
+        })
       })
-    }, 1500)
+      .then(() => {
+        wx.showToast({ title: '发布成功！', icon: 'success', duration: 1500 })
+        setTimeout(() => { this.resetForm() }, 1500)
+      })
+      .catch(err => {
+        this.setData({ submitting: false })
+        wx.showToast({ title: typeof err === 'string' ? err : '发布失败，请重试', icon: 'none' })
+      })
+  },
+
+  // 上传单张图片到云存储，返回 fileID
+  uploadOne(tempPath) {
+    return new Promise((resolve, reject) => {
+      const m = tempPath.match(/\.(\w+)$/)
+      const ext = m ? m[1] : 'png'
+      const cloudPath = 'items/' + Date.now() + '_' + Math.floor(Math.random() * 1e6) + '.' + ext
+      wx.cloud.uploadFile({
+        cloudPath: cloudPath,
+        filePath: tempPath,
+        success: res => resolve(res.fileID),
+        fail: err => reject(err)
+      })
+    })
+  },
+
+  // 重置表单
+  resetForm() {
+    this.setData({
+      title: '',
+      description: '',
+      category: 'books',
+      categoryIndex: 0,
+      allowBarter: false,
+      images: [],
+      location: null,
+      locationName: '',
+      submitting: false
+    })
   }
 })

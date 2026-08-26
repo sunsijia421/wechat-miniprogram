@@ -1,25 +1,35 @@
+// TODO: 替换为你的云开发环境ID（云开发控制台 -> 环境设置 -> 环境ID 复制）
+const CLOUD_ENV = 'your-cloud-env-id'
+
 App({
   globalData: {
     userInfo: null,
-    isAgreed: false
+    isAgreed: false,
+    openid: '',
+    cloudReady: false
   },
 
   onLaunch() {
-    // 读取本地存储的协议同意状态
-    const isAgreed = wx.getStorageSync('isAgreed')
-    if (isAgreed) {
-      this.globalData.isAgreed = true
+    if (!wx.cloud) {
+      console.error('当前基础库不支持云开发，请使用 2.2.3 或以上版本')
+      return
     }
+    wx.cloud.init({
+      env: CLOUD_ENV,
+      traceUser: true
+    })
+    this.globalData.cloudReady = true
 
-    // 读取本地存储的用户信息
+    const isAgreed = wx.getStorageSync('isAgreed')
+    if (isAgreed) this.globalData.isAgreed = true
+
     const userInfo = wx.getStorageSync('userInfo')
-    if (userInfo) {
-      this.globalData.userInfo = userInfo
-    }
+    if (userInfo) this.globalData.userInfo = userInfo
+
+    const openid = wx.getStorageSync('openid')
+    if (openid) this.globalData.openid = openid
 
     console.log('校园物资公益流转小程序启动')
-    console.log('用户信息：', this.globalData.userInfo)
-    console.log('协议同意：', this.globalData.isAgreed)
   },
 
   // 检查是否已同意协议
@@ -47,7 +57,21 @@ App({
     return this.globalData.userInfo
   },
 
-  // 更新用户积分和捐赠次数
+  // 保存 openid
+  setOpenid(openid) {
+    this.globalData.openid = openid
+    wx.setStorageSync('openid', openid)
+  },
+
+  // 获取 openid
+  getOpenid() {
+    if (!this.globalData.openid) {
+      this.globalData.openid = wx.getStorageSync('openid')
+    }
+    return this.globalData.openid
+  },
+
+  // 更新用户积分和捐赠次数（本地即时反馈，云端 users 集合为权威值）
   updateUserStats(points, donateCount) {
     const userInfo = this.getUserInfo()
     if (userInfo) {

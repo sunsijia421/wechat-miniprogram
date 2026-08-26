@@ -194,6 +194,11 @@
   white-space: nowrap;
 }
 
+.btn-danger {
+  background-color: #f44336;
+  color: #ffffff;
+}
+
 /* ========== 弹窗 ========== */
 .modal-overlay {
   position: fixed;

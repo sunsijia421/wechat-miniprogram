@@ -160,6 +160,29 @@ function checkImageContent(filePaths) {
   return { passed: true, message: '' }
 }
 
+// ==================== 云函数调用封装 ====================
+// 统一调用 campusApi 云函数：成功 resolve(result)，失败 reject(message)
+function callApi(action, data) {
+  return new Promise(function (resolve, reject) {
+    if (!wx.cloud) {
+      reject('云开发未初始化')
+      return
+    }
+    wx.cloud.callFunction({
+      name: 'campusApi',
+      data: Object.assign({ action: action }, data || {}),
+      success: function (res) {
+        const result = res.result || {}
+        if (result.success) resolve(result)
+        else reject(result.message || '操作失败')
+      },
+      fail: function (err) {
+        reject((err && err.errMsg) || '网络请求失败')
+      }
+    })
+  })
+}
+
 module.exports = {
   generateId: generateId,
   formatTime: formatTime,
@@ -170,5 +193,6 @@ module.exports = {
   deepClone: deepClone,
   checkTextContent: checkTextContent,
   checkImageContent: checkImageContent,
-  SENSITIVE_WORDS: SENSITIVE_WORDS
+  SENSITIVE_WORDS: SENSITIVE_WORDS,
+  callApi: callApi
 }

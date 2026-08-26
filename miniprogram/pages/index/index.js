@@ -15,7 +15,7 @@ Page({
     categoryKeys: util.CATEGORY_KEYS,
     currentCategory: 'all',
 
-    // 物品列表
+    // 物品列表（云端）
     allItems: [],
     displayItems: [],
 
@@ -23,6 +23,7 @@ Page({
     page: 1,
     pageSize: 10,
     hasMore: true,
+    loading: false,
 
     // 地图
     mapMarkers: [],
@@ -30,18 +31,61 @@ Page({
     mapLng: 114.4,
     mapScale: 14,
 
-    // 登录状态
+    // 登录与协议状态
     showAgreement: false,
-    isLoggedIn: false
+    showPrivacy: false,
+    showProfileSetup: false,
+    isLoggedIn: false,
+    avatarUrl: '',
+    nickName: ''
   },
 
   onLoad() {
-    this.checkLogin()
+    this.initPrivacyAndLogin()
   },
 
   onShow() {
-    this.loadItems()
+    this.loadItems(true)
     this.calculateStats()
+  },
+
+  // 微信隐私授权（合规必需，必须在调用定位等隐私接口前完成）
+  initPrivacyAndLogin() {
+    const that = this
+    if (wx.getPrivacySetting) {
+      wx.getPrivacySetting({
+        success(res) {
+          if (res.needAuthorization) {
+            that.setData({ showPrivacy: true })
+          } else {
+            that.checkLogin()
+          }
+        },
+        fail() {
+          that.checkLogin()
+        }
+      })
+    } else {
+      that.checkLogin()
+    }
+  },
+
+  onAgreePrivacy() {
+    const that = this
+    if (wx.requirePrivacyAuthorize) {
+      wx.requirePrivacyAuthorize({
+        success() {
+          that.setData({ showPrivacy: false })
+          that.checkLogin()
+        },
+        fail() {
+          wx.showToast({ title: '需同意隐私协议后使用', icon: 'none' })
+        }
+      })
+    } else {
+      that.setData({ showPrivacy: false })
+      that.checkLogin()
+    }
   },
 
   // 检查登录状态
@@ -55,7 +99,6 @@ Page({
     }
 
     if (!userInfo) {
-      // 需要获取用户信息
       this.setData({ isLoggedIn: false })
       return
     }
@@ -63,15 +106,19 @@ Page({
     this.setData({ isLoggedIn: true })
   },
 
-  // 同意协议
+  // 同意公约
   onAgree() {
     app.setAgreed()
     this.setData({ showAgreement: false })
-    // 继续获取用户信息
-    this.getUserProfile()
+    const userInfo = app.getUserInfo()
+    if (!userInfo) {
+      this.setData({ showProfileSetup: true })
+    } else {
+      this.setData({ isLoggedIn: true })
+    }
   },
 
-  // 拒绝协议
+  // 拒绝公约
   onDisagree() {
     wx.showModal({
       title: '提示',
@@ -79,103 +126,154 @@ Page({
       showCancel: false,
       confirmText: '我知道了',
       success: () => {
-        // 退出小程序（仅模拟）
         this.setData({ showAgreement: true })
       }
     })
   },
 
-  // 获取用户信息
-  getUserProfile() {
-    wx.getUserProfile({
-      desc: '用于展示您的捐赠者信息',
-      success: (res) => {
-        const userInfo = {
-          avatarUrl: res.userInfo.avatarUrl,
-          nickName: res.userInfo.nickName,
-          points: 0,
-          donateCount: 0
-        }
-        app.saveUserInfo(userInfo)
-        this.setData({ isLoggedIn: true })
-        wx.showToast({ title: '登录成功', icon: 'success' })
-      },
-      fail: () => {
-        // 获取失败时使用默认用户信息
-        const defaultUser = {
-          avatarUrl: '',
-          nickName: '公益参与者',
-          points: 0,
-          donateCount: 0
-        }
-        app.saveUserInfo(defaultUser)
-        this.setData({ isLoggedIn: true })
-        wx.showToast({ title: '已使用默认信息', icon: 'none' })
-      }
+  // 未登录提示点击：进入资料填写
+  onSetupProfileTap() {
+    if (!app.checkAgreed()) {
+      this.setData({ showAgreement: true })
+      return
+    }
+    this.setData({ showProfileSetup: true })
+  },
+
+  // 选择头像（新版头像昵称能力）
+  onChooseAvatar(e) {
+    const avatarUrl = e.detail.avatarUrl
+    this.setData({ avatarUrl })
+  },
+
+  // 输入昵称（新版头像昵称能力）
+  onNicknameInput(e) {
+    this.setData({ nickName: e.detail.value })
+  },
+
+  // 保存资料并同步云端登录
+  onSaveProfile() {
+    const nickName = (this.data.nickName || '').trim()
+    if (!nickName) {
+      wx.showToast({ title: '请填写昵称', icon: 'none' })
+      return
+    }
+    const userInfo = {
+      avatarUrl: this.data.avatarUrl || '',
+      nickName: nickName,
+      points: 0,
+      donateCount: 0
+    }
+    app.saveUserInfo(userInfo)
+    this.setData({
+      isLoggedIn: true,
+      showProfileSetup: false,
+      avatarUrl: '',
+      nickName: ''
+    })
+    this.syncLogin(nickName, userInfo.avatarUrl)
+    wx.showToast({ title: '登录成功', icon: 'success' })
+  },
+
+  // 跳过资料填写（使用默认身份）
+  onSkipProfile() {
+    const userInfo = {
+      avatarUrl: '',
+      nickName: '公益参与者',
+      points: 0,
+      donateCount: 0
+    }
+    app.saveUserInfo(userInfo)
+    this.setData({
+      isLoggedIn: true,
+      showProfileSetup: false,
+      avatarUrl: '',
+      nickName: ''
+    })
+    this.syncLogin('公益参与者', '')
+    wx.showToast({ title: '已使用默认信息', icon: 'none' })
+  },
+
+  // 同步登录态到云端（获取并保存 openid）
+  syncLogin(nickName, avatarUrl) {
+    util.callApi('login', { nickName, avatarUrl })
+      .then(res => {
+        app.setOpenid(res.openid)
+      })
+      .catch(e => {
+        console.warn('云端登录同步失败：', e)
+      })
+  },
+
+  // 加载物品列表（云端）
+  loadItems(reset) {
+    if (reset) {
+      this.setData({ page: 1, allItems: [], displayItems: [] })
+    }
+    if (this.data.loading) return
+
+    const { currentCategory, page, pageSize } = this.data
+    this.setData({ loading: true })
+    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize })
+      .then(res => {
+        const newItems = res.list.map(it => this.normalizeItem(it))
+        const allItems = this.data.allItems.concat(newItems)
+        this.setData({
+          allItems: allItems,
+          hasMore: res.hasMore,
+          loading: false
+        })
+        this.filterItems()
+        this.updateMapMarkers()
+      })
+      .catch(e => {
+        this.setData({ loading: false })
+        wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
+      })
+  },
+
+  // 统一处理云端返回的物品字段
+  normalizeItem(item) {
+    return Object.assign({}, item, {
+      id: item._id,
+      categoryName: util.getCategoryName(item.category),
+      createTimeStr: util.formatTime(new Date(item.createTime).getTime()),
+      images: item.images || []
     })
   },
 
-  // 加载物品列表
-  loadItems() {
-    const items = wx.getStorageSync('items') || []
-    // 确保每个物品都有 categoryName（向后兼容）
-    items.forEach(item => {
-      if (!item.categoryName) {
-        item.categoryName = util.getCategoryName(item.category)
-      }
-    })
-    // 按发布时间倒序
-    items.sort((a, b) => b.createTime - a.createTime)
-    this.setData({ allItems: items })
-    this.filterItems()
-    this.updateMapMarkers()
-  },
-
-  // 计算统计数据
+  // 计算统计（云端）
   calculateStats() {
-    const items = wx.getStorageSync('items') || []
-    const completedCount = items.filter(item => item.status === 'completed').length
-    const availableCount = items.filter(item => item.status === 'available').length
-    this.setData({ completedCount, availableCount })
+    util.callApi('stats')
+      .then(res => {
+        this.setData({
+          completedCount: res.completedCount,
+          availableCount: res.availableCount
+        })
+      })
+      .catch(() => {})
   },
 
   // 切换分类
   onCategoryChange(e) {
     const category = e.currentTarget.dataset.category
-    this.setData({
-      currentCategory: category,
-      page: 1,
-      displayItems: []
-    })
-    this.filterItems()
+    this.setData({ currentCategory: category })
+    this.loadItems(true)
   },
 
-  // 筛选物品
+  // 客户端分类筛选（云端已按状态筛选，这里仅按分类二次过滤）
   filterItems() {
-    const { allItems, currentCategory, page, pageSize } = this.data
+    const { allItems, currentCategory } = this.data
     let filtered = allItems
-
-    // 按分类筛选
     if (currentCategory !== 'all') {
       filtered = allItems.filter(item => item.category === currentCategory)
     }
-
-    // 只显示可用的物品
-    filtered = filtered.filter(item => item.status === 'available')
-
-    // 分页
-    const start = 0
-    const end = page * pageSize
-    const displayItems = filtered.slice(start, end)
-    const hasMore = end < filtered.length
-
-    this.setData({ displayItems, hasMore })
+    this.setData({ displayItems: filtered })
   },
 
   // 下拉刷新
   onPullDownRefresh() {
-    this.setData({ page: 1 })
-    this.loadItems()
+    this.loadItems(true)
     this.calculateStats()
     wx.stopPullDownRefresh()
     wx.showToast({ title: '已刷新', icon: 'success', duration: 1000 })
@@ -183,12 +281,13 @@ Page({
 
   // 上拉加载更多
   onReachBottom() {
+    if (this.data.loading) return
     if (!this.data.hasMore) {
       wx.showToast({ title: '没有更多了', icon: 'none', duration: 1000 })
       return
     }
     this.setData({ page: this.data.page + 1 })
-    this.filterItems()
+    this.loadItems(false)
   },
 
   // 切换视图模式
@@ -204,7 +303,7 @@ Page({
   updateMapMarkers() {
     const { allItems } = this.data
     const markers = []
-    const markerIdMap = {} // 数字 id -> 物品 id 映射
+    const markerIdMap = {}
     let avgLat = 0, avgLng = 0, count = 0
     let nextId = 1
 
