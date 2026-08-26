@@ -4,13 +4,16 @@ const util = require('../../utils/util')
 Page({
   data: {
     userInfo: null,
-    activeTab: 'published', // published | applied
+    activeTab: 'published', // published | applied | reported
 
     // 我发布的
     publishedItems: [],
 
     // 我申请的
     appliedItems: [],
+
+    // 我举报的（受理结果）
+    myReports: [],
 
     // 管理员
     isAdmin: false,
@@ -22,6 +25,7 @@ Page({
     this.loadUserInfo()
     this.loadPublishedItems()
     this.loadAppliedItems()
+    this.loadMyReports()
     this.checkAdmin()
   },
 
@@ -67,6 +71,26 @@ Page({
       .then(res => {
         const list = res.list.map(it => this.normalizeItem(it))
         this.setData({ appliedItems: list })
+      })
+      .catch(() => {})
+  },
+
+  // 加载我提交的举报（受理结果）
+  loadMyReports() {
+    if (!app.getOpenid()) return
+    util.callApi('myReports', {})
+      .then(res => {
+        const list = res.list.map(r => ({
+          id: r._id,
+          itemId: r.itemId,
+          itemTitle: r.itemTitle || '(物品已删除)',
+          reason: r.reason,
+          createTimeStr: util.formatTime(r.createTime),
+          statusText: r.status === 'handled'
+            ? (r.result === 'offline' ? '已下架' : '已忽略')
+            : '待处理'
+        }))
+        this.setData({ myReports: list })
       })
       .catch(() => {})
   },
@@ -165,7 +189,8 @@ Page({
           this.setData({
             userInfo: null,
             publishedItems: [],
-            appliedItems: []
+            appliedItems: [],
+            myReports: []
           })
           wx.showToast({ title: '本地数据已清除', icon: 'success' })
         }

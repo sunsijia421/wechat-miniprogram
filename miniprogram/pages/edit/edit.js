@@ -122,6 +122,16 @@ Page({
           images: [...this.data.images, ...paths],
           imageUrls: [...this.data.imageUrls, ...paths]
         })
+      },
+      fail: (err) => {
+        if (err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+          wx.showModal({
+            title: '无法打开相册',
+            content: '请在「设置」中允许本小程序使用相册，并确认已在小程序后台配置《用户隐私保护指引》。',
+            showCancel: false,
+            confirmText: '我知道了'
+          })
+        }
       }
     })
   },
@@ -155,8 +165,13 @@ Page({
         })
       },
       fail: (err) => {
-        if (err.errMsg.indexOf('cancel') === -1) {
-          wx.showToast({ title: '选择位置失败', icon: 'none' })
+        if (err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+          wx.showModal({
+            title: '无法获取位置',
+            content: '请在「设置」中允许本小程序使用位置信息，并确认已在小程序后台配置《用户隐私保护指引》中的位置权限。',
+            showCancel: false,
+            confirmText: '我知道了'
+          })
         }
       }
     })

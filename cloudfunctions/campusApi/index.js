@@ -107,7 +107,7 @@ async function login(event, openid) {
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (users.data.length === 0) {
     await db.collection(COL.users).add({
-      data: { nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, createTime: db.serverDate() }
+      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, createTime: db.serverDate() }
     })
     return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0 }
   } else {
@@ -137,6 +137,7 @@ async function publish(event, openid) {
 
   const res = await db.collection(COL.items).add({
     data: {
+      _openid: openid,
       title: title.trim(),
       description: description.trim(),
       category: category || 'other',
@@ -272,6 +273,7 @@ async function apply(event, openid) {
 
   const res = await db.collection(COL.applications).add({
     data: {
+      _openid: openid,
       itemId,
       itemTitle: itemTitle || '',
       applicantNickName: applicantNickName || '匿名',
@@ -341,6 +343,7 @@ async function report(event, openid) {
   if (!textCheck.passed) return { success: false, code: 'CONTENT_RISK', message: textCheck.message }
   await db.collection(COL.reports).add({
     data: {
+      _openid: openid,
       itemId,
       itemTitle: itemTitle || '',
       reason: reason.trim(),
@@ -414,6 +417,25 @@ async function checkIsAdmin(openid) {
   return { success: true, isAdmin: await isAdminUser(openid) }
 }
 
+// 我提交的举报（举报者查看受理结果，含物品状态）
+async function myReports(openid) {
+  const reports = await db.collection(COL.reports).where({ _openid: openid }).orderBy('createTime', 'desc').get()
+  const itemIds = [...new Set(reports.data.map(r => r.itemId))]
+  const itemMap = {}
+  if (itemIds.length) {
+    const items = await db.collection(COL.items).where({ _id: _.in(itemIds) }).get()
+    items.data.forEach(it => { itemMap[it._id] = it })
+  }
+  const list = reports.data.map(r => {
+    const it = itemMap[r.itemId]
+    return Object.assign({}, r, {
+      itemStatus: it ? it.status : 'deleted',
+      itemTitle: (it && it.title) || r.itemTitle || '(物品已删除)'
+    })
+  })
+  return { success: true, list }
+}
+
 // 首页统计
 async function getStats() {
   const available = await db.collection(COL.items).where({ status: 'available' }).count()
@@ -445,6 +467,7 @@ exports.main = async (event, context) => {
       case 'report': return await report(event, openid)
       case 'handleReport': return await handleReport(event, openid)
       case 'adminReports': return await adminReports(openid)
+      case 'myReports': return await myReports(openid)
       case 'becomeAdmin': return await becomeAdmin(event, openid)
       case 'isAdmin': return await checkIsAdmin(openid)
       case 'stats': return await getStats()

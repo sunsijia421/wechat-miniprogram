@@ -15,7 +15,7 @@
     <view class="user-card">
       <view class="user-bg"></view>
       <view class="user-info">
-        <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+        <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" bindlongpress="openAdminVerify" />
         <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
       </view>
       <view class="user-stats">
@@ -40,6 +40,10 @@
       <view class="tab-item {{activeTab === 'applied' ? 'active' : ''}}"
         data-tab="applied" bindtap="switchTab">
         📋 我申请的
+      </view>
+      <view class="tab-item {{activeTab === 'reported' ? 'active' : ''}}"
+        data-tab="reported" bindtap="switchTab">
+        🚨 我举报的
       </view>
     </view>
 
@@ -95,14 +99,30 @@
         </view>
     </view>
 
+    <!-- 我举报的（受理结果） -->
+    <view wx:if="{{activeTab === 'reported'}}">
+      <view wx:if="{{myReports.length === 0}}" class="empty-state">
+        <view class="icon">🚨</view>
+        <view class="text">还没有提交过举报</view>
+      </view>
+      <view class="item-list" wx:else>
+        <view class="report-card card" wx:for="{{myReports}}" wx:key="id">
+          <view class="report-head flex-between">
+            <view class="report-item-title">{{item.itemTitle}}</view>
+            <view class="status-tag {{item.statusText === '待处理' ? 'status-pending' : 'status-handled'}}">{{item.statusText}}</view>
+          </view>
+          <view class="report-reason-text">举报理由：{{item.reason}}</view>
+          <view class="report-meta">
+            <text>{{item.createTimeStr}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <!-- 设置区域 -->
     <view class="settings-area">
       <view class="setting-item" wx:if="{{isAdmin}}" bindtap="goAdmin">
         <text>🛡️ 举报管理</text>
-        <text class="setting-arrow">›</text>
-      </view>
-      <view class="setting-item" wx:if="{{!isAdmin}}" bindtap="openAdminVerify">
-        <text>🔑 管理员验证</text>
         <text class="setting-arrow">›</text>
       </view>
       <view class="setting-item" bindtap="logout">
