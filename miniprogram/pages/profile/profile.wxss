@@ -37,6 +37,15 @@
   margin-top: 16rpx;
 }
 
+.openid-debug {
+  font-size: 11px;
+  color: #999;
+  margin-top: 10rpx;
+  padding: 0 20rpx;
+  word-break: break-all;
+  text-align: center;
+}
+
 .user-stats {
   display: flex;
   align-items: center;

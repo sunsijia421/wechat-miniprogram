@@ -17,6 +17,7 @@
       <view class="user-info">
         <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
         <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
+        <view class="openid-debug" wx:if="{{openid}}">我的标识：{{openid}}</view>
       </view>
       <view class="user-stats">
         <view class="user-stat-item">

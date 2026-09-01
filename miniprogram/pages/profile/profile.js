@@ -41,7 +41,7 @@ Page({
   loadUserInfo() {
     const userInfo = app.getUserInfo()
     if (userInfo) {
-      this.setData({ userInfo })
+      this.setData({ userInfo, openid: app.getOpenid() || '' })
     }
   },
 
