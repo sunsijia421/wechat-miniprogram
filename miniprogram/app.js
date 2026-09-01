@@ -6,6 +6,7 @@ App({
     userInfo: null,
     isAgreed: false,
     openid: '',
+    isAdmin: false,
     cloudReady: false
   },
 
@@ -28,6 +29,9 @@ App({
 
     const openid = wx.getStorageSync('openid')
     if (openid) this.globalData.openid = openid
+
+    const isAdmin = wx.getStorageSync('isAdmin')
+    if (isAdmin) this.globalData.isAdmin = true
 
     console.log('佳禾换物小站小程序启动')
   },
@@ -69,6 +73,21 @@ App({
       this.globalData.openid = wx.getStorageSync('openid')
     }
     return this.globalData.openid
+  },
+
+  // 保存管理员身份
+  setIsAdmin(v) {
+    this.globalData.isAdmin = !!v
+    if (v) {
+      wx.setStorageSync('isAdmin', true)
+    } else {
+      wx.removeStorageSync('isAdmin')
+    }
+  },
+
+  // 获取管理员身份
+  getIsAdmin() {
+    return this.globalData.isAdmin || wx.getStorageSync('isAdmin')
   },
 
   // 更新用户积分和捐赠次数（本地即时反馈，云端 users 集合为权威值）

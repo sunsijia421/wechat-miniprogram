@@ -93,5 +93,10 @@ Page({
 
   goBack() {
     wx.navigateBack()
+  },
+
+  // 返回用户端（切回首页）
+  backToUser() {
+    wx.switchTab({ url: '/pages/index/index' })
   }
 })

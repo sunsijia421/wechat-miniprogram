@@ -15,10 +15,8 @@ Page({
     // 我举报的（受理结果）
     myReports: [],
 
-    // 管理员
-    isAdmin: false,
-    showAdminVerify: false,
-    adminSecret: ''
+    // 管理员（登录后自动识别，无需密钥）
+    isAdmin: false
   },
 
   onShow() {
@@ -103,11 +101,14 @@ Page({
     })
   },
 
-  // 检查管理员身份
+  // 检查管理员身份（登录后自动识别，结果同步到全局）
   checkAdmin() {
     if (!app.getUserInfo()) return
     util.callApi('isAdmin')
-      .then(res => this.setData({ isAdmin: res.isAdmin }))
+      .then(res => {
+        app.setIsAdmin(res.isAdmin)
+        this.setData({ isAdmin: res.isAdmin })
+      })
       .catch(() => {})
   },
 
@@ -116,36 +117,7 @@ Page({
     wx.navigateTo({ url: '/pages/admin/admin' })
   },
 
-  // 管理员验证弹窗
-  openAdminVerify() {
-    this.setData({ showAdminVerify: true, adminSecret: '' })
-  },
-
-  closeAdminVerify() {
-    this.setData({ showAdminVerify: false, adminSecret: '' })
-  },
-
-  onAdminSecretInput(e) {
-    this.setData({ adminSecret: e.detail.value })
-  },
-
-  submitAdminVerify() {
-    const secret = (this.data.adminSecret || '').trim()
-    if (!secret) {
-      wx.showToast({ title: '请输入管理密钥', icon: 'none' })
-      return
-    }
-    util.callApi('becomeAdmin', { secret: secret })
-      .then(() => {
-        this.setData({ showAdminVerify: false, adminSecret: '', isAdmin: true })
-        wx.showToast({ title: '验证成功，已成为管理员', icon: 'success' })
-      })
-      .catch(e => {
-        wx.showToast({ title: typeof e === 'string' ? e : '验证失败', icon: 'none' })
-      })
-  },
-
-  // 阻止弹窗冒泡
+  // 阻止弹窗冒泡（保留兼容）
   stopPropagation() {},
 
   // 退出登录
@@ -160,10 +132,12 @@ Page({
           wx.removeStorageSync('userInfo')
           wx.removeStorageSync('isAgreed')
           wx.removeStorageSync('openid')
+          wx.removeStorageSync('isAdmin')
           app.globalData.userInfo = null
           app.globalData.isAgreed = false
           app.globalData.openid = ''
-          this.setData({ userInfo: null })
+          app.globalData.isAdmin = false
+          this.setData({ userInfo: null, isAdmin: false })
           wx.showToast({ title: '已退出', icon: 'success' })
           setTimeout(() => {
             wx.switchTab({ url: '/pages/index/index' })
@@ -186,8 +160,10 @@ Page({
           app.globalData.userInfo = null
           app.globalData.isAgreed = false
           app.globalData.openid = ''
+          app.globalData.isAdmin = false
           this.setData({
             userInfo: null,
+            isAdmin: false,
             publishedItems: [],
             appliedItems: [],
             myReports: []

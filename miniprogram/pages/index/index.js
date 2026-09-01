@@ -201,17 +201,26 @@ Page({
     wx.showToast({ title: '已使用默认信息', icon: 'none' })
   },
 
-  // 同步登录态到云端（获取并保存 openid 与最新积分）
+  // 同步登录态到云端（获取并保存 openid、管理员身份与最新积分）
   syncLogin(nickName, avatarUrl) {
     util.callApi('login', { nickName, avatarUrl })
       .then(res => {
         app.setOpenid(res.openid)
+        app.setIsAdmin(res.isAdmin)
+        // 供调试：复制控制台输出的 openid 填入云函数 ADMIN_OPENIDS 白名单
+        console.log('当前用户 openid：', res.openid, '管理员：', !!res.isAdmin)
         const userInfo = app.getUserInfo() || {}
         userInfo.points = res.points || 0
         userInfo.donateCount = res.donateCount || 0
         if (nickName) userInfo.nickName = nickName
         if (avatarUrl) userInfo.avatarUrl = avatarUrl
         app.saveUserInfo(userInfo)
+        // 管理员登录后自动进入管理界面（普通用户不受影响）
+        if (res.isAdmin) {
+          setTimeout(() => {
+            wx.navigateTo({ url: '/pages/admin/admin' })
+          }, 1200)
+        }
       })
       .catch(e => {
         console.warn('云端登录同步失败：', e)

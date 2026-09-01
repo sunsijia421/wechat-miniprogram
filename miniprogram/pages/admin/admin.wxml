@@ -5,15 +5,18 @@
   <view class="empty-state" wx:if="{{checked && !isAdmin}}">
     <view class="icon">🔒</view>
     <view class="text">无管理员权限</view>
-    <view class="text sub">请先在「我的」中通过管理员验证</view>
-    <button class="btn-primary back-btn" bindtap="goBack">返回</button>
+    <view class="text sub">管理员账号登录后会自动进入本页</view>
+    <button class="btn-primary back-btn" bindtap="backToUser">返回用户端</button>
   </view>
 
   <!-- 管理员 -->
   <block wx:if="{{isAdmin}}">
     <view class="admin-header">
-      <view class="admin-title">举报管理</view>
-      <view class="admin-count">共 {{reports.length}} 条</view>
+      <view class="admin-title">🛡️ 举报管理</view>
+      <view class="admin-actions">
+        <view class="admin-count">共 {{reports.length}} 条</view>
+        <view class="back-user-btn" bindtap="backToUser">返回用户端 ›</view>
+      </view>
     </view>
 
     <!-- 空状态 -->

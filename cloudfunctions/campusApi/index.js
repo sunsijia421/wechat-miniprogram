@@ -15,8 +15,13 @@ const COL = {
   users: 'users'
 }
 
-// 管理员密钥：用于「我的 → 管理员验证」输入后成为管理员（处理举报）。
-// ⚠️ 上线前务必改为你自己的强随机字符串，并妥善保密。
+// 管理员识别（二选一命中即为管理员）：
+// 1. ADMIN_OPENIDS 白名单（推荐，登录即管理员，无需任何操作）
+// 2. users 集合 isAdmin 标记（旧的「输入密钥」方式写入，保留兼容）
+// 把你的 openid 填入下方数组即可，如 ['oXxx...', 'oYyy...']
+const ADMIN_OPENIDS = []
+
+// 管理员密钥：已废弃的前端「输入密钥」流程保留的后门，仅供日后给协管员授权使用。
 const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 
 // 首次请求时确保集合存在（免去手动建库）。集合已存在时 createCollection 抛错，忽略即可。
@@ -92,9 +97,10 @@ async function addPoints(openid, points, donateCount) {
   }
 }
 
-// 判断当前用户是否管理员（users 集合 isAdmin 标记）
+// 判断当前用户是否管理员（白名单 openid 或 users 集合 isAdmin 标记）
 async function isAdminUser(openid) {
   if (!openid) return false
+  if (ADMIN_OPENIDS.includes(openid)) return true
   const res = await db.collection(COL.users).where({ _openid: openid, isAdmin: true }).get()
   return res.data.length > 0
 }
@@ -109,13 +115,13 @@ async function login(event, openid) {
     await db.collection(COL.users).add({
       data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, createTime: db.serverDate() }
     })
-    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0 }
+    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, isAdmin: await isAdminUser(openid) }
   } else {
     const u = users.data[0]
     await db.collection(COL.users).doc(u._id).update({
       data: { nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '' }
     })
-    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', points: u.points || 0, donateCount: u.donateCount || 0 }
+    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', points: u.points || 0, donateCount: u.donateCount || 0, isAdmin: await isAdminUser(openid) }
   }
 }
 

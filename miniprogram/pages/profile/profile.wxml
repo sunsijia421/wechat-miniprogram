@@ -15,7 +15,7 @@
     <view class="user-card">
       <view class="user-bg"></view>
       <view class="user-info">
-        <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" bindlongpress="openAdminVerify" />
+        <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
         <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
       </view>
       <view class="user-stats">
@@ -137,17 +137,4 @@
 
   </block>
 
-  <!-- 管理员验证弹窗 -->
-  <view class="modal-overlay" wx:if="{{showAdminVerify}}" catchtap="closeAdminVerify">
-    <view class="modal-content" catchtap="stopPropagation">
-      <view class="modal-title">管理员验证</view>
-      <view class="modal-subtitle">请输入管理密钥（用于举报处理）</view>
-      <input class="modal-input" type="text" placeholder="请输入管理密钥"
-        value="{{adminSecret}}" bindinput="onAdminSecretInput" />
-      <view class="modal-buttons">
-        <button class="modal-btn-cancel" bindtap="closeAdminVerify">取消</button>
-        <button class="modal-btn-confirm" bindtap="submitAdminVerify">验证</button>
-      </view>
-    </view>
-  </view>
 </view>

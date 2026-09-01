@@ -22,6 +22,20 @@
   color: #999;
 }
 
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.back-user-btn {
+  font-size: 13px;
+  color: #4a90d9;
+  padding: 6rpx 16rpx;
+  border: 1px solid #4a90d9;
+  border-radius: 24rpx;
+}
+
 .report-list {
   display: flex;
   flex-direction: column;
