@@ -17,7 +17,7 @@ const COL = {
 
 // 管理员密钥：用于「我的 → 管理员验证」输入后成为管理员（处理举报）。
 // ⚠️ 上线前务必改为你自己的强随机字符串，并妥善保密。
-const ADMIN_SECRET = 'gongyi-admin-2026'
+const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 
 // 首次请求时确保集合存在（免去手动建库）。集合已存在时 createCollection 抛错，忽略即可。
 let collectionsReady = false
