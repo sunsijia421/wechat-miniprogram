@@ -1,4 +1,4 @@
-<!-- 首页 - 校园物资公益流转 -->
+<!-- 首页 - 佳禾换物小站 -->
 <view class="container">
 
   <!-- 微信隐私保护指引弹窗（合规必需） -->
@@ -25,7 +25,7 @@
     <view class="agreement-content">
       <view class="agreement-title">🌿 公益互助公约</view>
       <scroll-view scroll-y class="agreement-text">
-        <text>欢迎加入校园物资公益流转平台！\n\n</text>
+        <text>欢迎加入佳禾换物小站！\n\n</text>
         <text>1. 本平台仅用于校园内闲置物品的免费流转，禁止任何形式的金钱交易。\n\n</text>
         <text>2. 请如实描述物品状况，不得发布违禁物品（如烟酒、管制刀具等）。\n\n</text>
         <text>3. 物品流转由双方自行协商交接，本平台仅提供信息展示服务。\n\n</text>

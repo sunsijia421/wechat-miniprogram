@@ -29,7 +29,7 @@ App({
     const openid = wx.getStorageSync('openid')
     if (openid) this.globalData.openid = openid
 
-    console.log('校园物资公益流转小程序启动')
+    console.log('佳禾换物小站小程序启动')
   },
 
   // 检查是否已同意协议
