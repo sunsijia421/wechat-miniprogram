@@ -53,6 +53,12 @@
   <!-- 主内容（登录后显示） -->
   <block wx:if="{{isLoggedIn && !showAgreement}}">
 
+    <!-- P0 消息入口条 -->
+    <view class="msg-entry" bindtap="goMessages">
+      <text>💬 我的消息</text>
+      <text class="msg-entry-arrow">›</text>
+    </view>
+
     <!-- 统计面板 -->
     <view class="stats-panel">
       <view class="stats-row">

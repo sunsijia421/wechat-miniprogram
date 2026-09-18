@@ -1,0 +1,138 @@
+.container {
+  min-height: 100vh;
+  background: #f5f5f5;
+  padding: 16rpx;
+  box-sizing: border-box;
+}
+
+/* 空状态 */
+.empty {
+  padding: 160rpx 40rpx;
+  text-align: center;
+}
+.empty-icon {
+  font-size: 90rpx;
+}
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-top: 24rpx;
+}
+.empty-desc {
+  font-size: 26rpx;
+  color: #999;
+  margin-top: 12rpx;
+  line-height: 1.6;
+}
+.empty-btn {
+  margin-top: 40rpx;
+  width: 240rpx;
+  font-size: 28rpx;
+  background: #4CAF50;
+  color: #fff;
+  border-radius: 44rpx;
+}
+
+/* 会话列表 */
+.conv-list {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+.conv-item {
+  display: flex;
+  padding: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  align-items: center;
+}
+.conv-item:last-child {
+  border-bottom: none;
+}
+.conv-avatar-wrap {
+  position: relative;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+.conv-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: #eee;
+}
+.conv-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  padding: 0 8rpx;
+  background: #f44336;
+  color: #fff;
+  font-size: 20rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.conv-main {
+  flex: 1;
+  min-width: 0;
+}
+.conv-top {
+  margin-bottom: 8rpx;
+}
+.conv-peer {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.conv-time {
+  font-size: 22rpx;
+  color: #bbb;
+  flex-shrink: 0;
+  margin-left: 12rpx;
+}
+.conv-bottom {
+  align-items: center;
+}
+.conv-last {
+  flex: 1;
+  min-width: 0;
+  font-size: 26rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conv-last-unread {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+.conv-item-title {
+  flex-shrink: 0;
+  max-width: 220rpx;
+  font-size: 22rpx;
+  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.08);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  margin-left: 12rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loading {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  padding: 40rpx;
+}

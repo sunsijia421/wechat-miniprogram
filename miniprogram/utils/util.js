@@ -240,6 +240,34 @@ function callApi(action, data) {
   })
 }
 
+// ==================== 订阅消息授权 ====================
+// 微信订阅消息模板 ID：需在 mp.weixin.qq.com → 功能 → 订阅消息 中申请模板后填入。
+// 当前为占位：未配置时静默跳过授权，不影响主流程（云函数端也会在模板未配置时跳过发送）。
+var SUBSCRIBE_TEMPLATES = {
+  applyNotice: '',   // 物品被申请时通知发布者
+  applyResult: ''    // 申请被处理时通知申请者
+}
+
+// 请求订阅授权（一次性订阅；用户授权一次可收到一次推送）。模板未配置时静默跳过。
+function requestSubscribe(scene) {
+  return new Promise(function (resolve) {
+    var templateId = SUBSCRIBE_TEMPLATES[scene]
+    if (!templateId || !wx.requestSubscribeMessage) {
+      resolve({ granted: false })
+      return
+    }
+    wx.requestSubscribeMessage({
+      tmplIds: [templateId],
+      success: function (res) {
+        resolve({ granted: res[templateId] === 'accept', detail: res })
+      },
+      fail: function () {
+        resolve({ granted: false })
+      }
+    })
+  })
+}
+
 module.exports = {
   generateId: generateId,
   formatTime: formatTime,
@@ -253,5 +281,7 @@ module.exports = {
   checkImageContent: checkImageContent,
   SENSITIVE_WORDS: SENSITIVE_WORDS,
   callApi: callApi,
-  requireLogin: requireLogin
+  requireLogin: requireLogin,
+  requestSubscribe: requestSubscribe,
+  SUBSCRIBE_TEMPLATES: SUBSCRIBE_TEMPLATES
 }

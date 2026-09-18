@@ -5,7 +5,9 @@
     "pages/detail/detail",
     "pages/edit/edit",
     "pages/admin/admin",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/messages/messages",
+    "pages/chat/chat"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",

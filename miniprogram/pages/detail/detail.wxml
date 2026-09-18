@@ -71,6 +71,9 @@
             公益积分: {{currentUser.points}} | 已捐赠: {{currentUser.donateCount}}次
           </view>
         </view>
+        <view wx:if="{{isLoggedIn && !isOwner}}" class="follow-btn {{followed ? 'followed' : ''}}" bindtap="toggleFollow">
+          {{followed ? '✓ 已关注' : '+ 关注'}}
+        </view>
       </view>
     </view>
 
@@ -161,7 +164,10 @@
 
     <!-- 不是自己发布的 & 可领取 -->
     <block wx:if="{{!isOwner && !isCompleted && !isOffline}}">
-      <!-- 已登录：发起申请/交换 -->
+      <!-- 已登录：收藏 + 发起申请/交换 -->
+      <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
+        {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
+      </view>
       <button wx:if="{{isLoggedIn}}" class="btn-primary bottom-btn" bindtap="openApply">
         🙋 我要申请
       </button>
@@ -171,12 +177,20 @@
       </button>
     </block>
 
-    <!-- 不是自己发布的 & 已完成 -->
+    <!-- 不是自己发布的 & 已完成：仍可收藏 -->
     <block wx:if="{{!isOwner && isCompleted}}">
+      <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
+        {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
+      </view>
       <button class="btn-disabled bottom-btn" disabled>
         已被他人领取
       </button>
     </block>
+
+    <!-- 消息入口（登录用户可见） -->
+    <view wx:if="{{isLoggedIn}}" class="msg-btn" bindtap="openConversation">
+      💬 消息
+    </view>
 
     <!-- 举报按钮（仅登录用户可见，游客只读） -->
     <view wx:if="{{isLoggedIn}}" class="report-btn" bindtap="openReport">

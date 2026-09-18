@@ -4,7 +4,7 @@ const util = require('../../utils/util')
 Page({
   data: {
     userInfo: null,
-    activeTab: 'published', // published | applied | reported
+    activeTab: 'published', // published | applied | reported | favorites | follows
 
     // 我发布的
     publishedItems: [],
@@ -15,6 +15,10 @@ Page({
     // 我举报的（受理结果）
     myReports: [],
 
+    // P0 新增：我收藏的 / 我关注的
+    favoriteItems: [],
+    followList: [],
+
     // 管理员（登录后自动识别，无需密钥）
     isAdmin: false
   },
@@ -24,6 +28,8 @@ Page({
     this.loadPublishedItems()
     this.loadAppliedItems()
     this.loadMyReports()
+    this.loadFavorites()
+    this.loadFollows()
     this.checkAdmin()
   },
 
@@ -91,6 +97,36 @@ Page({
         this.setData({ myReports: list })
       })
       .catch(() => {})
+  },
+
+  // P0：加载我收藏的物品
+  loadFavorites() {
+    if (!app.getOpenid()) return
+    util.callApi('myFavorites', {})
+      .then(res => {
+        const list = res.list.map(f => Object.assign({}, f, {
+          id: f.id,
+          categoryName: util.getCategoryName(f.category || 'other'),
+          createTimeStr: util.formatTime(f.createTime)
+        }))
+        this.setData({ favoriteItems: list })
+      })
+      .catch(() => {})
+  },
+
+  // P0：加载我关注的发布者
+  loadFollows() {
+    if (!app.getOpenid()) return
+    util.callApi('myFollows', {})
+      .then(res => {
+        this.setData({ followList: res.list || [] })
+      })
+      .catch(() => {})
+  },
+
+  // P0：进入消息中心
+  goMessages() {
+    wx.navigateTo({ url: '/pages/messages/messages' })
   },
 
   // 点击物品跳转详情

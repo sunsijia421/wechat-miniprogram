@@ -27,7 +27,12 @@ Page({
     isOffline: false,
 
     // 该物品的举报记录（仅发布者可见）
-    reports: []
+    reports: [],
+
+    // P0 新增：收藏 / 关注 / 会话
+    favorited: false,
+    followed: false,
+    hasConversation: false
   },
 
   onLoad(options) {
@@ -97,6 +102,11 @@ Page({
         reports
       })
       if (res.isOwner) this.loadApplications()
+      // P0：加载收藏/关注状态（登录且非本人发布时）
+      if (app.getUserInfo() && !res.isOwner) {
+        this.loadFavoriteStatus()
+        this.loadFollowStatus()
+      }
     } catch (e) {
       wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       setTimeout(() => wx.navigateBack(), 1500)
@@ -158,18 +168,30 @@ Page({
       return
     }
 
+    // P0：先请求订阅授权（申请结果通知），授权失败不影响提交
+    const that = this
+    util.requestSubscribe('applyResult').then(() => {
+      that.doSubmitApply(message)
+    }, () => {
+      that.doSubmitApply(message)
+    })
+  },
+
+  // 提交申请（订阅授权后执行）
+  doSubmitApply(message) {
+    const that = this
     const userInfo = app.getUserInfo() || {}
-    const item = this.data.item
+    const item = that.data.item
     util.callApi('apply', {
-      itemId: this.data.itemId,
+      itemId: that.data.itemId,
       message: message,
       itemTitle: item.title,
       applicantNickName: userInfo.nickName || '公益参与者',
       applicantAvatarUrl: userInfo.avatarUrl || ''
     })
       .then(() => {
-        this.setData({ showApplyModal: false, applyMessage: '' })
-        this.loadApplications()
+        that.setData({ showApplyModal: false, applyMessage: '' })
+        that.loadApplications()
         wx.showToast({ title: '申请已提交', icon: 'success' })
       })
       .catch(e => {
@@ -313,6 +335,71 @@ Page({
           })
       }
     })
+  },
+
+  // ========== P0：收藏 / 关注 / 消息 ==========
+
+  loadFavoriteStatus() {
+    if (!this.data.itemId) return
+    util.callApi('favoriteStatus', { itemId: this.data.itemId })
+      .then(res => this.setData({ favorited: !!res.favorited }))
+      .catch(() => {})
+  },
+
+  loadFollowStatus() {
+    if (!this.data.item || !this.data.item._openid) return
+    util.callApi('followStatus', { targetOpenid: this.data.item._openid })
+      .then(res => this.setData({ followed: !!res.followed }))
+      .catch(() => {})
+  },
+
+  // 切换收藏
+  toggleFavorite() {
+    if (!util.requireLogin()) return
+    util.callApi('toggleFavorite', { itemId: this.data.itemId })
+      .then(res => {
+        this.setData({ favorited: !!res.favorited })
+        wx.showToast({ title: res.favorited ? '已收藏 ❤️' : '已取消收藏', icon: 'none' })
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
+      })
+  },
+
+  // 切换关注
+  toggleFollow() {
+    if (!util.requireLogin()) return
+    if (!this.data.item || !this.data.item._openid) return
+    util.callApi('toggleFollow', { targetOpenid: this.data.item._openid })
+      .then(res => {
+        this.setData({ followed: !!res.followed })
+        wx.showToast({ title: res.followed ? '已关注发布者' : '已取消关注', icon: 'none' })
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
+      })
+  },
+
+  // 打开与发布者的会话（申请后自动创建；若没有会话则提示先申请）
+  openConversation() {
+    if (!util.requireLogin()) return
+    // 通过 myConversations 查找与当前物品、当前发布者的会话
+    util.callApi('myConversations', {})
+      .then(res => {
+        const conv = res.list.find(c => c.itemId === this.data.itemId)
+        if (conv) {
+          wx.navigateTo({ url: '/pages/chat/chat?convId=' + conv.id })
+        } else {
+          wx.showToast({ title: '先提交申请，即可与发布者沟通', icon: 'none' })
+        }
+      })
+      .catch(() => {
+        wx.showToast({ title: '操作失败', icon: 'none' })
+      })
+  },
+
+  goMessages() {
+    wx.navigateTo({ url: '/pages/messages/messages' })
   },
 
   // ========== 举报流程 ==========

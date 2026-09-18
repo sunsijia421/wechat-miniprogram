@@ -1,0 +1,31 @@
+<!-- 我的消息（会话列表） -->
+<view class="container">
+
+  <view class="empty" wx:if="{{!loading && isEmpty}}">
+    <view class="empty-icon">💬</view>
+    <view class="empty-title">暂无消息</view>
+    <view class="empty-desc">申请物品后，你和发布者可以在这里沟通</view>
+    <button class="empty-btn" bindtap="goHome">去逛逛</button>
+  </view>
+
+  <view class="conv-list" wx:if="{{!isEmpty}}">
+    <view class="conv-item" wx:for="{{conversations}}" wx:key="id" bindtap="openChat" data-id="{{item.id}}">
+      <view class="conv-avatar-wrap">
+        <image class="conv-avatar" src="{{item.peerAvatar || '/images/default-item.png'}}" mode="aspectFill" />
+        <view class="conv-badge" wx:if="{{item.unreadCount > 0}}">{{item.unreadCount > 99 ? '99+' : item.unreadCount}}</view>
+      </view>
+      <view class="conv-main">
+        <view class="conv-top flex-between">
+          <view class="conv-peer">{{item.peerName}}</view>
+          <view class="conv-time">{{item.lastTimeText}}</view>
+        </view>
+        <view class="conv-bottom flex-between">
+          <view class="conv-last {{item.unreadCount > 0 ? 'conv-last-unread' : ''}}">{{item.lastMessage || '开始对话吧~'}}</view>
+          <view class="conv-item-title" catchtap="goItem" data-itemid="{{item.itemId}}">📦 {{item.itemTitle}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+</view>

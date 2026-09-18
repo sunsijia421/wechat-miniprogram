@@ -182,13 +182,23 @@ Page({
 
     const userInfo = app.getUserInfo()
 
+    // P0：先请求订阅授权（物品被申请时通知发布者），授权失败不影响发布
+    util.requestSubscribe('applyNotice').then(() => {
+      this.doUpload(userInfo)
+    }, () => {
+      this.doUpload(userInfo)
+    })
+  },
+
+  // 上传图片并发布（订阅授权后执行）
+  doUpload(userInfo) {
     // 先上传图片到云存储
-    const uploadTasks = (images || []).map(p => this.uploadOne(p))
+    const uploadTasks = (this.data.images || []).map(p => this.uploadOne(p))
     Promise.all(uploadTasks)
       .then(fileIDs => {
         return util.callApi('publish', {
-          title: title.trim(),
-          description: description.trim(),
+          title: this.data.title.trim(),
+          description: this.data.description.trim(),
           category: this.data.category,
           images: fileIDs,
           allowBarter: this.data.allowBarter,

@@ -12,7 +12,19 @@ const COL = {
   items: 'items',
   applications: 'applications',
   reports: 'reports',
-  users: 'users'
+  users: 'users',
+  conversations: 'conversations',
+  messages: 'messages',
+  favorites: 'favorites',
+  follows: 'follows'
+}
+
+// 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
+// 目前为占位符：申请/处理结果通知需要用户自行配置模板后填写真实 ID
+const SUBSCRIBE_TEMPLATES = {
+  applyNotice: '',      // 物品被申请时通知发布者（如"申请结果通知"类模板）
+  applyResult: '',      // 申请被处理时通知申请者
+  reportResult: ''      // 举报处理结果通知举报者
 }
 
 // 管理员识别（二选一命中即为管理员）：
@@ -28,7 +40,7 @@ const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -103,6 +115,265 @@ async function isAdminUser(openid) {
   if (ADMIN_OPENIDS.includes(openid)) return true
   const res = await db.collection(COL.users).where({ _openid: openid, isAdmin: true }).get()
   return res.data.length > 0
+}
+
+// ===================== 订阅消息 =====================
+
+// 发送订阅消息（一次性订阅）。模板未配置或发送失败时不阻断主流程，仅记录日志。
+async function sendSubscribeMessage(templateId, touser, page, data) {
+  if (!templateId) return { sent: false, reason: 'template_not_configured' }
+  try {
+    const res = await cloud.openapi.subscribeMessage.send({
+      touser: touser,
+      page: page || 'pages/index/index',
+      lang: 'zh_CN',
+      data: data,
+      miniprogramState: 'formal'
+    })
+    if (res.errCode === 0) return { sent: true }
+    // 43101: 用户未订阅/订阅次数用尽，属正常业务状态，不报错
+    if (res.errCode === 43101) return { sent: false, reason: 'not_subscribed' }
+    return { sent: false, reason: 'err_' + res.errCode }
+  } catch (e) {
+    console.warn('subscribeMessage.send 失败:', e)
+    return { sent: false, reason: 'exception' }
+  }
+}
+
+// 发布者确认送出/完成时通知申请者（模板数据需按实际申请的模板字段调整）
+async function notifyApplyResult(openid, touser, itemTitle, statusText) {
+  if (!touser) return
+  await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyResult, touser, 'pages/index/index', {
+    thing1: { value: (itemTitle || '').slice(0, 20) },
+    phrase2: { value: (statusText || '已处理').slice(0, 20) },
+    time3: { value: getNowStr() }
+  })
+}
+
+function getNowStr() {
+  const d = new Date()
+  const p = n => (n < 10 ? '0' + n : '' + n)
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+}
+
+// ===================== 会话与消息 =====================
+
+// 创建/获取申请人与发布者之间的会话（幂等：同物品同申请人复用已有会话）
+async function getOrCreateConversation(openid, itemId, applicantNickName, applicantAvatarUrl, item) {
+  const exist = await db.collection(COL.conversations).where({ itemId, applicantOpenid: openid }).get()
+  if (exist.data.length) {
+    const conv = exist.data[0]
+    await db.collection(COL.conversations).doc(conv._id).update({
+      data: { ownerOpenid: item._openid, lastMessage: '', lastTime: db.serverDate() }
+    })
+    return conv
+  }
+  const res = await db.collection(COL.conversations).add({
+    data: {
+      _openid: openid,
+      itemId,
+      itemTitle: item.title || '',
+      itemImage: (item.images && item.images[0]) || '',
+      itemStatus: item.status || 'available',
+      applicantOpenid: openid,
+      ownerOpenid: item._openid,
+      applicantNickName: applicantNickName || '匿名',
+      applicantAvatarUrl: applicantAvatarUrl || '',
+      ownerNickName: item.publisherNickName || '匿名',
+      ownerAvatarUrl: item.publisherAvatarUrl || '',
+      lastMessage: '',
+      lastTime: db.serverDate(),
+      createTime: db.serverDate()
+    }
+  })
+  const doc = await db.collection(COL.conversations).doc(res._id).get()
+  return doc.data
+}
+
+// 我的会话列表（我作为申请方或发布方），按最近消息时间倒序
+async function myConversations(openid) {
+  const asApplicant = await db.collection(COL.conversations).where({ applicantOpenid: openid }).orderBy('lastTime', 'desc').limit(100).get()
+  const asOwner = await db.collection(COL.conversations).where({ ownerOpenid: openid }).orderBy('lastTime', 'desc').limit(100).get()
+
+  const seen = {}
+  const list = []
+  const both = asApplicant.data.concat(asOwner.data)
+  for (const c of both) {
+    if (seen[c._id]) continue
+    seen[c._id] = true
+    // 计算未读数：对方发给我的未读消息
+    const unread = await db.collection(COL.messages)
+      .where({ convId: c._id, toOpenid: openid, read: false }).count()
+    list.push({
+      id: c._id,
+      itemId: c.itemId,
+      itemTitle: c.itemTitle,
+      itemImage: c.itemImage,
+      itemStatus: c.itemStatus,
+      isOwner: c.ownerOpenid === openid,
+      peerName: c.ownerOpenid === openid ? (c.applicantNickName || '申请者') : (c.ownerNickName || '发布者'),
+      peerAvatar: c.ownerOpenid === openid ? (c.applicantAvatarUrl || '') : (c.ownerAvatarUrl || ''),
+      lastMessage: c.lastMessage || '',
+      lastTime: c.lastTime,
+      lastTimeStr: formatServerTime(c.lastTime),
+      unreadCount: unread.total
+    })
+  }
+  // 排序：按 lastTime 倒序
+  list.sort((a, b) => (b.lastTime && b.lastTime.$date || b.lastTime) - (a.lastTime && a.lastTime.$date || a.lastTime))
+  return { success: true, list }
+}
+
+function formatServerTime(t) {
+  if (!t) return ''
+  let ms = typeof t === 'object' ? (t.$date || t.getTime()) : t
+  if (!ms) return ''
+  const d = new Date(ms)
+  const p = n => (n < 10 ? '0' + n : '' + n)
+  const now = new Date()
+  if (d.toDateString() === now.toDateString()) return p(d.getHours()) + ':' + p(d.getMinutes())
+  return p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+}
+
+// 会话消息列表（仅会话双方可看），并自动将对方发给我的消息标记已读
+async function conversationMessages(event, openid) {
+  const { convId } = event
+  if (!convId) return { success: false, message: '会话ID缺失' }
+  const convRes = await db.collection(COL.conversations).doc(convId).get()
+  const conv = convRes.data
+  if (!conv) return { success: false, message: '会话不存在' }
+  if (conv.applicantOpenid !== openid && conv.ownerOpenid !== openid) {
+    return { success: false, message: '无权查看该会话' }
+  }
+  const msgs = await db.collection(COL.messages)
+    .where({ convId }).orderBy('createTime', 'asc').limit(200).get()
+  const list = msgs.data.map(m => ({
+    id: m._id,
+    fromOpenid: m.fromOpenid,
+    toOpenid: m.toOpenid,
+    content: m.content,
+    createTime: m.createTime,
+    createTimeStr: formatServerTime(m.createTime),
+    isMine: m.fromOpenid === openid,
+    read: m.read
+  }))
+  // 标记已读（对方发给我的）
+  await db.collection(COL.messages).where({ convId, toOpenid: openid, read: false })
+    .update({ data: { read: true } })
+  return { success: true, list, peerName: conv.ownerOpenid === openid ? conv.applicantNickName : conv.ownerNickName, peerAvatar: conv.ownerOpenid === openid ? (conv.applicantAvatarUrl || '') : (conv.ownerAvatarUrl || ''), itemTitle: conv.itemTitle }
+}
+
+// 发送消息（仅会话双方可发）
+async function sendMessage(event, openid) {
+  const { convId, content } = event
+  if (!convId) return { success: false, message: '会话ID缺失' }
+  const text = (content || '').trim()
+  if (!text) return { success: false, message: '消息不能为空' }
+  if (text.length > 500) return { success: false, message: '消息过长' }
+
+  const textCheck = await checkText(text, openid)
+  if (!textCheck.passed) return { success: false, code: 'CONTENT_RISK', message: textCheck.message }
+
+  const convRes = await db.collection(COL.conversations).doc(convId).get()
+  const conv = convRes.data
+  if (!conv) return { success: false, message: '会话不存在' }
+  if (conv.applicantOpenid !== openid && conv.ownerOpenid !== openid) {
+    return { success: false, message: '无权在该会话发言' }
+  }
+  const toOpenid = conv.ownerOpenid === openid ? conv.applicantOpenid : conv.ownerOpenid
+
+  const res = await db.collection(COL.messages).add({
+    data: {
+      _openid: openid,
+      convId,
+      fromOpenid: openid,
+      toOpenid,
+      content: text,
+      read: false,
+      createTime: db.serverDate()
+    }
+  })
+  await db.collection(COL.conversations).doc(convId).update({
+    data: { lastMessage: text, lastTime: db.serverDate() }
+  })
+  return { success: true, id: res._id }
+}
+
+// ===================== 收藏与关注 =====================
+
+// 切换收藏状态（收藏/取消收藏）
+async function toggleFavorite(event, openid) {
+  const { itemId } = event
+  if (!itemId) return { success: false, message: '物品ID缺失' }
+  const exist = await db.collection(COL.favorites).where({ _openid: openid, itemId }).get()
+  if (exist.data.length) {
+    await db.collection(COL.favorites).doc(exist.data[0]._id).remove()
+    return { success: true, favorited: false }
+  }
+  const itemRes = await db.collection(COL.items).doc(itemId).get()
+  const item = itemRes.data
+  if (!item) return { success: false, message: '物品不存在' }
+  await db.collection(COL.favorites).add({
+    data: {
+      _openid: openid,
+      itemId,
+      itemTitle: item.title || '',
+      itemImage: (item.images && item.images[0]) || '',
+      itemStatus: item.status || 'available',
+      createTime: db.serverDate()
+    }
+  })
+  return { success: true, favorited: true }
+}
+
+// 我的收藏列表
+async function myFavorites(openid) {
+  const res = await db.collection(COL.favorites).where({ _openid: openid }).orderBy('createTime', 'desc').limit(100).get()
+  return { success: true, list: res.data.map(f => Object.assign({}, f, { id: f._id, favorited: true })) }
+}
+
+// 物品收藏状态（供详情页按钮展示）
+async function favoriteStatus(event, openid) {
+  const { itemId } = event
+  if (!itemId) return { success: false, message: '物品ID缺失' }
+  const exist = await db.collection(COL.favorites).where({ _openid: openid, itemId }).get()
+  return { success: true, favorited: exist.data.length > 0 }
+}
+
+// 切换关注状态（关注/取关发布者）
+async function toggleFollow(event, openid) {
+  const { targetOpenid } = event
+  if (!targetOpenid) return { success: false, message: '关注对象缺失' }
+  if (targetOpenid === openid) return { success: false, message: '不能关注自己' }
+  const exist = await db.collection(COL.follows).where({ _openid: openid, targetOpenid }).get()
+  if (exist.data.length) {
+    await db.collection(COL.follows).doc(exist.data[0]._id).remove()
+    return { success: true, followed: false }
+  }
+  const u = await db.collection(COL.users).where({ _openid: targetOpenid }).get()
+  await db.collection(COL.follows).add({
+    data: {
+      _openid: openid,
+      targetOpenid,
+      targetNickName: u.data.length ? (u.data[0].nickName || '用户') : '用户',
+      createTime: db.serverDate()
+    }
+  })
+  return { success: true, followed: true }
+}
+
+// 我的关注列表
+async function myFollows(openid) {
+  const res = await db.collection(COL.follows).where({ _openid: openid }).orderBy('createTime', 'desc').limit(100).get()
+  return { success: true, list: res.data.map(f => Object.assign({}, f, { id: f._id, followed: true })) }
+}
+
+// 是否已关注某发布者（供详情页按钮展示）
+async function followStatus(event, openid) {
+  const { targetOpenid } = event
+  if (!targetOpenid) return { success: false, message: '关注对象缺失' }
+  const exist = await db.collection(COL.follows).where({ _openid: openid, targetOpenid }).get()
+  return { success: true, followed: exist.data.length > 0 }
 }
 
 // ===================== 各 Action 实现 =====================
@@ -290,6 +561,35 @@ async function apply(event, openid) {
       createTime: db.serverDate()
     }
   })
+
+  // 自动创建/复用会话，方便双方在站内消息中沟通（P0 新能力）
+  try {
+    const itemRes = await db.collection(COL.items).doc(itemId).get()
+    if (itemRes.data) {
+      await getOrCreateConversation(openid, itemId, applicantNickName, applicantAvatarUrl, itemRes.data)
+      // 把申请留言作为第一条消息写入会话
+      const convRes = await db.collection(COL.conversations).where({ itemId, applicantOpenid: openid }).get()
+      if (convRes.data.length) {
+        await db.collection(COL.messages).add({
+          data: {
+            _openid: openid,
+            convId: convRes.data[0]._id,
+            fromOpenid: openid,
+            toOpenid: itemRes.data._openid,
+            content: '【申请留言】' + message.trim(),
+            read: false,
+            createTime: db.serverDate()
+          }
+        })
+        await db.collection(COL.conversations).doc(convRes.data[0]._id).update({
+          data: { lastMessage: '【申请留言】' + message.trim(), lastTime: db.serverDate() }
+        })
+      }
+    }
+  } catch (e) {
+    console.warn('创建会话失败（不影响申请）:', e)
+  }
+
   return { success: true, id: res._id }
 }
 
@@ -330,11 +630,16 @@ async function handleApply(event, openid) {
     await db.collection(COL.applications).where({ itemId, _id: applicationId }).update({ data: { status: 'approved' } })
     await db.collection(COL.applications).where({ itemId, _id: _.neq(applicationId) }).update({ data: { status: 'rejected' } })
     await addPoints(openid, 10, 1)
+    // 通知被选中的申请者
+    const appRes = await db.collection(COL.applications).doc(applicationId).get()
+    if (appRes.data) await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '申请已通过')
   } else if (action === 'complete') {
     await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
     await addPoints(openid, 10, 1)
   } else if (action === 'reject' && applicationId) {
     await db.collection(COL.applications).where({ itemId, _id: applicationId }).update({ data: { status: 'rejected' } })
+    const appRes = await db.collection(COL.applications).doc(applicationId).get()
+    if (appRes.data) await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '申请未通过')
   } else {
     return { success: false, message: '未知操作' }
   }
@@ -478,6 +783,15 @@ exports.main = async (event, context) => {
       case 'becomeAdmin': return await becomeAdmin(event, openid)
       case 'isAdmin': return await checkIsAdmin(openid)
       case 'stats': return await getStats()
+      case 'myConversations': return await myConversations(openid)
+      case 'conversationMessages': return await conversationMessages(event, openid)
+      case 'sendMessage': return await sendMessage(event, openid)
+      case 'toggleFavorite': return await toggleFavorite(event, openid)
+      case 'myFavorites': return await myFavorites(openid)
+      case 'favoriteStatus': return await favoriteStatus(event, openid)
+      case 'toggleFollow': return await toggleFollow(event, openid)
+      case 'myFollows': return await myFollows(openid)
+      case 'followStatus': return await followStatus(event, openid)
       default: return { success: false, message: '未知操作: ' + action }
     }
   } catch (e) {

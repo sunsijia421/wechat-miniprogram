@@ -1,0 +1,36 @@
+<!-- 会话详情（聊天窗口） -->
+<view class="chat-page">
+
+  <!-- 顶部物品条 -->
+  <view class="item-bar" wx:if="{{itemTitle}}">
+    <view class="item-bar-text">📦 {{itemTitle}}</view>
+  </view>
+
+  <!-- 消息列表 -->
+  <scroll-view class="msg-scroll" scroll-y scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation="{{true}}" style="height: calc(100vh - 180rpx);">
+    <view class="msg-list">
+      <view class="msg-item {{msg.isMine ? 'mine' : 'theirs'}}"
+        wx:for="{{messages}}" wx:key="id" id="msg-{{msg.id}}" wx:for-item="msg">
+        <image class="msg-avatar" src="{{msg.isMine ? (myAvatar || '/images/default-item.png') : (peerAvatar || '/images/default-item.png')}}" mode="aspectFill" />
+        <view class="msg-bubble">
+          <view class="msg-content">{{msg.content}}</view>
+          <view class="msg-time">{{msg.createTimeStr}}</view>
+        </view>
+      </view>
+      <view class="msg-empty" wx:if="{{loaded && messages.length === 0}}">
+        还没有消息，打个招呼吧~
+      </view>
+      <view class="msg-loading" wx:if="{{!loaded}}">加载中...</view>
+    </view>
+  </scroll-view>
+
+  <!-- 输入栏 -->
+  <view class="input-bar">
+    <input class="msg-input" placeholder="输入消息..." value="{{inputValue}}"
+      bindinput="onInput" confirm-type="send" bindconfirm="sendMessage"
+      maxlength="500" cursor-spacing="20" />
+    <button class="send-btn" bindtap="sendMessage" disabled="{{sending || !inputValue.trim()}}">发送</button>
+  </view>
+
+</view>
