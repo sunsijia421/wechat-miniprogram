@@ -29,6 +29,7 @@ Page({
           loading: false,
           isEmpty: list.length === 0
         })
+        this.updateTabBadge()
       })
       .catch(e => {
         this.setData({ loading: false })
@@ -37,6 +38,19 @@ Page({
       .then(() => {
         wx.stopPullDownRefresh()
       })
+  },
+
+  // 更新消息 Tab 角标（未读数）
+  updateTabBadge() {
+    const total = this.data.conversations.reduce((s, c) => s + (c.unreadCount || 0), 0)
+    if (total > 0) {
+      wx.setTabBarBadge({
+        index: 2, // 消息是第 3 个 Tab（首页/发布/消息/我的）
+        text: total > 99 ? '99+' : String(total)
+      })
+    } else {
+      wx.removeTabBarBadge({ index: 2 })
+    }
   },
 
   // 进入会话

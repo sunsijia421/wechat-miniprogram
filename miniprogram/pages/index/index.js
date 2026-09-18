@@ -54,6 +54,7 @@ Page({
   onShow() {
     this.loadItems(true)
     this.calculateStats()
+    util.refreshMessageBadge()
   },
 
   // 微信隐私授权（合规必需，必须在调用定位等隐私接口前完成）

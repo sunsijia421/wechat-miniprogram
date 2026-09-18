@@ -32,6 +32,7 @@ Page({
     this.loadFavorites()
     this.loadFollows()
     this.checkAdmin()
+    util.refreshMessageBadge()
   },
 
   // 统一处理云端返回的物品字段

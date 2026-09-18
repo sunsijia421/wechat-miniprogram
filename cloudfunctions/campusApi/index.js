@@ -244,6 +244,14 @@ async function myConversations(openid) {
   return { success: true, list }
 }
 
+// 我的未读消息总数（供消息 Tab 角标 / 首页红点）
+async function unreadCount(openid) {
+  if (!openid) return { success: true, count: 0 }
+  const res = await db.collection(COL.messages)
+    .where({ toOpenid: openid, read: false }).count()
+  return { success: true, count: res.total }
+}
+
 function formatServerTime(t) {
   if (!t) return ''
   let ms = typeof t === 'object' ? (t.$date || t.getTime()) : t
@@ -280,10 +288,17 @@ async function conversationMessages(event, openid) {
   // 标记已读（对方发给我的）
   await db.collection(COL.messages).where({ convId, toOpenid: openid, read: false })
     .update({ data: { read: true } })
-  return { success: true, list, peerName: conv.ownerOpenid === openid ? conv.applicantNickName : conv.ownerNickName, peerAvatar: conv.ownerOpenid === openid ? (conv.applicantAvatarUrl || '') : (conv.ownerAvatarUrl || ''), itemTitle: conv.itemTitle }
+  return {
+    success: true,
+    list,
+    role: conv.applicantOpenid === openid ? 'applicant' : 'owner',
+    peerName: conv.ownerOpenid === openid ? conv.applicantNickName : conv.ownerNickName,
+    peerAvatar: conv.ownerOpenid === openid ? (conv.applicantAvatarUrl || '') : (conv.ownerAvatarUrl || ''),
+    itemTitle: conv.itemTitle
+  }
 }
 
-// 发送消息（仅会话双方可发）
+// 发送消息（仅会话双方可发；申请者在发布者回复前最多发一条）
 async function sendMessage(event, openid) {
   const { convId, content } = event
   if (!convId) return { success: false, message: '会话ID缺失' }
@@ -301,6 +316,19 @@ async function sendMessage(event, openid) {
     return { success: false, message: '无权在该会话发言' }
   }
   const toOpenid = conv.ownerOpenid === openid ? conv.applicantOpenid : conv.ownerOpenid
+
+  // 申请者限发规则：发布者回复前，申请者最多发一条（类抖音私信）
+  if (conv.applicantOpenid === openid) {
+    const ownerReplied = await db.collection(COL.messages)
+      .where({ convId, fromOpenid: conv.ownerOpenid }).count()
+    if (ownerReplied.total === 0) {
+      const mySent = await db.collection(COL.messages)
+        .where({ convId, fromOpenid: openid }).count()
+      if (mySent.total >= 1) {
+        return { success: false, code: 'LIMIT_ONE', message: '发布者回复前仅可发送一条消息' }
+      }
+    }
+  }
 
   const res = await db.collection(COL.messages).add({
     data: {
@@ -957,6 +985,7 @@ exports.main = async (event, context) => {
       case 'isAdmin': return await checkIsAdmin(openid)
       case 'stats': return await getStats()
       case 'myConversations': return await myConversations(openid)
+      case 'unreadCount': return await unreadCount(openid)
       case 'conversationMessages': return await conversationMessages(event, openid)
       case 'sendMessage': return await sendMessage(event, openid)
       case 'toggleFavorite': return await toggleFavorite(event, openid)

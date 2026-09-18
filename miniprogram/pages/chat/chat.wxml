@@ -27,6 +27,9 @@
 
   <!-- 输入栏 -->
   <view class="input-bar">
+    <view class="send-limit-tip" wx:if="{{canSendOneOnly}}">
+      ⏳ 发布者回复前仅可发送一条消息
+    </view>
     <input class="msg-input" placeholder="输入消息..." value="{{inputValue}}"
       bindinput="onInput" confirm-type="send" bindconfirm="sendMessage"
       maxlength="500" cursor-spacing="20" />

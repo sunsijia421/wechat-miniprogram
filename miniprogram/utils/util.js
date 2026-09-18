@@ -269,6 +269,26 @@ function requestSubscribe(scene) {
   })
 }
 
+// 刷新"消息"Tab 角标（首页/发布/我的等 Tab 页 onShow 时调用）
+// 消息是第 3 个 Tab（index=2），未登录或未读为 0 时清除角标
+function refreshMessageBadge() {
+  if (!wx.cloud) return
+  wx.cloud.callFunction({
+    name: 'campusApi',
+    data: { action: 'unreadCount' },
+    success: function (res) {
+      const result = res.result || {}
+      const count = result.count || 0
+      if (count > 0) {
+        wx.setTabBarBadge({ index: 2, text: count > 99 ? '99+' : String(count) })
+      } else {
+        wx.removeTabBarBadge({ index: 2 })
+      }
+    },
+    fail: function () { /* 静默失败，下次 onShow 重试 */ }
+  })
+}
+
 module.exports = {
   generateId: generateId,
   formatTime: formatTime,
@@ -283,6 +303,7 @@ module.exports = {
   SENSITIVE_WORDS: SENSITIVE_WORDS,
   callApi: callApi,
   requireLogin: requireLogin,
+  refreshMessageBadge: refreshMessageBadge,
   requestSubscribe: requestSubscribe,
   SUBSCRIBE_TEMPLATES: SUBSCRIBE_TEMPLATES
 }

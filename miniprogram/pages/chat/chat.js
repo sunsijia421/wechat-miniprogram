@@ -30,21 +30,32 @@ Page({
 
   onHide() {
     this._hidden = true
+    util.refreshMessageBadge()
   },
 
   // 加载消息 + 轮询新消息（每 5 秒）
   loadMessages() {
     const app = getApp()
     const myInfo = app.getUserInfo() || {}
+    const that = this
     util.callApi('conversationMessages', { convId: this.data.convId })
       .then(res => {
+        const list = res.list || []
+        // 限发判断：我是申请者 && 对方（发布者）尚未回复 && 我已发过至少 1 条 → 显示"仅可再发一条"提示
+        let canSendOneOnly = false
+        if (res.role === 'applicant') {
+          const peerReplied = list.some(m => !m.isMine)
+          const mySent = list.filter(m => m.isMine).length
+          canSendOneOnly = !peerReplied && mySent >= 1
+        }
         this.setData({
-          messages: res.list,
+          messages: list,
           peerName: res.peerName || '',
           peerAvatar: res.peerAvatar || '',
           myAvatar: myInfo.avatarUrl || '',
           itemTitle: res.itemTitle || '',
-          loaded: true
+          loaded: true,
+          canSendOneOnly
         })
         this.scrollToBottom()
         this.startPolling()
@@ -64,6 +75,7 @@ Page({
 
   onUnload() {
     clearInterval(this._pollTimer)
+    util.refreshMessageBadge()
   },
 
   onInput(e) {
