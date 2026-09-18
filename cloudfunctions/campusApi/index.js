@@ -463,13 +463,15 @@ async function myPointLogs(openid) {
   }
 }
 
-// 公益排行榜：积分 Top N + 捐赠次数 Top N
+// 公益排行榜：积分 Top N + 捐赠次数 Top N（排除封禁用户）
 async function rankList() {
   const byPoints = await db.collection(COL.users)
+    .where({ status: _.neq('banned') })
     .orderBy('points', 'desc')
     .limit(10)
     .get()
   const byDonate = await db.collection(COL.users)
+    .where({ status: _.neq('banned') })
     .orderBy('donateCount', 'desc')
     .limit(10)
     .get()
@@ -742,15 +744,21 @@ async function listItems(event) {
   }
   return {
     success: true,
-    list: listRes.data,
+    // 隐私：列表不返回发布者 openid，仅展示昵称/头像（详情接口单独返回给需要校验的场景）
+    list: listRes.data.map(it => {
+      const { _openid, ...rest } = it
+      return rest
+    }),
     total: countRes.total,
     hasMore: page * pageSize < countRes.total
   }
 }
 
-// P2：搜索热词榜（按搜索次数倒序，取前 10）
+// P2：搜索热词榜（近 30 天按搜索次数倒序，取前 10，避免历史旧词永久霸榜）
 async function hotKeywords() {
+  const since = new Date(Date.now() - 30 * 86400000)
   const agg = await db.collection(COL.searchLogs).aggregate()
+    .match({ createTime: _.gte(since) })
     .group({ _id: '$keyword', count: _.sum(1) })
     .sort({ count: -1 })
     .limit(10)
@@ -817,6 +825,16 @@ async function deleteItem(event, openid) {
   // 级联清理关联申请与举报
   await db.collection(COL.applications).where({ itemId: id }).remove()
   await db.collection(COL.reports).where({ itemId: id }).remove()
+  await db.collection(COL.favorites).where({ itemId: id }).remove()
+  // 级联清理会话与消息（messages.convId 指向会话 _id，需先查会话再删）
+  try {
+    const convRes = await db.collection(COL.conversations).where({ itemId: id }).get()
+    const convIds = convRes.data.map(c => c._id)
+    if (convIds.length) {
+      await db.collection(COL.messages).where({ convId: _.in(convIds) }).remove()
+    }
+    await db.collection(COL.conversations).where({ itemId: id }).remove()
+  } catch (e) { /* 清理失败不影响删除 */ }
   return { success: true }
 }
 
@@ -886,6 +904,11 @@ async function apply(event, openid) {
 
   const exist = await db.collection(COL.applications).where({ itemId, _openid: openid }).get()
   if (exist.data.length) return { success: false, message: '您已申请过该物品' }
+
+  // 校验物品存在且处于可领取状态（禁止对已送出/已下架/已删除物品申请）
+  const itemCheck = await db.collection(COL.items).doc(itemId).get()
+  if (!itemCheck.data) return { success: false, message: '物品不存在' }
+  if (itemCheck.data.status !== 'available') return { success: false, message: '该物品当前不可申请' }
 
   const res = await db.collection(COL.applications).add({
     data: {
@@ -963,6 +986,10 @@ async function handleApply(event, openid) {
   const itemRes = await db.collection(COL.items).doc(itemId).get()
   if (!itemRes.data || itemRes.data._openid !== openid) {
     return { success: false, message: '无权操作该物品' }
+  }
+  // 防刷分：已完成的物品不可重复确认送出/完成（否则会重复加积分）
+  if (itemRes.data.status === 'completed') {
+    return { success: false, message: '该物品已送出，请勿重复操作' }
   }
 
   if (action === 'approve' && applicationId) {
@@ -1161,7 +1188,7 @@ async function adminSetItemStatus(event, openid) {
   return { success: true, status }
 }
 
-// 管理员删除物品（级联清理申请/举报/收藏/会话）
+// 管理员删除物品（级联清理申请/举报/收藏/会话/消息）
 async function adminDeleteItem(event, openid) {
   if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
   const { id } = event
@@ -1172,8 +1199,15 @@ async function adminDeleteItem(event, openid) {
   await db.collection(COL.applications).where({ itemId: id }).remove()
   await db.collection(COL.reports).where({ itemId: id }).remove()
   await db.collection(COL.favorites).where({ itemId: id }).remove()
-  await db.collection(COL.conversations).where({ itemId: id }).remove()
-  await db.collection(COL.messages).where({ convId: id }).remove()
+  // 先查该物品的所有会话 ID，再按 convId 清理消息（messages.convId 是会话 _id，不是物品 ID）
+  try {
+    const convRes = await db.collection(COL.conversations).where({ itemId: id }).get()
+    const convIds = convRes.data.map(c => c._id)
+    if (convIds.length) {
+      await db.collection(COL.messages).where({ convId: _.in(convIds) }).remove()
+    }
+    await db.collection(COL.conversations).where({ itemId: id }).remove()
+  } catch (e) { /* 清理失败不影响删除 */ }
   return { success: true }
 }
 
