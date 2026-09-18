@@ -4,7 +4,7 @@ Page({
   data: {
     byPoints: [],
     byDonate: [],
-    loading: true,
+    loading: false,
     activeTab: 'points' // points | donate
   },
 

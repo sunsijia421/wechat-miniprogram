@@ -3,7 +3,7 @@ const util = require('../../utils/util')
 Page({
   data: {
     logs: [],
-    loading: true,
+    loading: false,
     totalPoints: 0,
     totalDonate: 0
   },
