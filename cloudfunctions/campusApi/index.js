@@ -488,7 +488,7 @@ async function listItems(event) {
   }
 }
 
-// 物品详情（含是否本人发布；本人可见该物品举报记录）
+// 物品详情（含是否本人发布；本人可见该物品举报记录；申请者可见申请状态）
 async function getItemDetail(event, openid) {
   const { id } = event
   if (!id) return { success: false, message: '物品ID缺失' }
@@ -500,7 +500,17 @@ async function getItemDetail(event, openid) {
     const r = await db.collection(COL.reports).where({ itemId: id }).orderBy('createTime', 'desc').get()
     reports = r.data
   }
-  return { success: true, item: res.data, isOwner, reports }
+  // 当前用户是否申请过该物品（用于前端"已申请"状态展示，避免重复申请）
+  let hasApplied = false
+  let applyStatus = ''
+  if (openid) {
+    const appRes = await db.collection(COL.applications).where({ itemId: id, _openid: openid }).limit(1).get()
+    if (appRes.data.length) {
+      hasApplied = true
+      applyStatus = appRes.data[0].status || 'pending'
+    }
+  }
+  return { success: true, item: res.data, isOwner, reports, hasApplied, applyStatus }
 }
 
 // 删除物品（仅发布者）

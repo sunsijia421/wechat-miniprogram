@@ -168,7 +168,11 @@
       <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
         {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
       </view>
-      <button wx:if="{{isLoggedIn}}" class="btn-primary bottom-btn" bindtap="openApply">
+      <!-- 已申请：按钮置灰，不可重复申请 -->
+      <button wx:if="{{isLoggedIn && hasApplied}}" class="btn-disabled bottom-btn" disabled>
+        {{applyStatus === 'approved' ? '✅ 申请已通过' : applyStatus === 'rejected' ? '😢 申请未通过' : '⏳ 已申请 · 待处理'}}
+      </button>
+      <button wx:elif="{{isLoggedIn}}" class="btn-primary bottom-btn" bindtap="openApply">
         🙋 我要申请
       </button>
       <!-- 未登录：游客只读，引导登录后才能交换 -->

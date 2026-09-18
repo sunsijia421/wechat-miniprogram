@@ -32,7 +32,11 @@ Page({
     // P0 新增：收藏 / 关注 / 会话
     favorited: false,
     followed: false,
-    hasConversation: false
+    hasConversation: false,
+
+    // 已申请状态（申请后按钮置灰显示"已申请"）
+    hasApplied: false,
+    applyStatus: ''
   },
 
   onLoad(options) {
@@ -99,7 +103,9 @@ Page({
         isCompleted: item.status === 'completed',
         isOffline: item.status === 'offline',
         currentUser: app.getUserInfo() || null,
-        reports
+        reports,
+        hasApplied: !!res.hasApplied,
+        applyStatus: res.applyStatus || ''
       })
       if (res.isOwner) this.loadApplications()
       // P0：加载收藏/关注状态（登录且非本人发布时）
@@ -190,7 +196,8 @@ Page({
       applicantAvatarUrl: userInfo.avatarUrl || ''
     })
       .then(() => {
-        that.setData({ showApplyModal: false, applyMessage: '' })
+        // 申请成功后立即置为"已申请"，按钮变为置灰状态
+        that.setData({ showApplyModal: false, applyMessage: '', hasApplied: true, applyStatus: 'pending' })
         that.loadApplications()
         wx.showToast({ title: '申请已提交', icon: 'success' })
       })
