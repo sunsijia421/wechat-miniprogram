@@ -439,6 +439,8 @@ Page({
       .then(() => {
         this.setData({ showReportModal: false, reportReason: '' })
         wx.showToast({ title: '已收到举报，我们会尽快处理', icon: 'none' })
+        // P0：请求订阅授权（举报处理结果通知），授权失败不影响举报
+        util.requestSubscribe('reportResult').then(() => {}, () => {})
       })
       .catch(e => {
         wx.showToast({ title: typeof e === 'string' ? e : '提交失败', icon: 'none' })

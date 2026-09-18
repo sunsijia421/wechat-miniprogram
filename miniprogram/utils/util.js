@@ -244,8 +244,9 @@ function callApi(action, data) {
 // 微信订阅消息模板 ID：需在 mp.weixin.qq.com → 功能 → 订阅消息 中申请模板后填入。
 // 当前为占位：未配置时静默跳过授权，不影响主流程（云函数端也会在模板未配置时跳过发送）。
 var SUBSCRIBE_TEMPLATES = {
-  applyNotice: '',   // 物品被申请时通知发布者
-  applyResult: ''    // 申请被处理时通知申请者
+  applyNotice: 'KONb9VrH39tCvnNZmDedUM3AwUoF94-jqaLKfzcvqeA',   // 物品被申请时通知发布者
+  applyResult: 'Abrj1ds3NiI04kR2EoTEcg83gIFXYdlgTa7MY1fKUYA',    // 申请被处理时通知申请者
+  reportResult: 'Jw1n_Vaw6W73fSuz72b9MGu15kWRwYwoQuo-aba1-_M'     // 举报处理结果通知举报者
 }
 
 // 请求订阅授权（一次性订阅；用户授权一次可收到一次推送）。模板未配置时静默跳过。

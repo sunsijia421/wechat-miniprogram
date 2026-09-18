@@ -22,9 +22,9 @@ const COL = {
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
 // 目前为占位符：申请/处理结果通知需要用户自行配置模板后填写真实 ID
 const SUBSCRIBE_TEMPLATES = {
-  applyNotice: '',      // 物品被申请时通知发布者（如"申请结果通知"类模板）
-  applyResult: '',      // 申请被处理时通知申请者
-  reportResult: ''      // 举报处理结果通知举报者
+  applyNotice: 'KONb9VrH39tCvnNZmDedUM3AwUoF94-jqaLKfzcvqeA',      // 物品被申请时通知发布者（如"申请结果通知"类模板）
+  applyResult: 'Abrj1ds3NiI04kR2EoTEcg83gIFXYdlgTa7MY1fKUYA',      // 申请被处理时通知申请者
+  reportResult: 'Jw1n_Vaw6W73fSuz72b9MGu15kWRwYwoQuo-aba1-_M'      // 举报处理结果通知举报者
 }
 
 // 管理员识别（二选一命中即为管理员）：
@@ -140,13 +140,33 @@ async function sendSubscribeMessage(templateId, touser, page, data) {
   }
 }
 
-// 发布者确认送出/完成时通知申请者（模板数据需按实际申请的模板字段调整）
+// 发布者确认送出/完成时通知申请者（模板「审核结果通知」：thing1=审核内容、phrase1=审核结果、time1=审核时间）
 async function notifyApplyResult(openid, touser, itemTitle, statusText) {
   if (!touser) return
   await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyResult, touser, 'pages/index/index', {
     thing1: { value: (itemTitle || '').slice(0, 20) },
-    phrase2: { value: (statusText || '已处理').slice(0, 20) },
-    time3: { value: getNowStr() }
+    phrase1: { value: (statusText || '已处理').slice(0, 5) },
+    time1: { value: getNowStr() }
+  })
+}
+
+// 物品被申请时通知发布者（模板「申请审核提醒」：thing1=用户昵称、thing2=申请原因、time1=申请时间）
+async function notifyApplyNotice(openid, touser, applicantNickName, applyMessage) {
+  if (!touser) return
+  await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyNotice, touser, 'pages/index/index', {
+    thing1: { value: (applicantNickName || '某同学').slice(0, 20) },
+    thing2: { value: (applyMessage || '有人申请了你的物品').slice(0, 20) },
+    time1: { value: getNowStr() }
+  })
+}
+
+// 举报处理结果通知举报者（模板「举报结果通知」：thing1=举报内容、phrase1=处理进度、time1=处理日期）
+async function notifyReportResult(openid, touser, reportReason, resultText) {
+  if (!touser) return
+  await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.reportResult, touser, 'pages/index/index', {
+    thing1: { value: (reportReason || '举报内容').slice(0, 20) },
+    phrase1: { value: (resultText || '已处理').slice(0, 5) },
+    time1: { value: getNowStr() }
   })
 }
 
@@ -585,6 +605,8 @@ async function apply(event, openid) {
           data: { lastMessage: '【申请留言】' + message.trim(), lastTime: db.serverDate() }
         })
       }
+      // 订阅消息：通知发布者"物品被申请"
+      await notifyApplyNotice(openid, itemRes.data._openid, applicantNickName, message.trim())
     }
   } catch (e) {
     console.warn('创建会话失败（不影响申请）:', e)
@@ -680,14 +702,22 @@ async function handleReport(event, openid) {
   if (action === 'offline') {
     if (itemRes.data.status === 'completed') return { success: false, message: '该物品已送出，无需下架' }
     await db.collection(COL.items).doc(itemId).update({ data: { status: 'offline' } })
-    await db.collection(COL.reports).where({ itemId, status: 'pending' }).update({
+    const offlineRes = await db.collection(COL.reports).where({ itemId, status: 'pending' }).update({
       data: { status: 'handled', result: 'offline', handleTime: db.serverDate() }
     })
+    // 订阅消息：通知举报者"已下架"
+    if (offlineRes.stats && offlineRes.stats.updated > 0) {
+      const rep = await db.collection(COL.reports).where({ itemId, status: 'handled' }).orderBy('handleTime', 'desc').limit(1).get()
+      if (rep.data.length) await notifyReportResult(openid, rep.data[0]._openid, rep.data[0].reason, '已下架')
+    }
   } else if (action === 'ignore') {
     if (!reportId) return { success: false, message: '举报ID缺失' }
     await db.collection(COL.reports).doc(reportId).update({
       data: { status: 'handled', result: 'ignored', handleTime: db.serverDate() }
     })
+    // 订阅消息：通知该条举报者"已忽略"
+    const repRes = await db.collection(COL.reports).doc(reportId).get()
+    if (repRes.data) await notifyReportResult(openid, repRes.data._openid, repRes.data.reason, '已忽略')
   } else {
     return { success: false, message: '未知操作' }
   }
