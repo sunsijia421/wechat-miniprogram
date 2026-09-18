@@ -16,7 +16,8 @@ const COL = {
   conversations: 'conversations',
   messages: 'messages',
   favorites: 'favorites',
-  follows: 'follows'
+  follows: 'follows',
+  searchLogs: 'search_logs' // P2：搜索热词日志
 }
 
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
@@ -40,7 +41,7 @@ const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -491,28 +492,52 @@ async function publish(event, openid) {
   return { success: true, id: res._id }
 }
 
-// 物品列表（分页 + 分类/关键词/仅看可换筛选），默认只返回 available
+// 物品列表（分页 + 分类/关键词/仅看可换筛选 + 热门排序），默认只返回 available
 async function listItems(event) {
-  const { category = 'all', page = 1, pageSize = 10, status = 'available', keyword = '', barterOnly = false } = event
+  const { category = 'all', page = 1, pageSize = 10, status = 'available', keyword = '', barterOnly = false, sort = 'new' } = event
   const conditions = []
   if (category !== 'all') conditions.push({ category })
   if (status) conditions.push({ status })
   if (barterOnly) conditions.push({ allowBarter: true })
-  if (keyword && keyword.trim()) {
-    conditions.push({ title: db.RegExp({ regexp: keyword.trim(), options: 'i' }) })
+  const kw = (keyword || '').trim()
+  if (kw) {
+    conditions.push({ title: db.RegExp({ regexp: kw, options: 'i' }) })
+    // P2：记录搜索热词（异步，不阻塞主流程）
+    try {
+      await db.collection(COL.searchLogs).add({
+        data: { keyword: kw, createTime: db.serverDate() }
+      })
+    } catch (e) { /* 搜索日志失败不影响搜索 */ }
   }
   let q = db.collection(COL.items)
   if (conditions.length) q = q.where(_.and(conditions))
   const countRes = await q.count()
-  const listRes = await q.orderBy('createTime', 'desc')
-    .skip((page - 1) * pageSize)
-    .limit(pageSize)
-    .get()
+  let listRes
+  if (sort === 'hot') {
+    listRes = await q.orderBy('heat', 'desc').orderBy('createTime', 'desc')
+      .skip((page - 1) * pageSize).limit(pageSize).get()
+  } else {
+    listRes = await q.orderBy('createTime', 'desc')
+      .skip((page - 1) * pageSize).limit(pageSize).get()
+  }
   return {
     success: true,
     list: listRes.data,
     total: countRes.total,
     hasMore: page * pageSize < countRes.total
+  }
+}
+
+// P2：搜索热词榜（按搜索次数倒序，取前 10）
+async function hotKeywords() {
+  const agg = await db.collection(COL.searchLogs).aggregate()
+    .group({ _id: '$keyword', count: _.sum(1) })
+    .sort({ count: -1 })
+    .limit(10)
+    .end()
+  return {
+    success: true,
+    list: (agg.list || []).map(k => ({ keyword: k._id, count: k.count }))
   }
 }
 
@@ -522,6 +547,14 @@ async function getItemDetail(event, openid) {
   if (!id) return { success: false, message: '物品ID缺失' }
   const res = await db.collection(COL.items).doc(id).get()
   if (!res.data) return { success: false, message: '物品不存在' }
+  // P2：浏览量 +1（heat 热度字段同步累加，用于热门排序）
+  try {
+    await db.collection(COL.items).doc(id).update({
+      data: { viewCount: _.inc(1), heat: _.inc(1) }
+    })
+    res.data.viewCount = (res.data.viewCount || 0) + 1
+    res.data.heat = (res.data.heat || 0) + 1
+  } catch (e) { /* 计数失败不影响详情 */ }
   const isOwner = res.data._openid === openid
   let reports = []
   if (isOwner) {
@@ -538,7 +571,21 @@ async function getItemDetail(event, openid) {
       applyStatus = appRes.data[0].status || 'pending'
     }
   }
-  return { success: true, item: res.data, isOwner, reports, hasApplied, applyStatus }
+  // P2：猜你喜欢 —— 同分类可领取物品（排除本物品，按热度降序取 6 条）
+  let related = []
+  try {
+    const relatedRes = await db.collection(COL.items)
+      .where(_.and([
+        { category: res.data.category || 'other' },
+        { status: 'available' },
+        { _id: _.neq(id) }
+      ]))
+      .orderBy('heat', 'desc')
+      .limit(6)
+      .get()
+    related = relatedRes.data
+  } catch (e) { /* 推荐失败不影响详情 */ }
+  return { success: true, item: res.data, isOwner, reports, hasApplied, applyStatus, related }
 }
 
 // 删除物品（仅发布者）
@@ -819,6 +866,23 @@ async function adminStats(openid) {
     const r = await db.collection(COL.items).where({ status: 'available', category: c }).count()
     catCounts[c] = r.total
   }
+  // P2：近 7 天发布趋势（按天统计 createTime）
+  const dayLabels = []
+  const dayCounts = []
+  {
+    const now = new Date()
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 86400000)
+      const label = (d.getMonth() + 1) + '-' + d.getDate()
+      dayLabels.push(label)
+      const start = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+      const end = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)
+      const r = await db.collection(COL.items)
+        .where(_.and([{ createTime: _.gte(start) }, { createTime: _.lt(end) }]))
+        .count()
+      dayCounts.push(r.total)
+    }
+  }
   return {
     success: true,
     stats: {
@@ -831,7 +895,9 @@ async function adminStats(openid) {
       reportCount: reportCnt.total,
       pendingReportCount: pendingReportCnt.total,
       bannedCount: bannedCnt.total,
-      categoryCounts: catCounts
+      categoryCounts: catCounts,
+      trendDays: dayLabels,
+      trendCounts: dayCounts
     }
   }
 }
@@ -968,6 +1034,7 @@ exports.main = async (event, context) => {
       case 'login': return await login(event, openid)
       case 'publish': return await publish(event, openid)
       case 'list': return await listItems(event)
+      case 'hotKeywords': return await hotKeywords()
       case 'detail': return await getItemDetail(event, openid)
       case 'update': return await updateItem(event, openid)
       case 'setStatus': return await setStatus(event, openid)

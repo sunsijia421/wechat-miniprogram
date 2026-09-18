@@ -36,7 +36,10 @@ Page({
 
     // 已申请状态（申请后按钮置灰显示"已申请"）
     hasApplied: false,
-    applyStatus: ''
+    applyStatus: '',
+
+    // P2：猜你喜欢
+    relatedItems: []
   },
 
   onLoad(options) {
@@ -97,6 +100,8 @@ Page({
       const item = this.normalizeItem(res.item)
       item.images = await this.getTempUrls(item.images)
       const reports = (res.reports || []).map(r => this.normalizeReport(r))
+      // P2：猜你喜欢（同分类推荐，无需转临时 URL，缩略图直接用 fileID 即可由 image 组件解析）
+      const relatedItems = (res.related || []).map(r => this.normalizeItem(r))
       this.setData({
         item,
         isOwner: res.isOwner,
@@ -105,7 +110,8 @@ Page({
         currentUser: app.getUserInfo() || null,
         reports,
         hasApplied: !!res.hasApplied,
-        applyStatus: res.applyStatus || ''
+        applyStatus: res.applyStatus || '',
+        relatedItems
       })
       if (res.isOwner) this.loadApplications()
       // P0：加载收藏/关注状态（登录且非本人发布时）
@@ -131,6 +137,13 @@ Page({
         this.setData({ applications: list })
       })
       .catch(() => {})
+  },
+
+  // P2：点击猜你喜欢物品跳转详情
+  onItemTap(e) {
+    const id = e.currentTarget.dataset.id
+    if (!id) return
+    wx.navigateTo({ url: '/pages/detail/detail?id=' + id })
   },
 
   // ========== 图片预览 ==========

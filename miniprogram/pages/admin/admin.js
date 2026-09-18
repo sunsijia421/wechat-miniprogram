@@ -1,4 +1,5 @@
 const util = require('../../utils/util')
+const echarts = require('../../ec-canvas/echarts')
 
 Page({
   data: {
@@ -10,6 +11,10 @@ Page({
     // 数据总览
     stats: null,
     statCards: [],
+
+    // P2：ECharts 图表（lazyLoad，由 renderXxxChart 主动 init）
+    categoryEc: { lazyLoad: true },
+    trendEc: { lazyLoad: true },
 
     // 物品管理
     items: [],
@@ -72,7 +77,6 @@ Page({
     this.setData({ activeTab: tab, loading: true })
     this.refreshCurrentTab()
   },
-
   // ========== 数据总览 ==========
   loadStats() {
     util.callApi('adminStats')
@@ -93,11 +97,85 @@ Page({
             { label: '已封禁用户', value: s.bannedCount, icon: '🔒' }
           ]
         })
+        // P2：图表数据就绪后绘制（等 ec-canvas 挂载，稍作延迟）
+        const that = this
+        setTimeout(() => {
+          if (that.data.activeTab === 'overview') {
+            that.renderCategoryChart(s.categoryCounts || {})
+            that.renderTrendChart(s.trendDays || [], s.trendCounts || [])
+          }
+        }, 300)
       })
       .catch(e => {
         this.setData({ loading: false })
         wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       })
+  },
+
+  // P2：分类分布饼图
+  renderCategoryChart(catCounts) {
+    const catNames = { books: '图书', clothes: '衣物', electronics: '电子', other: '其他' }
+    const colors = ['#FF9800', '#2196F3', '#9C27B0', '#607D8B']
+    const data = Object.keys(catCounts || {}).map((k, i) => ({
+      name: catNames[k] || k,
+      value: catCounts[k] || 0,
+      itemStyle: { color: colors[i % colors.length] }
+    }))
+    if (!this.categoryChart && this.selectComponent) {
+      this.categoryChart = this.selectComponent('#categoryChart')
+    }
+    if (this.categoryChart) {
+      this.categoryChart.init((canvas, width, height, dpr) => {
+        const chart = echarts.init(canvas, null, { width, height, devicePixelRatio: dpr })
+        chart.setOption({
+          tooltip: { trigger: 'item' },
+          legend: { bottom: 0, textStyle: { fontSize: 10 } },
+          series: [{
+            name: '分类分布',
+            type: 'pie',
+            radius: ['35%', '62%'],
+            center: ['50%', '44%'],
+            label: { fontSize: 10 },
+            data
+          }]
+        })
+        return chart
+      })
+    }
+  },
+
+  // P2：近 7 天发布趋势柱状图
+  renderTrendChart(days, counts) {
+    if (!this.trendChart && this.selectComponent) {
+      this.trendChart = this.selectComponent('#trendChart')
+    }
+    if (this.trendChart) {
+      this.trendChart.init((canvas, width, height, dpr) => {
+        const chart = echarts.init(canvas, null, { width, height, devicePixelRatio: dpr })
+        chart.setOption({
+          tooltip: { trigger: 'axis' },
+          grid: { left: 30, right: 10, top: 24, bottom: 24 },
+          xAxis: {
+            type: 'category',
+            data: days,
+            axisLabel: { fontSize: 10 }
+          },
+          yAxis: {
+            type: 'value',
+            minInterval: 1,
+            axisLabel: { fontSize: 10 }
+          },
+          series: [{
+            name: '发布量',
+            type: 'bar',
+            data: counts,
+            barWidth: '55%',
+            itemStyle: { color: '#4CAF50', borderRadius: [6, 6, 0, 0] }
+          }]
+        })
+        return chart
+      })
+    }
   },
 
   // ========== 物品管理 ==========

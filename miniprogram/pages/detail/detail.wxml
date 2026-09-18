@@ -58,6 +58,10 @@
         <text class="info-label">发布时间</text>
         <text class="info-value">{{item.createTimeStr}}</text>
       </view>
+      <view class="info-row">
+        <text class="info-label">浏览量</text>
+        <text class="info-value">👁 {{item.viewCount || 0}} 次浏览</text>
+      </view>
     </view>
 
     <!-- 发布者信息 -->
@@ -122,6 +126,24 @@
             <view class="report-action danger" data-action="offline" data-id="{{report.id}}" bindtap="handleReport">下架物品</view>
             <view class="report-action normal" data-action="ignore" data-id="{{report.id}}" bindtap="handleReport">忽略</view>
           </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- P2：猜你喜欢（同分类可领取，按热度推荐） -->
+    <view class="card" wx:if="{{relatedItems.length > 0}}">
+      <view class="section-title">💡 猜你喜欢</view>
+      <view class="related-list">
+        <view class="related-item" wx:for="{{relatedItems}}" wx:key="id" data-id="{{item.id}}" bindtap="onItemTap">
+          <image class="related-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+          <view class="related-info flex-1">
+            <view class="related-title text-ellipsis">{{item.title}}</view>
+            <view class="related-meta">
+              <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+              <text class="related-views">👁 {{item.viewCount || 0}}</text>
+            </view>
+          </view>
+          <view class="related-arrow">›</view>
         </view>
       </view>
     </view>

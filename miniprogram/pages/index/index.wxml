@@ -84,6 +84,14 @@
       </view>
     </view>
 
+    <!-- P2：热门搜索词 -->
+    <view class="hot-keywords" wx:if="{{viewMode === 'list' && hotKeywords.length > 0}}">
+      <text class="hot-label">🔥 热门搜索</text>
+      <view class="hot-keyword" wx:for="{{hotKeywords}}" wx:key="keyword" data-keyword="{{item.keyword}}" bindtap="onHotKeywordTap">
+        {{item.keyword}}
+      </view>
+    </view>
+
     <!-- 仅看可换 切换 -->
     <view class="barter-toggle" wx:if="{{viewMode === 'list'}}">
       <view class="barter-toggle-item {{barterOnly ? 'active' : ''}}" bindtap="onBarterToggle">
@@ -115,6 +123,24 @@
 
     <!-- 列表视图 -->
     <block wx:if="{{viewMode === 'list'}}">
+      <!-- P2：热门物品榜（按热度排序，横滑卡片） -->
+      <view class="hot-section" wx:if="{{hotItems.length > 0}}">
+        <view class="hot-section-head">
+          <text class="hot-section-title">🔥 热门物品</text>
+          <text class="hot-section-sub">大家都在看</text>
+        </view>
+        <scroll-view scroll-x class="hot-scroll">
+          <view class="hot-card" wx:for="{{hotItems}}" wx:key="id" data-id="{{item.id}}" bindtap="onItemTap">
+            <image class="hot-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="hot-title text-ellipsis">{{item.title}}</view>
+            <view class="hot-meta">
+              <text class="hot-views">👁 {{item.viewCount || 0}}</text>
+              <text class="hot-heat">🔥 {{item.heat || 0}}</text>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
       <view wx:if="{{displayItems.length === 0}}" class="empty-state">
         <view class="icon">📭</view>
         <view class="text">暂无物品</view>

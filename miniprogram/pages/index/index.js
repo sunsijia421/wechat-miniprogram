@@ -32,6 +32,10 @@ Page({
     hasMore: true,
     loading: false,
 
+    // P2：热门搜索词 + 热门物品榜
+    hotKeywords: [],
+    hotItems: [],
+
     // 地图
     mapMarkers: [],
     mapLat: 30.45,
@@ -54,7 +58,31 @@ Page({
   onShow() {
     this.loadItems(true)
     this.calculateStats()
+    this.loadHotData()
     util.refreshMessageBadge()
+  },
+
+  // P2：加载热门搜索词 + 热门物品榜
+  loadHotData() {
+    util.callApi('hotKeywords', {})
+      .then(res => {
+        this.setData({ hotKeywords: res.list || [] })
+      })
+      .catch(() => {})
+    // 热门物品：热度排序前 6 条可领取物品
+    util.callApi('list', { sort: 'hot', page: 1, pageSize: 6 })
+      .then(res => {
+        const list = (res.list || []).map(it => this.normalizeItem(it))
+        this.setData({ hotItems: list })
+      })
+      .catch(() => {})
+  },
+
+  // 点击热门搜索词：填入并搜索
+  onHotKeywordTap(e) {
+    const kw = e.currentTarget.dataset.keyword
+    this.setData({ keyword: kw })
+    this.searchItems()
   },
 
   // 微信隐私授权（合规必需，必须在调用定位等隐私接口前完成）
@@ -295,6 +323,12 @@ Page({
     this._searchTimer = setTimeout(() => {
       this.loadItems(true)
     }, 400)
+  },
+
+  // 立即按当前关键词搜索（热门词点击/回车）
+  searchItems() {
+    clearTimeout(this._searchTimer)
+    this.loadItems(true)
   },
 
   // 清空搜索

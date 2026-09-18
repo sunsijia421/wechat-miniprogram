@@ -2,5 +2,8 @@
   "navigationBarTitleText": "管理后台",
   "navigationBarBackgroundColor": "#4CAF50",
   "navigationBarTextStyle": "white",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "ec-canvas": "../../ec-canvas/ec-canvas"
+  }
 }

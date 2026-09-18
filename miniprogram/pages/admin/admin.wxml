@@ -33,6 +33,17 @@
           <view class="stat-label">{{item.label}}</view>
         </view>
       </view>
+
+      <!-- P2：ECharts 数据可视化 -->
+      <view class="chart-card" wx:if="{{stats}}">
+        <view class="chart-title">📊 物品分类分布</view>
+        <ec-canvas id="categoryChart" canvas-id="categoryChart" ec="{{categoryEc}}"></ec-canvas>
+      </view>
+      <view class="chart-card" wx:if="{{stats}}">
+        <view class="chart-title">📈 近7天发布趋势</view>
+        <ec-canvas id="trendChart" canvas-id="trendChart" ec="{{trendEc}}"></ec-canvas>
+      </view>
+
       <view class="empty-state" wx:if="{{!loading && !stats}}">
         <view class="icon">📊</view>
         <view class="text">暂无数据</view>
