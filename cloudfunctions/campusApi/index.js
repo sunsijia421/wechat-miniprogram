@@ -19,7 +19,8 @@ const COL = {
   follows: 'follows',
   searchLogs: 'search_logs', // P2：搜索热词日志
   pointLogs: 'point_logs',    // P1：积分明细流水
-  checkins: 'checkins'        // P3：每日签到
+  checkins: 'checkins',        // P3：每日签到
+  feedbacks: 'feedbacks'       // 意见反馈
 }
 
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
@@ -43,7 +44,7 @@ const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins, COL.feedbacks]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -554,6 +555,25 @@ async function checkIn(openid) {
     } catch (e) { /* 忽略 */ }
   }
   return { success: true, points, streak, bonus }
+}
+
+// 意见反馈：内容 + 联系方式（选填），写入 feedbacks 集合
+async function submitFeedback(event, openid) {
+  const { content, contact } = event
+  if (!content || !content.trim()) return { success: false, message: '反馈内容不能为空' }
+  if (content.trim().length > 500) return { success: false, message: '反馈内容不能超过500字' }
+  const textCheck = await checkText(content.trim(), openid)
+  if (!textCheck.passed) return { success: false, code: 'CONTENT_RISK', message: textCheck.message }
+  await db.collection(COL.feedbacks).add({
+    data: {
+      _openid: openid,
+      content: content.trim(),
+      contact: (contact || '').trim(),
+      status: 'pending', // pending | read
+      createTime: db.serverDate()
+    }
+  })
+  return { success: true }
 }
 
 // ===================== 各 Action 实现 =====================
@@ -1207,6 +1227,7 @@ exports.main = async (event, context) => {
       case 'rankList': return await rankList()
       case 'checkInStatus': return await checkInStatus(openid)
       case 'checkIn': return await checkIn(openid)
+      case 'submitFeedback': return await submitFeedback(event, openid)
       case 'adminStats': return await adminStats(openid)
       case 'adminItems': return await adminItems(event, openid)
       case 'adminSetItemStatus': return await adminSetItemStatus(event, openid)

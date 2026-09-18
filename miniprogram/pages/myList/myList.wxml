@@ -1,0 +1,44 @@
+<!-- 通用"我的"列表页 -->
+<view class="container">
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!loading && list.length === 0}}">
+    <view class="icon">🗂️</view>
+    <view class="text">{{cfg.empty}}</view>
+    <view class="text sub">{{cfg.emptySub}}</view>
+  </view>
+
+  <!-- 物品类列表（我发布的/我申请的/我收藏的） -->
+  <view class="list" wx:if="{{type !== 'reported' && list.length > 0}}">
+    <view class="item card" wx:for="{{list}}" wx:key="id" data-id="{{item.id}}" bindtap="onItemTap">
+      <image class="item-thumb" src="{{item.image || '/images/default-item.png'}}" mode="aspectFill" />
+      <view class="item-info">
+        <view class="item-title text-ellipsis">{{item.title}}</view>
+        <view class="item-meta">
+          <view class="tag">{{item.categoryName}}</view>
+          <view class="status-tag status-{{item.statusClass}}">{{item.statusText}}</view>
+          <view class="status-tag status-pending" wx:if="{{type === 'applied'}}">{{item.applyText}}</view>
+        </view>
+      </view>
+      <view class="item-arrow">›</view>
+    </view>
+  </view>
+
+  <!-- 举报类列表 -->
+  <view class="list" wx:if="{{type === 'reported' && list.length > 0}}">
+    <view class="item card" wx:for="{{list}}" wx:key="id" data-id="{{item.itemId}}" bindtap="onItemTap">
+      <view class="item-info" style="flex:1;">
+        <view class="item-title text-ellipsis">{{item.itemTitle}}</view>
+        <view class="item-meta">
+          <view class="status-tag status-{{item.statusClass}}">{{item.statusText}}</view>
+          <text class="item-time">{{item.createTimeStr}}</text>
+        </view>
+        <view class="item-reason" wx:if="{{item.reason}}">举报理由：{{item.reason}}</view>
+      </view>
+      <view class="item-arrow" wx:if="{{item.itemId}}">›</view>
+    </view>
+  </view>
+
+</view>

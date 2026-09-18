@@ -5,7 +5,6 @@ Page({
   data: {
     userInfo: null,
     openid: '',
-    expandedTab: '', // published | applied | favorites | reported（手风琴展开）
 
     // 我发布的
     publishedItems: [],
@@ -75,10 +74,15 @@ Page({
     wx.navigateTo({ url: '/pages/rank/rank' })
   },
 
-  // 展开/收起"我的交易"分组（手风琴）
-  toggleExpand(e) {
-    const tab = e.currentTarget.dataset.tab
-    this.setData({ expandedTab: this.data.expandedTab === tab ? '' : tab })
+  // 跳转"我的交易"独立列表页（published/applied/favorites/reported）
+  goMyList(e) {
+    const type = e.currentTarget.dataset.type
+    wx.navigateTo({ url: '/pages/myList/myList?type=' + type })
+  },
+
+  // 跳转意见反馈
+  goFeedback() {
+    wx.navigateTo({ url: '/pages/feedback/feedback' })
   },
 
   // 加载我发布的物品（云端）

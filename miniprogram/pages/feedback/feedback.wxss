@@ -1,0 +1,86 @@
+/* 意见反馈 */
+.container {
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.form-card {
+  margin: 0;
+  padding: 30rpx 24rpx;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 14rpx;
+}
+
+.required {
+  color: #f44336;
+}
+
+.optional {
+  color: #999;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.form-textarea {
+  width: 100%;
+  height: 240rpx;
+  background: #f8f8f8;
+  border-radius: 14rpx;
+  padding: 20rpx;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 11px;
+  color: #bbb;
+  margin-top: 8rpx;
+}
+
+.form-input {
+  background: #f8f8f8;
+  border-radius: 14rpx;
+  padding: 20rpx;
+  font-size: 14px;
+  margin-bottom: 8rpx;
+}
+
+.feedback-tips {
+  background: #F1F8E9;
+  border-radius: 14rpx;
+  padding: 20rpx;
+  margin: 24rpx 0;
+}
+
+.tips-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4CAF50;
+  margin-bottom: 8rpx;
+}
+
+.tips-text {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.7;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+  color: #fff;
+  border-radius: 44rpx;
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 8rpx;
+}
+
+.submit-btn[disabled] {
+  background: #ccc;
+  color: #fff;
+}

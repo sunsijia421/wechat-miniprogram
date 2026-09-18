@@ -1,0 +1,21 @@
+<!-- 意见反馈 -->
+<view class="container">
+
+  <view class="card form-card">
+    <view class="form-label">反馈内容 <text class="required">*</text></view>
+    <textarea class="form-textarea" placeholder="请描述你遇到的问题或建议（最多500字）"
+      maxlength="500" value="{{content}}" bindinput="onContentInput"></textarea>
+    <view class="char-count">{{content.length}}/500</view>
+
+    <view class="form-label">联系方式 <text class="optional">（选填）</text></view>
+    <input class="form-input" placeholder="微信号 / QQ / 手机号" value="{{contact}}" bindinput="onContactInput" />
+
+    <view class="feedback-tips">
+      <view class="tips-title">💡 反馈说明</view>
+      <view class="tips-text">你的每条反馈都会帮助我们改进平台，感谢为校园公益出一份力～</view>
+    </view>
+
+    <button class="submit-btn" bindtap="submit" disabled="{{submitting}}">{{submitting ? '提交中...' : '提交反馈'}}</button>
+  </view>
+
+</view>

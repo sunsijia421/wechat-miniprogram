@@ -9,7 +9,9 @@
     "pages/messages/messages",
     "pages/chat/chat",
     "pages/pointLogs/pointLogs",
-    "pages/rank/rank"
+    "pages/rank/rank",
+    "pages/myList/myList",
+    "pages/feedback/feedback"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",
