@@ -3,7 +3,7 @@ const util = require('../../utils/util')
 Page({
   data: {
     conversations: [],
-    loading: true,
+    loading: false,
     isEmpty: false
   },
 

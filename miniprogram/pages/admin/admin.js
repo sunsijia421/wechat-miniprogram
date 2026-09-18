@@ -23,6 +23,7 @@ Page({
     itemHasMore: true,
     itemKeyword: '',
     itemStatusFilter: '', // '' | available | offline | completed
+    itemLoading: false,
 
     // 用户管理
     users: [],
@@ -30,11 +31,13 @@ Page({
     userTotal: 0,
     userHasMore: true,
     userKeyword: '',
+    userLoading: false,
 
     // 举报管理
     reports: [],
     reportPage: 1,
-    reportHasMore: true
+    reportHasMore: true,
+    reportLoading: false
   },
 
   onShow() {
@@ -180,10 +183,10 @@ Page({
 
   // ========== 物品管理 ==========
   loadItems(reset) {
-    if (this.data.loading) return
+    if (this.data.itemLoading) return
     if (reset) this.setData({ itemPage: 1, items: [] })
     const { itemPage, itemKeyword, itemStatusFilter } = this.data
-    this.setData({ loading: true })
+    this.setData({ loading: true, itemLoading: true })
     util.callApi('adminItems', {
       page: itemPage,
       pageSize: 20,
@@ -197,11 +200,12 @@ Page({
           items,
           itemTotal: res.total,
           itemHasMore: res.hasMore,
-          loading: false
+          loading: false,
+          itemLoading: false
         })
       })
       .catch(e => {
-        this.setData({ loading: false })
+        this.setData({ loading: false, itemLoading: false })
         wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       })
   },
@@ -281,17 +285,17 @@ Page({
 
   // 物品列表触底加载
   loadMoreItems() {
-    if (!this.data.itemHasMore || this.data.loading) return
+    if (!this.data.itemHasMore || this.data.itemLoading) return
     this.setData({ itemPage: this.data.itemPage + 1 })
     this.loadItems(false)
   },
 
   // ========== 用户管理 ==========
   loadUsers(reset) {
-    if (this.data.loading) return
+    if (this.data.userLoading) return
     if (reset) this.setData({ userPage: 1, users: [] })
     const { userPage, userKeyword } = this.data
-    this.setData({ loading: true })
+    this.setData({ loading: true, userLoading: true })
     util.callApi('adminUsers', { page: userPage, pageSize: 20, keyword: userKeyword })
       .then(res => {
         const users = this.data.users.concat(res.list)
@@ -299,11 +303,12 @@ Page({
           users,
           userTotal: res.total,
           userHasMore: res.hasMore,
-          loading: false
+          loading: false,
+          userLoading: false
         })
       })
       .catch(e => {
-        this.setData({ loading: false })
+        this.setData({ loading: false, userLoading: false })
         wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       })
   },
@@ -347,23 +352,23 @@ Page({
 
   // 用户列表触底加载
   loadMoreUsers() {
-    if (!this.data.userHasMore || this.data.loading) return
+    if (!this.data.userHasMore || this.data.userLoading) return
     this.setData({ userPage: this.data.userPage + 1 })
     this.loadUsers(false)
   },
 
   // ========== 举报管理 ==========
   loadReports(reset) {
-    if (this.data.loading) return
+    if (this.data.reportLoading) return
     if (reset) this.setData({ reportPage: 1, reports: [] })
-    this.setData({ loading: true })
+    this.setData({ loading: true, reportLoading: true })
     util.callApi('adminReports', {})
       .then(res => {
         const list = res.list.map(r => this.normalizeReport(r))
-        this.setData({ reports: list, loading: false })
+        this.setData({ reports: list, loading: false, reportLoading: false })
       })
       .catch(e => {
-        this.setData({ loading: false })
+        this.setData({ loading: false, reportLoading: false })
         wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       })
   },
