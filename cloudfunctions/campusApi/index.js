@@ -958,7 +958,8 @@ async function apply(event, openid) {
 
 // 我申请过的物品（通过 applications 关联）
 async function myApply(openid) {
-  const apps = await db.collection(COL.applications).where({ _openid: openid }).orderBy('createTime', 'desc').get()
+  // 注意：云数据库默认单次最多返回 20 条，必须显式 limit
+  const apps = await db.collection(COL.applications).where({ _openid: openid }).orderBy('createTime', 'desc').limit(100).get()
   const itemIds = [...new Set(apps.data.map(a => a.itemId))]
   if (!itemIds.length) return { success: true, list: [] }
   const itemsRes = await db.collection(COL.items).where({ _id: _.in(itemIds) }).get()
@@ -976,7 +977,7 @@ async function getApplications(event, openid) {
   if (!itemRes.data || itemRes.data._openid !== openid) {
     return { success: false, message: '无权查看申请记录' }
   }
-  const apps = await db.collection(COL.applications).where({ itemId }).orderBy('createTime', 'desc').get()
+  const apps = await db.collection(COL.applications).where({ itemId }).orderBy('createTime', 'desc').limit(50).get()
   return { success: true, list: apps.data }
 }
 
@@ -1259,7 +1260,7 @@ async function checkIsAdmin(openid) {
 
 // 我提交的举报（举报者查看受理结果，含物品状态）
 async function myReports(openid) {
-  const reports = await db.collection(COL.reports).where({ _openid: openid }).orderBy('createTime', 'desc').get()
+  const reports = await db.collection(COL.reports).where({ _openid: openid }).orderBy('createTime', 'desc').limit(100).get()
   const itemIds = [...new Set(reports.data.map(r => r.itemId))]
   const itemMap = {}
   if (itemIds.length) {
