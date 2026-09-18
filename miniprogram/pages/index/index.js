@@ -3,12 +3,11 @@ const app = getApp()
 
 Page({
   data: {
-    // 统计数据
-    completedCount: 0,
-    availableCount: 0,
-
     // 视图模式：list | map
     viewMode: 'list',
+
+    // 排序：new 最新 | hot 最热
+    sortMode: 'new',
 
     // 分类筛选
     categories: util.CATEGORY_LIST,
@@ -67,10 +66,31 @@ Page({
 
   onShow() {
     this.loadItems(true)
-    this.calculateStats()
     this.loadHotData()
     this.loadCheckIn()
     util.refreshMessageBadge()
+  },
+
+  // 功能宫格跳转（闲鱼风）
+  goPublish() {
+    wx.switchTab({ url: '/pages/publish/publish' })
+  },
+  goRank() {
+    wx.navigateTo({ url: '/pages/rank/rank' })
+  },
+  goPointLogs() {
+    wx.navigateTo({ url: '/pages/pointLogs/pointLogs' })
+  },
+  goFavorites() {
+    wx.navigateTo({ url: '/pages/myList/myList?type=favorites' })
+  },
+
+  // 排序切换（最新/最热）
+  onSortChange(e) {
+    const sort = e.currentTarget.dataset.sort
+    if (sort === this.data.sortMode) return
+    this.setData({ sortMode: sort })
+    this.loadItems(true)
   },
 
   // P3：加载签到状态
@@ -329,9 +349,9 @@ Page({
     }
     if (this.data.loading) return
 
-    const { currentCategory, page, pageSize, keyword, barterOnly } = this.data
+    const { currentCategory, page, pageSize, keyword, barterOnly, sortMode } = this.data
     this.setData({ loading: true })
-    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize, keyword: keyword, barterOnly: barterOnly })
+    util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize, keyword: keyword, barterOnly: barterOnly, sort: sortMode })
       .then(res => {
         const newItems = res.list.map(it => this.normalizeItem(it))
         const allItems = this.data.allItems.concat(newItems)
@@ -359,18 +379,6 @@ Page({
       images: item.images || [],
       titleSegments: util.buildHighlightSegments(item.title, keyword)
     })
-  },
-
-  // 计算统计（云端）
-  calculateStats() {
-    util.callApi('stats')
-      .then(res => {
-        this.setData({
-          completedCount: res.completedCount,
-          availableCount: res.availableCount
-        })
-      })
-      .catch(() => {})
   },
 
   // 切换分类
@@ -436,7 +444,6 @@ Page({
   // 下拉刷新
   onPullDownRefresh() {
     this.loadItems(true)
-    this.calculateStats()
     wx.stopPullDownRefresh()
     wx.showToast({ title: '已刷新', icon: 'success', duration: 1000 })
   },

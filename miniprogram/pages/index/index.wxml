@@ -53,22 +53,42 @@
   <!-- 主内容（登录后显示） -->
   <block wx:if="{{isLoggedIn && !showAgreement}}">
 
-    <!-- 统计面板 -->
-    <view class="stats-panel">
-      <view class="stats-row">
-        <view class="stats-item">
-          <view class="stats-number">{{completedCount}}</view>
-          <view class="stats-label">件闲置物品获新生</view>
-        </view>
-        <view class="stats-divider"></view>
-        <view class="stats-item">
-          <view class="stats-number">{{availableCount}}</view>
-          <view class="stats-label">件物品等待有缘人</view>
-        </view>
+    <!-- 顶部：品牌 + 搜索框（闲鱼风） -->
+    <view class="home-header">
+      <view class="brand">🌱 佳禾换物</view>
+      <view class="search-input-wrap home-search">
+        <text class="search-icon">🔍</text>
+        <input class="search-input" placeholder="搜索物品名称" value="{{keyword}}"
+          bindinput="onSearchInput" confirm-type="search" />
+        <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
       </view>
     </view>
 
-    <!-- P3：公益公告栏 -->
+    <!-- 功能宫格（闲鱼风） -->
+    <view class="quick-grid">
+      <view class="quick-item" bindtap="goPublish">
+        <view class="quick-icon publish">📦</view>
+        <view class="quick-label">发布闲置</view>
+      </view>
+      <view class="quick-item" bindtap="doCheckIn">
+        <view class="quick-icon checkin">📅</view>
+        <view class="quick-label">每日签到</view>
+      </view>
+      <view class="quick-item" bindtap="goRank">
+        <view class="quick-icon rank">🏆</view>
+        <view class="quick-label">公益排行</view>
+      </view>
+      <view class="quick-item" bindtap="goPointLogs">
+        <view class="quick-icon points">📜</view>
+        <view class="quick-label">积分明细</view>
+      </view>
+      <view class="quick-item" bindtap="goFavorites">
+        <view class="quick-icon fav">❤️</view>
+        <view class="quick-label">我的收藏</view>
+      </view>
+    </view>
+
+    <!-- P3：公益公告横幅（闲鱼横幅风） -->
     <view class="notice-bar" wx:if="{{notices.length > 0}}">
       <view class="notice-icon">📢</view>
       <swiper class="notice-swiper" vertical autoplay interval="4000" circular="{{false}}">
@@ -76,9 +96,10 @@
           <view class="notice-text">{{item}}</view>
         </swiper-item>
       </swiper>
+      <view class="notice-arrow">›</view>
     </view>
 
-    <!-- P3：每日签到 -->
+    <!-- P3：每日签到（日历） -->
     <view class="checkin-card">
       <view class="checkin-left">
         <view class="checkin-title">
@@ -103,29 +124,11 @@
       <view class="toggle-btn {{viewMode === 'map' ? 'active' : ''}}" bindtap="switchViewMode">🗺️ 地图视图</view>
     </view>
 
-    <!-- 搜索栏（列表视图显示） -->
-    <view class="search-bar" wx:if="{{viewMode === 'list'}}">
-      <view class="search-input-wrap">
-        <text class="search-icon">🔍</text>
-        <input class="search-input" placeholder="搜索物品名称" value="{{keyword}}"
-          bindinput="onSearchInput" confirm-type="search" />
-        <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
-      </view>
-    </view>
-
     <!-- P2：热门搜索词 -->
     <view class="hot-keywords" wx:if="{{viewMode === 'list' && hotKeywords.length > 0}}">
       <text class="hot-label">🔥 热门搜索</text>
       <view class="hot-keyword" wx:for="{{hotKeywords}}" wx:key="keyword" data-keyword="{{item.keyword}}" bindtap="onHotKeywordTap">
         {{item.keyword}}
-      </view>
-    </view>
-
-    <!-- 仅看可换 切换 -->
-    <view class="barter-toggle" wx:if="{{viewMode === 'list'}}">
-      <view class="barter-toggle-item {{barterOnly ? 'active' : ''}}" bindtap="onBarterToggle">
-        <text class="barter-check">{{barterOnly ? '✅' : '⬜'}}</text>
-        <text>仅看可交换</text>
       </view>
     </view>
 
@@ -148,6 +151,16 @@
         搜索：{{keyword}} <text class="chip-x">✕</text>
       </view>
       <view class="filter-clear-all" bindtap="clearAllFilters">清除全部</view>
+    </view>
+
+    <!-- 猜你喜欢 + 排序筛选（闲鱼风） -->
+    <view class="guess-head" wx:if="{{viewMode === 'list'}}">
+      <view class="guess-title">猜你喜欢</view>
+      <view class="guess-filters">
+        <view class="gf {{sortMode === 'new' ? 'active' : ''}}" data-sort="new" bindtap="onSortChange">最新发布</view>
+        <view class="gf {{sortMode === 'hot' ? 'active' : ''}}" data-sort="hot" bindtap="onSortChange">最热物品</view>
+        <view class="gf {{barterOnly ? 'active' : ''}}" bindtap="onBarterToggle">可交换</view>
+      </view>
     </view>
 
     <!-- 列表视图 -->
