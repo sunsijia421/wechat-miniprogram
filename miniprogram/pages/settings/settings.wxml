@@ -1,0 +1,62 @@
+<!-- 设置（闲鱼风格：分组设置项） -->
+<view class="container">
+
+  <!-- 个人资料 -->
+  <view class="group">
+    <view class="group-title">个人资料</view>
+    <view class="group-card">
+      <view class="set-row">
+        <view class="set-label">头像</view>
+        <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+          <image class="set-avatar" src="{{avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+        </button>
+      </view>
+      <view class="set-divider"></view>
+      <view class="set-row">
+        <view class="set-label">昵称</view>
+        <input class="set-input" type="nickname" placeholder="请输入昵称" value="{{nickName}}" bindinput="onNicknameInput" />
+      </view>
+      <view class="set-divider"></view>
+      <view class="set-row">
+        <view class="set-label">会员名</view>
+        <view class="set-value readonly">{{shortOpenid}}</view>
+      </view>
+      <view class="set-divider"></view>
+      <view class="set-row column">
+        <view class="set-label">简介</view>
+        <textarea class="set-textarea" placeholder="介绍一下自己吧（100字以内）" maxlength="100"
+          value="{{bio}}" bindinput="onBioInput"></textarea>
+      </view>
+      <view class="set-divider"></view>
+      <view class="set-row">
+        <view class="set-label">所在地区</view>
+        <input class="set-input" placeholder="如：陕西省西安市" value="{{region}}" bindinput="onRegionInput" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 公益数据（替代闲鱼收款方式） -->
+  <view class="group">
+    <view class="group-title">公益数据</view>
+    <view class="group-card">
+      <view class="set-row">
+        <view class="set-label">当前等级</view>
+        <view class="set-value"><text class="level-text">{{level.icon}} {{level.name}}</text></view>
+      </view>
+      <view class="set-divider"></view>
+      <view class="set-row">
+        <view class="set-label">公益积分</view>
+        <view class="set-value accent">{{points}}</view>
+      </view>
+      <view class="set-divider"></view>
+      <view class="set-row">
+        <view class="set-label">捐赠次数</view>
+        <view class="set-value accent">{{donateCount}}</view>
+      </view>
+    </view>
+  </view>
+
+  <button class="save-btn" bindtap="save" disabled="{{saving}}">{{saving ? '保存中...' : '保存资料'}}</button>
+  <button class="logout-btn" bindtap="logout">退出登录</button>
+
+</view>

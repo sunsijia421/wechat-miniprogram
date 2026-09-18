@@ -11,7 +11,9 @@
     "pages/pointLogs/pointLogs",
     "pages/rank/rank",
     "pages/myList/myList",
-    "pages/feedback/feedback"
+    "pages/feedback/feedback",
+    "pages/settings/settings",
+    "pages/userHome/userHome"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",

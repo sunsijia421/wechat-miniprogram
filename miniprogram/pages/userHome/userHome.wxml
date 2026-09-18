@@ -1,0 +1,82 @@
+<!-- 个人主页（闲鱼风格） -->
+<view class="container">
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <block wx:if="{{user}}">
+
+    <!-- 顶部用户信息 -->
+    <view class="home-header">
+      <view class="home-deco">🌿</view>
+      <view class="home-top">
+        <view class="home-id">
+          <view class="home-name">{{user.nickName}}</view>
+          <view class="home-active">积极参与校园公益流转</view>
+        </view>
+        <image class="home-avatar" src="{{user.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+      </view>
+      <view class="home-bio" wx:if="{{user.bio}}">{{user.bio}}</view>
+      <view class="home-meta">
+        <view class="home-region" wx:if="{{user.region}}">📍 {{user.region}}</view>
+        <view class="home-region" wx:else>🌱 公益参与者</view>
+      </view>
+      <view class="home-stats">
+        <view class="home-stat">
+          <view class="home-stat-num">{{followCount}}</view>
+          <view class="home-stat-label">关注</view>
+        </view>
+        <view class="home-stat">
+          <view class="home-stat-num">{{fanCount}}</view>
+          <view class="home-stat-label">粉丝</view>
+        </view>
+        <view class="home-stat">
+          <view class="home-stat-num">{{user.points}}</view>
+          <view class="home-stat-label">公益积分</view>
+        </view>
+        <view class="home-stat">
+          <view class="home-stat-num">{{user.donateCount}}</view>
+          <view class="home-stat-label">捐赠</view>
+        </view>
+      </view>
+      <view class="home-actions">
+        <button class="home-btn" bindtap="goSettings">✏️ 编辑资料</button>
+      </view>
+    </view>
+
+    <!-- 标签栏 -->
+    <view class="home-tabs">
+      <view class="home-tab {{activeTab === 'items' ? 'active' : ''}}" data-tab="items" bindtap="switchTab">宝贝 {{items.length}}</view>
+      <view class="home-tab {{activeTab === 'comments' ? 'active' : ''}}" data-tab="comments" bindtap="switchTab">评价</view>
+    </view>
+
+    <!-- 宝贝列表 -->
+    <view class="home-items" wx:if="{{activeTab === 'items'}}">
+      <view class="empty-state" wx:if="{{items.length === 0}}">
+        <view class="icon">📦</view>
+        <view class="text">还没有发布闲置</view>
+      </view>
+      <view class="home-item card" wx:for="{{items}}" wx:key="id" data-id="{{item.id}}" bindtap="onItemTap">
+        <image class="home-item-thumb" src="{{item.image || '/images/default-item.png'}}" mode="aspectFill" />
+        <view class="home-item-info">
+          <view class="home-item-title">{{item.title}}</view>
+          <view class="home-item-meta">
+            <view class="tag">{{item.categoryName}}</view>
+            <view class="status-tag status-{{item.statusClass}}">{{item.statusText}}</view>
+          </view>
+          <view class="home-item-sub" wx:if="{{item.allowBarter}}">🔄 支持交换</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评价列表（空态） -->
+    <view class="home-comments" wx:if="{{activeTab === 'comments'}}">
+      <view class="empty-state">
+        <view class="icon">💬</view>
+        <view class="text">暂无评价</view>
+        <view class="text sub">完成捐赠后即可获得对方的评价</view>
+      </view>
+    </view>
+
+  </block>
+
+</view>

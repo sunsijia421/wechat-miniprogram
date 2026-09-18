@@ -312,6 +312,15 @@ function getLevel(points) {
   return { name: cur.name, icon: cur.icon, min: cur.min, nextMin: next ? next.min : null, progress, isMax: !next }
 }
 
+/**
+ * openid 脱敏展示（保留前 4 后 4）
+ */
+function maskOpenid(openid) {
+  if (!openid) return ''
+  if (openid.length <= 12) return openid
+  return openid.slice(0, 4) + '****' + openid.slice(-4)
+}
+
 module.exports = {
   generateId: generateId,
   formatTime: formatTime,
@@ -329,5 +338,6 @@ module.exports = {
   refreshMessageBadge: refreshMessageBadge,
   requestSubscribe: requestSubscribe,
   SUBSCRIBE_TEMPLATES: SUBSCRIBE_TEMPLATES,
-  getLevel: getLevel
+  getLevel: getLevel,
+  maskOpenid: maskOpenid
 }

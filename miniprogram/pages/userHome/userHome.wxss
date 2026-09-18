@@ -1,0 +1,224 @@
+/* 个人主页（闲鱼风格） */
+.container {
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.home-header {
+  background: linear-gradient(160deg, #E8F5E9, #C8E6C9);
+  border-radius: 24rpx;
+  padding: 36rpx 30rpx 28rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-deco {
+  position: absolute;
+  top: -30rpx;
+  right: -20rpx;
+  font-size: 160rpx;
+  opacity: 0.12;
+  transform: rotate(-15deg);
+}
+
+.home-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.home-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1B5E20;
+}
+
+.home-active {
+  font-size: 12px;
+  color: #4CAF50;
+  margin-top: 8rpx;
+}
+
+.home-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 4rpx solid #fff;
+  box-shadow: 0 4rpx 16rpx rgba(76, 175, 80, 0.3);
+}
+
+.home-bio {
+  font-size: 13px;
+  color: #33691E;
+  line-height: 1.7;
+  margin-top: 24rpx;
+}
+
+.home-meta {
+  margin-top: 10rpx;
+}
+
+.home-region {
+  font-size: 12px;
+  color: #689F38;
+}
+
+.home-stats {
+  display: flex;
+  margin-top: 26rpx;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 16rpx;
+  padding: 18rpx 0;
+}
+
+.home-stat {
+  flex: 1;
+  text-align: center;
+}
+
+.home-stat-num {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1B5E20;
+}
+
+.home-stat-label {
+  font-size: 11px;
+  color: #689F38;
+  margin-top: 4rpx;
+}
+
+.home-actions {
+  margin-top: 22rpx;
+  display: flex;
+  justify-content: center;
+}
+
+.home-btn {
+  background: #fff;
+  color: #2E7D32;
+  border-radius: 40rpx;
+  font-size: 14px;
+  padding: 0 50rpx;
+  line-height: 72rpx;
+  height: 72rpx;
+  font-weight: 600;
+}
+
+.home-btn::after {
+  border: none;
+}
+
+/* 标签栏 */
+.home-tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 16rpx;
+  margin-top: 20rpx;
+  padding: 8rpx;
+  border: 1rpx solid #f0f0f0;
+}
+
+.home-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 14px;
+  color: #666;
+  border-radius: 12rpx;
+}
+
+.home-tab.active {
+  background: linear-gradient(135deg, #43A047, #5CB85C);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 宝贝列表 */
+.home-items {
+  margin-top: 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.home-item {
+  margin: 0;
+  padding: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+.home-item-thumb {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 14rpx;
+  background: linear-gradient(135deg, #eef3ee, #e3ebe3);
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.home-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-item-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.home-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.tag {
+  background: #F1F8E9;
+  color: #4CAF50;
+  font-size: 10px;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.status-tag {
+  font-size: 10px;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+}
+
+.status-available {
+  background: #E3F2FD;
+  color: #1976D2;
+}
+
+.status-completed {
+  background: #E8F5E9;
+  color: #2E7D32;
+}
+
+.status-offline {
+  background: #F3E5F5;
+  color: #7B1FA2;
+}
+
+.home-item-sub {
+  font-size: 11px;
+  color: #FF9800;
+  margin-top: 10rpx;
+}
+
+.home-comments {
+  margin-top: 20rpx;
+}
+
+.loading {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 40rpx;
+}

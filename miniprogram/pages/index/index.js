@@ -305,6 +305,8 @@ Page({
         const userInfo = app.getUserInfo() || {}
         userInfo.points = res.points || 0
         userInfo.donateCount = res.donateCount || 0
+        userInfo.bio = res.bio || ''
+        userInfo.region = res.region || ''
         if (nickName) userInfo.nickName = nickName
         if (avatarUrl) userInfo.avatarUrl = avatarUrl
         app.saveUserInfo(userInfo)

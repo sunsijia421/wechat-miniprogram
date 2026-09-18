@@ -12,14 +12,17 @@
   <!-- 已登录 -->
   <block wx:if="{{userInfo}}">
 
-    <!-- 顶部用户信息区 -->
+    <!-- 顶部用户信息区（闲鱼风格：点击进个人主页，右侧设置入口） -->
     <view class="user-header">
       <view class="user-top">
-        <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
-        <view class="user-id-box">
-          <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
-          <view class="user-account" wx:if="{{openid}}">账号：{{openid}}</view>
+        <view class="user-main" bindtap="goUserHome">
+          <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+          <view class="user-id-box">
+            <view class="user-name">{{userInfo.nickName || '公益参与者'}} <text class="user-caret">›</text></view>
+            <view class="user-account" wx:if="{{shortOpenid}}">账号：{{shortOpenid}}</view>
+          </view>
         </view>
+        <view class="user-settings" bindtap="goSettings">⚙️ 设置</view>
       </view>
       <!-- 积分 / 捐赠并排 + 等级徽章（P1） -->
       <view class="user-stats">

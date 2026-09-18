@@ -5,6 +5,7 @@ Page({
   data: {
     userInfo: null,
     openid: '',
+    shortOpenid: '',
 
     // 我发布的
     publishedItems: [],
@@ -58,10 +59,21 @@ Page({
       this.setData({
         userInfo,
         openid: app.getOpenid() || '',
+        shortOpenid: util.maskOpenid(app.getOpenid() || ''),
         level,
         levelNextName: levelNames[level.name] || ''
       })
     }
+  },
+
+  // 跳转个人主页
+  goUserHome() {
+    wx.navigateTo({ url: '/pages/userHome/userHome' })
+  },
+
+  // 跳转设置页
+  goSettings() {
+    wx.navigateTo({ url: '/pages/settings/settings' })
   },
 
   // P1：跳转积分明细

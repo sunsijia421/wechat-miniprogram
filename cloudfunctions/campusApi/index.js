@@ -584,15 +584,80 @@ async function login(event, openid) {
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (users.data.length === 0) {
     await db.collection(COL.users).add({
-      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, status: 'normal', createTime: db.serverDate() }
+      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, status: 'normal', createTime: db.serverDate() }
     })
-    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, isAdmin: await isAdminUser(openid) }
+    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, isAdmin: await isAdminUser(openid) }
   } else {
     const u = users.data[0]
     await db.collection(COL.users).doc(u._id).update({
       data: { nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '' }
     })
-    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', points: u.points || 0, donateCount: u.donateCount || 0, isAdmin: await isAdminUser(openid) }
+    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, isAdmin: await isAdminUser(openid) }
+  }
+}
+
+// 更新个人资料（昵称/头像/简介/地区）
+async function updateProfile(event, openid) {
+  const { nickName, avatarUrl, bio, region } = event
+  const users = await db.collection(COL.users).where({ _openid: openid }).get()
+  if (!users.data.length) return { success: false, message: '用户不存在' }
+  const data = {}
+  if (nickName !== undefined) {
+    const name = (nickName || '').trim()
+    if (!name) return { success: false, message: '昵称不能为空' }
+    const tc = await checkText(name, openid)
+    if (!tc.passed) return { success: false, code: 'CONTENT_RISK', message: tc.message }
+    data.nickName = name
+  }
+  if (avatarUrl !== undefined) data.avatarUrl = avatarUrl || ''
+  if (bio !== undefined) {
+    if (bio.length > 100) return { success: false, message: '简介不能超过100字' }
+    const bc = await checkText(bio.trim(), openid)
+    if (!bc.passed) return { success: false, code: 'CONTENT_RISK', message: bc.message }
+    data.bio = bio.trim()
+  }
+  if (region !== undefined) {
+    if (region.length > 30) return { success: false, message: '地区信息过长' }
+    data.region = region.trim()
+  }
+  await db.collection(COL.users).doc(users.data[0]._id).update({ data })
+  return { success: true }
+}
+
+// 个人主页：用户公开资料 + 关注/粉丝数 + 发布的物品列表
+async function userProfile(event, openid) {
+  const target = (event && event.openid) || openid
+  const users = await db.collection(COL.users).where({ _openid: target }).get()
+  if (!users.data.length) return { success: false, message: '用户不存在' }
+  const u = users.data[0]
+  const [followCnt, fanCnt, itemsRes] = await Promise.all([
+    db.collection(COL.follows).where({ _openid: target }).count(),
+    db.collection(COL.follows).where({ targetOpenid: target }).count(),
+    db.collection(COL.items).where({ _openid: target }).orderBy('createTime', 'desc').limit(50).get()
+  ])
+  const items = itemsRes.data.map(it => ({
+    id: it._id,
+    title: it.title,
+    image: (it.images && it.images[0]) || '',
+    category: it.category || 'other',
+    status: it.status,
+    allowBarter: !!it.allowBarter,
+    createTime: it.createTime
+  }))
+  return {
+    success: true,
+    user: {
+      openid: target,
+      nickName: u.nickName || '公益参与者',
+      avatarUrl: u.avatarUrl || '',
+      bio: u.bio || '',
+      region: u.region || '',
+      points: u.points || 0,
+      donateCount: u.donateCount || 0
+    },
+    followCount: followCnt.total,
+    fanCount: fanCnt.total,
+    items
   }
 }
 
@@ -1228,6 +1293,8 @@ exports.main = async (event, context) => {
       case 'checkInStatus': return await checkInStatus(openid)
       case 'checkIn': return await checkIn(openid)
       case 'submitFeedback': return await submitFeedback(event, openid)
+      case 'updateProfile': return await updateProfile(event, openid)
+      case 'userProfile': return await userProfile(event, openid)
       case 'adminStats': return await adminStats(openid)
       case 'adminItems': return await adminItems(event, openid)
       case 'adminSetItemStatus': return await adminSetItemStatus(event, openid)
