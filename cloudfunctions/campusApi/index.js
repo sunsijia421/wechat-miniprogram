@@ -18,7 +18,8 @@ const COL = {
   favorites: 'favorites',
   follows: 'follows',
   searchLogs: 'search_logs', // P2：搜索热词日志
-  pointLogs: 'point_logs'    // P1：积分明细流水
+  pointLogs: 'point_logs',    // P1：积分明细流水
+  checkins: 'checkins'        // P3：每日签到
 }
 
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
@@ -42,7 +43,7 @@ const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -483,6 +484,76 @@ async function rankList() {
     byPoints: byPoints.data.map(pick),
     byDonate: byDonate.data.map(pick)
   }
+}
+
+// ===================== P3：体验运营（签到） =====================
+
+// 东八区日期字符串 yyyy-mm-dd（偏移 n 天）
+function dateKey(offsetDays) {
+  const d = new Date(Date.now() + 8 * 3600 * 1000 + (offsetDays || 0) * 86400000)
+  const p = n => (n < 10 ? '0' + n : '' + n)
+  return d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate())
+}
+
+// 签到状态：今日是否已签 / 连续天数 / 近7天日历
+async function checkInStatus(openid) {
+  if (!openid) return { success: true, signed: false, streak: 0, week: [] }
+  const today = dateKey(0)
+  const todayRes = await db.collection(COL.checkins).where({ _openid: openid, date: today }).get()
+  const users = await db.collection(COL.users).where({ _openid: openid }).get()
+  const streak = users.data.length ? (users.data[0].streak || 0) : 0
+  // 近 7 天
+  const week = []
+  const days = []
+  for (let i = 6; i >= 0; i--) days.push(dateKey(-i))
+  const logs = await db.collection(COL.checkins).where({ _openid: openid, date: _.in(days) }).get()
+  const signedSet = new Set(logs.data.map(l => l.date))
+  for (const d of days) {
+    week.push({ date: d, label: d.slice(5), signed: signedSet.has(d), isToday: d === today })
+  }
+  return { success: true, signed: todayRes.data.length > 0, streak, week }
+}
+
+// 执行签到：+2 积分；连续满 7 天额外 +5（激励连续参与）
+async function checkIn(openid) {
+  if (!openid) return { success: false, message: '登录后即可签到' }
+  const today = dateKey(0)
+  const exist = await db.collection(COL.checkins).where({ _openid: openid, date: today }).get()
+  if (exist.data.length) return { success: false, message: '今日已签到' }
+
+  const users = await db.collection(COL.users).where({ _openid: openid }).get()
+  let streak = 1
+  let bonus = 0
+  if (users.data.length) {
+    const u = users.data[0]
+    const yesterday = dateKey(-1)
+    streak = (u.lastCheckInDate === yesterday) ? (u.streak || 0) + 1 : 1
+    // 连续满 7 天（及每满 7 天）额外 +5
+    if (streak > 0 && streak % 7 === 0) bonus = 5
+  }
+  const points = 2 + bonus
+
+  await db.collection(COL.checkins).add({
+    data: { _openid: openid, date: today, createTime: db.serverDate() }
+  })
+  if (users.data.length) {
+    await db.collection(COL.users).doc(users.data[0]._id).update({
+      data: { lastCheckInDate: today, streak, points: _.inc(points) }
+    })
+    try {
+      await db.collection(COL.pointLogs).add({
+        data: {
+          _openid: openid,
+          points: points,
+          donateCount: 0,
+          reason: bonus > 0 ? '连续签到满7天' : '每日签到',
+          itemTitle: '',
+          createTime: db.serverDate()
+        }
+      })
+    } catch (e) { /* 忽略 */ }
+  }
+  return { success: true, points, streak, bonus }
 }
 
 // ===================== 各 Action 实现 =====================
@@ -1134,6 +1205,8 @@ exports.main = async (event, context) => {
       case 'followStatus': return await followStatus(event, openid)
       case 'pointLogs': return await myPointLogs(openid)
       case 'rankList': return await rankList()
+      case 'checkInStatus': return await checkInStatus(openid)
+      case 'checkIn': return await checkIn(openid)
       case 'adminStats': return await adminStats(openid)
       case 'adminItems': return await adminItems(event, openid)
       case 'adminSetItemStatus': return await adminSetItemStatus(event, openid)

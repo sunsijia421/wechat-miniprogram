@@ -68,6 +68,35 @@
       </view>
     </view>
 
+    <!-- P3：公益公告栏 -->
+    <view class="notice-bar" wx:if="{{notices.length > 0}}">
+      <view class="notice-icon">📢</view>
+      <swiper class="notice-swiper" vertical autoplay interval="4000" circular="{{false}}">
+        <swiper-item wx:for="{{notices}}" wx:key="*this">
+          <view class="notice-text">{{item}}</view>
+        </swiper-item>
+      </swiper>
+    </view>
+
+    <!-- P3：每日签到 -->
+    <view class="checkin-card">
+      <view class="checkin-left">
+        <view class="checkin-title">
+          📅 每日签到
+          <text class="checkin-streak" wx:if="{{checkin.streak > 0}}">🔥 连续 {{checkin.streak}} 天</text>
+        </view>
+        <view class="checkin-week">
+          <view class="checkin-day {{day.signed ? 'signed' : ''}} {{day.isToday ? 'today' : ''}}" wx:for="{{checkin.week}}" wx:key="date">
+            <view class="checkin-day-dot">{{day.signed ? '✓' : ''}}</view>
+            <view class="checkin-day-label">{{day.label}}</view>
+          </view>
+        </view>
+      </view>
+      <button class="checkin-btn {{checkin.signed ? 'done' : ''}}" bindtap="doCheckIn" disabled="{{checkin.signed}}">
+        {{checkin.signed ? '今日已签' : '签到 +2'}}
+      </button>
+    </view>
+
     <!-- 视图切换按钮 -->
     <view class="view-toggle">
       <view class="toggle-btn {{viewMode === 'list' ? 'active' : ''}}" bindtap="switchViewMode">📋 列表视图</view>
@@ -143,11 +172,16 @@
 
       <view wx:if="{{displayItems.length === 0}}" class="empty-state">
         <view class="icon">📭</view>
-        <view class="text">暂无物品</view>
-        <view class="text sub">去发布第一件物品吧~</view>
+        <view class="text">{{keyword ? '未找到相关物品' : '暂无物品'}}</view>
+        <view class="text sub" wx:if="{{keyword}}">试试热门搜索：{{hotKeywords.length > 0 ? hotKeywords[0].keyword : ''}}</view>
+        <view class="text sub" wx:else>去发布第一件物品吧~</view>
+        <view class="hot-keyword" wx:if="{{keyword && hotKeywords.length > 0}}" data-keyword="{{hotKeywords[0].keyword}}" bindtap="onHotKeywordTap">🔍 搜 "{{hotKeywords[0].keyword}}"</view>
       </view>
 
       <view class="item-list" wx:else>
+        <view class="result-count" wx:if="{{keyword || currentCategory !== 'all'}}">
+          共找到 {{displayItems.length}} 件相关物品
+        </view>
         <view class="item-card card" wx:for="{{displayItems}}" wx:key="id"
           data-id="{{item.id}}" bindtap="onItemTap">
           <view class="item-card-row">
@@ -191,6 +225,32 @@
     </block>
 
   </block>
+
+  <!-- P3：新手引导弹窗（首次登录后展示一次，可跳过） -->
+  <view class="agreement-modal" wx:if="{{showGuide}}">
+    <view class="agreement-content guide-content">
+      <view class="guide-step-indicator">
+        <view class="guide-dot {{guideStep === 1 ? 'active' : ''}}"></view>
+        <view class="guide-dot {{guideStep === 2 ? 'active' : ''}}"></view>
+        <view class="guide-dot {{guideStep === 3 ? 'active' : ''}}"></view>
+      </view>
+      <view class="guide-body">
+        <view class="guide-icon" wx:if="{{guideStep === 1}}">🔍</view>
+        <view class="guide-icon" wx:if="{{guideStep === 2}}">📦</view>
+        <view class="guide-icon" wx:if="{{guideStep === 3}}">🙋</view>
+        <view class="guide-title" wx:if="{{guideStep === 1}}">浏览闲置好物</view>
+        <view class="guide-title" wx:if="{{guideStep === 2}}">发布闲置物品</view>
+        <view class="guide-title" wx:if="{{guideStep === 3}}">申请领取</view>
+        <view class="guide-desc" wx:if="{{guideStep === 1}}">逛逛首页，看看同学们在分享什么闲置好物，支持分类筛选和关键词搜索～</view>
+        <view class="guide-desc" wx:if="{{guideStep === 2}}">点击底部"发布"，把闲置物品免费送出或交换，让资源流动起来～</view>
+        <view class="guide-desc" wx:if="{{guideStep === 3}}">看到需要的物品，点击"我要申请"，写清理由等待发布者确认即可～</view>
+      </view>
+      <view class="agreement-buttons">
+        <button class="btn-disagree" bindtap="onSkipGuide">{{guideStep === 3 ? '跳过' : '跳过'}}</button>
+        <button class="btn-agree" bindtap="onNextGuide">{{guideStep === 3 ? '开始使用' : '下一步'}}</button>
+      </view>
+    </view>
+  </view>
 
   <!-- 完善公益身份弹窗（头像 + 昵称） -->
   <view class="agreement-modal" wx:if="{{showProfileSetup}}">

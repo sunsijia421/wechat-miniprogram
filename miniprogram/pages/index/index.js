@@ -48,7 +48,17 @@ Page({
     showProfileSetup: false,
     isLoggedIn: false,
     avatarUrl: '',
-    nickName: ''
+    nickName: '',
+
+    // P3：每日签到 + 公告栏 + 新手引导
+    checkin: { signed: false, streak: 0, week: [] },
+    notices: [
+      '🌿 每成功送出 1 件闲置 +10 公益积分',
+      '📅 每日签到 +2 积分，连续 7 天额外 +5',
+      '🔄 支持以物易物，请在详情页勾选"可交换"'
+    ],
+    showGuide: false,
+    guideStep: 1
   },
 
   onLoad() {
@@ -59,7 +69,58 @@ Page({
     this.loadItems(true)
     this.calculateStats()
     this.loadHotData()
+    this.loadCheckIn()
     util.refreshMessageBadge()
+  },
+
+  // P3：加载签到状态
+  loadCheckIn() {
+    if (!app.getUserInfo()) {
+      this.setData({ checkin: { signed: false, streak: 0, week: [] } })
+      return
+    }
+    util.callApi('checkInStatus', {})
+      .then(res => {
+        this.setData({ checkin: { signed: res.signed, streak: res.streak || 0, week: res.week || [] } })
+      })
+      .catch(() => {})
+  },
+
+  // P3：执行签到
+  doCheckIn() {
+    if (!util.requireLogin()) return
+    const that = this
+    util.callApi('checkIn', {})
+      .then(res => {
+        wx.showToast({ title: res.bonus > 0 ? '签到成功 +' + res.points + '（含7天奖励）' : '签到成功 +' + res.points, icon: 'success' })
+        that.loadCheckIn()
+        that.loadHotData() // 积分变化后刷新热门（热榜含积分可能影响？仅保持数据新鲜）
+      })
+      .catch(e => {
+        if (typeof e === 'string' && e.indexOf('已签到') >= 0) {
+          wx.showToast({ title: '今日已签到', icon: 'none' })
+        } else {
+          wx.showToast({ title: typeof e === 'string' ? e : '签到失败', icon: 'none' })
+        }
+      })
+  },
+
+  // P3：新手引导
+  maybeShowGuide() {
+    if (!this.data.isLoggedIn) return
+    if (wx.getStorageSync('guideShown')) return
+    this.setData({ showGuide: true })
+    wx.setStorageSync('guideShown', true)
+  },
+  onNextGuide() {
+    if (this.data.guideStep < 3) {
+      this.setData({ guideStep: this.data.guideStep + 1 })
+    } else {
+      this.setData({ showGuide: false, guideStep: 1 })
+    }
+  },
+  onSkipGuide() {
+    this.setData({ showGuide: false, guideStep: 1 })
   },
 
   // P2：加载热门搜索词 + 热门物品榜
@@ -151,6 +212,7 @@ Page({
       this.setData({ showProfileSetup: true })
     } else {
       this.setData({ isLoggedIn: true })
+      this.maybeShowGuide()
     }
   },
 
@@ -209,6 +271,7 @@ Page({
     })
     this.syncLogin(nickName, userInfo.avatarUrl)
     wx.showToast({ title: '登录成功', icon: 'success' })
+    this.maybeShowGuide()
   },
 
   // 跳过资料填写（使用默认身份）
@@ -228,6 +291,7 @@ Page({
     })
     this.syncLogin('公益参与者', '')
     wx.showToast({ title: '已使用默认信息', icon: 'none' })
+    this.maybeShowGuide()
   },
 
   // 同步登录态到云端（获取并保存 openid、管理员身份与最新积分）

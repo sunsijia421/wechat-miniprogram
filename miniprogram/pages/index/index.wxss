@@ -150,6 +150,162 @@
   padding: 20rpx 0;
 }
 
+/* ========== P3：公告栏 ========== */
+.notice-bar {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+  border-radius: 14rpx;
+  padding: 14rpx 20rpx;
+  margin: 0 20rpx 16rpx;
+  border: 1rpx solid #FFE082;
+}
+.notice-icon {
+  font-size: 26rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
+}
+.notice-swiper {
+  flex: 1;
+  height: 34rpx;
+}
+.notice-text {
+  font-size: 13px;
+  color: #B26A00;
+  line-height: 34rpx;
+}
+
+/* ========== P3：每日签到 ========== */
+.checkin-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16rpx;
+  margin: 0 20rpx 16rpx;
+  padding: 20rpx;
+  border: 1rpx solid #f0f0f0;
+}
+.checkin-left {
+  flex: 1;
+  min-width: 0;
+}
+.checkin-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+.checkin-streak {
+  font-size: 11px;
+  color: #FF7043;
+  font-weight: 400;
+  margin-left: 8rpx;
+}
+.checkin-week {
+  display: flex;
+  gap: 10rpx;
+  margin-top: 14rpx;
+}
+.checkin-day {
+  width: 56rpx;
+  text-align: center;
+}
+.checkin-day-dot {
+  width: 44rpx;
+  height: 44rpx;
+  line-height: 44rpx;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 2rpx dashed #ddd;
+  color: transparent;
+  font-size: 20rpx;
+  box-sizing: border-box;
+}
+.checkin-day.signed .checkin-day-dot {
+  background: #4CAF50;
+  border: none;
+  color: #fff;
+}
+.checkin-day.today .checkin-day-dot {
+  border: 2rpx solid #4CAF50;
+  box-shadow: 0 0 0 4rpx rgba(76, 175, 80, 0.15);
+}
+.checkin-day.signed.today .checkin-day-dot {
+  border: 2rpx solid #fff;
+  box-shadow: 0 0 0 4rpx rgba(76, 175, 80, 0.3);
+}
+.checkin-day-label {
+  font-size: 9px;
+  color: #999;
+  margin-top: 6rpx;
+}
+.checkin-day.today .checkin-day-label {
+  color: #4CAF50;
+  font-weight: 600;
+}
+.checkin-btn {
+  width: 170rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  padding: 0;
+  margin: 0;
+  border-radius: 36rpx;
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.checkin-btn.done {
+  background: #e0e0e0;
+  color: #999;
+}
+
+/* ========== P3：新手引导 ========== */
+.guide-content {
+  align-items: center;
+}
+.guide-step-indicator {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 30rpx;
+}
+.guide-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 50%;
+  background: #e0e0e0;
+}
+.guide-dot.active {
+  background: #4CAF50;
+  width: 32rpx;
+  border-radius: 7rpx;
+}
+.guide-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx 0;
+}
+.guide-icon {
+  font-size: 90rpx;
+  margin-bottom: 24rpx;
+}
+.guide-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+.guide-desc {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.8;
+  text-align: center;
+  padding: 0 20rpx;
+}
+
 /* ========== 登录提示 ========== */
 .login-prompt {
   text-align: center;
@@ -523,3 +679,20 @@
   text-align: center;
 }
 
+
+/* ========== P3：搜索空态引导 + 结果数量 ========== */
+.hot-keyword {
+  display: inline-block;
+  margin-top: 24rpx;
+  background: #F1F8E9;
+  color: #4CAF50;
+  font-size: 13px;
+  padding: 14rpx 32rpx;
+  border-radius: 36rpx;
+  border: 1rpx solid #C8E6C9;
+}
+.result-count {
+  font-size: 12px;
+  color: #999;
+  padding: 6rpx 4rpx 16rpx;
+}
