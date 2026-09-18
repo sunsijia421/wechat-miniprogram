@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "公益排行榜",
+  "navigationBarBackgroundColor": "#4CAF50",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
+}

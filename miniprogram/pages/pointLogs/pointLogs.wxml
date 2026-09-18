@@ -1,0 +1,36 @@
+<!-- 积分明细 -->
+<view class="container">
+
+  <!-- 汇总 -->
+  <view class="summary-card">
+    <view class="summary-item">
+      <view class="summary-num">+{{totalPoints}}</view>
+      <view class="summary-label">累计获得积分</view>
+    </view>
+    <view class="summary-divider"></view>
+    <view class="summary-item">
+      <view class="summary-num">{{totalDonate}}</view>
+      <view class="summary-label">累计捐赠次数</view>
+    </view>
+  </view>
+
+  <!-- 流水列表 -->
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <view class="empty-state" wx:if="{{!loading && logs.length === 0}}">
+    <view class="icon">📜</view>
+    <view class="text">暂无积分记录</view>
+    <view class="text sub">发布物品、成功捐赠、举报有效均可获得积分</view>
+  </view>
+
+  <view class="log-list" wx:if="{{logs.length > 0}}">
+    <view class="log-item card" wx:for="{{logs}}" wx:key="id">
+      <view class="log-row flex-between">
+        <view class="log-reason">{{item.reason}}<text class="log-item-title" wx:if="{{item.itemTitle}}"> · {{item.itemTitle}}</text></view>
+        <view class="log-points {{item.points > 0 ? 'plus' : ''}}">+{{item.points}}</view>
+      </view>
+      <view class="log-time">{{item.createTimeStr}}<text wx:if="{{item.donateCount > 0}}" class="log-donate"> · 捐赠+{{item.donateCount}}</text></view>
+    </view>
+  </view>
+
+</view>

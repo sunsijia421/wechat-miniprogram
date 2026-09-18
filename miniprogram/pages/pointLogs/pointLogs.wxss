@@ -1,0 +1,94 @@
+/* 积分明细 */
+.container {
+  padding: 20rpx;
+  box-sizing: border-box;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+  border-radius: 20rpx;
+  padding: 36rpx 20rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 6rpx 20rpx rgba(76, 175, 80, 0.25);
+}
+
+.summary-item {
+  flex: 1;
+  text-align: center;
+}
+
+.summary-num {
+  font-size: 34px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 6rpx;
+}
+
+.summary-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.log-item {
+  margin: 0;
+  padding: 24rpx;
+}
+
+.log-row {
+  display: flex;
+  align-items: center;
+}
+
+.log-reason {
+  font-size: 15px;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+}
+
+.log-item-title {
+  color: #999;
+  font-size: 13px;
+}
+
+.log-points {
+  font-size: 18px;
+  font-weight: 700;
+  color: #999;
+  margin-left: 16rpx;
+}
+
+.log-points.plus {
+  color: #43A047;
+}
+
+.log-time {
+  font-size: 12px;
+  color: #bbb;
+  margin-top: 10rpx;
+}
+
+.log-donate {
+  color: #FF9800;
+}
+
+.loading {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  padding: 40rpx;
+}

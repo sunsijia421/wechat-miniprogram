@@ -21,11 +21,17 @@
           <view class="user-account" wx:if="{{openid}}">账号：{{openid}}</view>
         </view>
       </view>
-      <!-- 积分 / 捐赠并排 -->
+      <!-- 积分 / 捐赠并排 + 等级徽章（P1） -->
       <view class="user-stats">
-        <view class="stat-item">
+        <view class="stat-item" bindtap="goPointLogs">
+          <view class="level-badge">{{level.icon}} {{level.name}}</view>
           <view class="stat-num">{{userInfo.points || 0}}</view>
-          <view class="stat-label">公益积分</view>
+          <view class="stat-label">公益积分 ›</view>
+          <view class="level-progress">
+            <view class="level-progress-bar" style="width: {{level.progress}}%;"></view>
+          </view>
+          <view class="level-next" wx:if="{{!level.isMax}}">距{{levelNextName}}还差{{level.nextMin - (userInfo.points || 0)}}分</view>
+          <view class="level-next" wx:else>已达最高等级</view>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
@@ -133,6 +139,16 @@
     <view class="group">
       <view class="group-title">常用工具</view>
       <view class="group-card">
+        <view class="entry-row" bindtap="goRank">
+          <view class="entry-icon">🏆</view>
+          <view class="entry-label">公益排行榜</view>
+          <view class="entry-arrow">›</view>
+        </view>
+        <view class="entry-row" bindtap="goPointLogs">
+          <view class="entry-icon">📜</view>
+          <view class="entry-label">积分明细</view>
+          <view class="entry-arrow">›</view>
+        </view>
         <view class="entry-row" wx:if="{{isAdmin}}" bindtap="goAdmin">
           <view class="entry-icon">🛡️</view>
           <view class="entry-label">举报管理</view>

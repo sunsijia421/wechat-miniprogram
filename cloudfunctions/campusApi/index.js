@@ -17,7 +17,8 @@ const COL = {
   messages: 'messages',
   favorites: 'favorites',
   follows: 'follows',
-  searchLogs: 'search_logs' // P2：搜索热词日志
+  searchLogs: 'search_logs', // P2：搜索热词日志
+  pointLogs: 'point_logs'    // P1：积分明细流水
 }
 
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
@@ -41,7 +42,7 @@ const ADMIN_SECRET = 'EFULQegQtvthmjFR6TXY'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -99,15 +100,27 @@ async function checkImages(images) {
   return { passed: true }
 }
 
-// 给发布者增加积分
-async function addPoints(openid, points, donateCount) {
+// 给发布者增加积分，并写入积分流水（P1：激励信用）
+async function addPoints(openid, points, donateCount, reason, itemTitle) {
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
-  if (users.data.length) {
-    const u = users.data[0]
-    await db.collection(COL.users).doc(u._id).update({
-      data: { points: _.inc(points), donateCount: _.inc(donateCount) }
+  if (!users.data.length) return
+  const u = users.data[0]
+  await db.collection(COL.users).doc(u._id).update({
+    data: { points: _.inc(points), donateCount: _.inc(donateCount) }
+  })
+  // 积分流水（失败不影响加分）
+  try {
+    await db.collection(COL.pointLogs).add({
+      data: {
+        _openid: openid,
+        points: points,
+        donateCount: donateCount || 0,
+        reason: reason || '公益行为',
+        itemTitle: itemTitle || '',
+        createTime: db.serverDate()
+      }
     })
-  }
+  } catch (e) { /* 日志失败忽略 */ }
 }
 
 // 判断当前用户是否管理员（白名单 openid 或 users 集合 isAdmin 标记）
@@ -425,6 +438,53 @@ async function followStatus(event, openid) {
   return { success: true, followed: exist.data.length > 0 }
 }
 
+// ===================== P1：激励信用 =====================
+
+// 我的积分明细（含积分/捐赠/原因/时间，倒序）
+async function myPointLogs(openid) {
+  const logs = await db.collection(COL.pointLogs)
+    .where({ _openid: openid })
+    .orderBy('createTime', 'desc')
+    .limit(100)
+    .get()
+  return {
+    success: true,
+    list: logs.data.map(l => ({
+      id: l._id,
+      points: l.points || 0,
+      donateCount: l.donateCount || 0,
+      reason: l.reason || '公益行为',
+      itemTitle: l.itemTitle || '',
+      createTime: l.createTime,
+      createTimeStr: formatServerTime(l.createTime)
+    }))
+  }
+}
+
+// 公益排行榜：积分 Top N + 捐赠次数 Top N
+async function rankList() {
+  const byPoints = await db.collection(COL.users)
+    .orderBy('points', 'desc')
+    .limit(10)
+    .get()
+  const byDonate = await db.collection(COL.users)
+    .orderBy('donateCount', 'desc')
+    .limit(10)
+    .get()
+  const pick = u => ({
+    openid: u._openid,
+    nickName: u.nickName || '公益参与者',
+    avatarUrl: u.avatarUrl || '',
+    points: u.points || 0,
+    donateCount: u.donateCount || 0
+  })
+  return {
+    success: true,
+    byPoints: byPoints.data.map(pick),
+    byDonate: byDonate.data.map(pick)
+  }
+}
+
 // ===================== 各 Action 实现 =====================
 
 // 登录 / 同步用户资料
@@ -489,6 +549,10 @@ async function publish(event, openid) {
       createTime: db.serverDate()
     }
   })
+  // P1：发布物品 +2 公益积分
+  try {
+    await addPoints(openid, 2, 0, '发布物品', title.trim())
+  } catch (e) { /* 加分失败不影响发布 */ }
   return { success: true, id: res._id }
 }
 
@@ -749,13 +813,16 @@ async function handleApply(event, openid) {
     await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
     await db.collection(COL.applications).where({ itemId, _id: applicationId }).update({ data: { status: 'approved' } })
     await db.collection(COL.applications).where({ itemId, _id: _.neq(applicationId) }).update({ data: { status: 'rejected' } })
-    await addPoints(openid, 10, 1)
-    // 通知被选中的申请者
+    await addPoints(openid, 10, 1, '物品成功送出', itemRes.data.title)
+    // P1：被选中的申请者 +5 积分（激励主动申领）
     const appRes = await db.collection(COL.applications).doc(applicationId).get()
-    if (appRes.data) await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '申请已通过')
+    if (appRes.data) {
+      await addPoints(appRes.data._openid, 5, 0, '申请被选中', itemRes.data.title)
+      await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '申请已通过')
+    }
   } else if (action === 'complete') {
     await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
-    await addPoints(openid, 10, 1)
+    await addPoints(openid, 10, 1, '物品成功送出', itemRes.data.title)
   } else if (action === 'reject' && applicationId) {
     await db.collection(COL.applications).where({ itemId, _id: applicationId }).update({ data: { status: 'rejected' } })
     const appRes = await db.collection(COL.applications).doc(applicationId).get()
@@ -807,7 +874,11 @@ async function handleReport(event, openid) {
     // 订阅消息：通知举报者"已下架"
     if (offlineRes.stats && offlineRes.stats.updated > 0) {
       const rep = await db.collection(COL.reports).where({ itemId, status: 'handled' }).orderBy('handleTime', 'desc').limit(1).get()
-      if (rep.data.length) await notifyReportResult(openid, rep.data[0]._openid, rep.data[0].reason, '已下架')
+      if (rep.data.length) {
+        await notifyReportResult(openid, rep.data[0]._openid, rep.data[0].reason, '已下架')
+        // P1：举报核实有效（物品下架）→ 举报者 +2 公益积分
+        await addPoints(rep.data[0]._openid, 2, 0, '举报有效', itemRes.data.title)
+      }
     }
   } else if (action === 'ignore') {
     if (!reportId) return { success: false, message: '举报ID缺失' }
@@ -1061,6 +1132,8 @@ exports.main = async (event, context) => {
       case 'toggleFollow': return await toggleFollow(event, openid)
       case 'myFollows': return await myFollows(openid)
       case 'followStatus': return await followStatus(event, openid)
+      case 'pointLogs': return await myPointLogs(openid)
+      case 'rankList': return await rankList()
       case 'adminStats': return await adminStats(openid)
       case 'adminItems': return await adminItems(event, openid)
       case 'adminSetItemStatus': return await adminSetItemStatus(event, openid)

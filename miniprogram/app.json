@@ -7,7 +7,9 @@
     "pages/admin/admin",
     "pages/profile/profile",
     "pages/messages/messages",
-    "pages/chat/chat"
+    "pages/chat/chat",
+    "pages/pointLogs/pointLogs",
+    "pages/rank/rank"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",

@@ -1,0 +1,50 @@
+<!-- 公益排行榜 -->
+<view class="container">
+
+  <!-- 榜单切换 -->
+  <view class="rank-tabs">
+    <view class="rank-tab {{activeTab === 'points' ? 'active' : ''}}" data-tab="points" bindtap="switchTab">🏆 积分榜</view>
+    <view class="rank-tab {{activeTab === 'donate' ? 'active' : ''}}" data-tab="donate" bindtap="switchTab">🎁 捐赠榜</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">加载中...</view>
+
+  <!-- 积分榜 -->
+  <view wx:if="{{activeTab === 'points'}}">
+    <view class="empty-state" wx:if="{{!loading && byPoints.length === 0}}">
+      <view class="icon">🏆</view>
+      <view class="text">暂无排名</view>
+    </view>
+    <view class="rank-list" wx:if="{{byPoints.length > 0}}">
+      <view class="rank-item {{item.isMe ? 'me' : ''}}" wx:for="{{byPoints}}" wx:key="openid">
+        <view class="rank-no {{item.rank <= 3 ? 'top' : ''}}">{{item.medal}}</view>
+        <image class="rank-avatar" src="{{item.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+        <view class="rank-info flex-1">
+          <view class="rank-name text-ellipsis">{{item.nickName}}<text wx:if="{{item.isMe}}" class="me-tag">我</text></view>
+          <view class="rank-detail">捐赠 {{item.donateCount}} 次</view>
+        </view>
+        <view class="rank-points">{{item.points}} 分</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 捐赠榜 -->
+  <view wx:if="{{activeTab === 'donate'}}">
+    <view class="empty-state" wx:if="{{!loading && byDonate.length === 0}}">
+      <view class="icon">🎁</view>
+      <view class="text">暂无排名</view>
+    </view>
+    <view class="rank-list" wx:if="{{byDonate.length > 0}}">
+      <view class="rank-item {{item.isMe ? 'me' : ''}}" wx:for="{{byDonate}}" wx:key="openid">
+        <view class="rank-no {{item.rank <= 3 ? 'top' : ''}}">{{item.medal}}</view>
+        <image class="rank-avatar" src="{{item.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+        <view class="rank-info flex-1">
+          <view class="rank-name text-ellipsis">{{item.nickName}}<text wx:if="{{item.isMe}}" class="me-tag">我</text></view>
+          <view class="rank-detail">积分 {{item.points}}</view>
+        </view>
+        <view class="rank-points">{{item.donateCount}} 次</view>
+      </view>
+    </view>
+  </view>
+
+</view>

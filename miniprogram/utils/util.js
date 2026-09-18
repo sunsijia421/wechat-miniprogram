@@ -289,6 +289,29 @@ function refreshMessageBadge() {
   })
 }
 
+// P1：积分等级体系（5 级）。返回 { name, icon, min, max, progress, next }
+function getLevel(points) {
+  const LEVELS = [
+    { name: '初心者', icon: '🌱', min: 0 },
+    { name: '公益使者', icon: '🍃', min: 20 },
+    { name: '公益达人', icon: '🌿', min: 60 },
+    { name: '公益先锋', icon: '🌳', min: 150 },
+    { name: '公益大使', icon: '🏆', min: 300 }
+  ]
+  const pts = points || 0
+  let idx = 0
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (pts >= LEVELS[i].min) idx = i
+  }
+  const cur = LEVELS[idx]
+  const next = LEVELS[idx + 1] || null
+  let progress = 100
+  if (next) {
+    progress = Math.min(100, Math.round(((pts - cur.min) / (next.min - cur.min)) * 100))
+  }
+  return { name: cur.name, icon: cur.icon, min: cur.min, nextMin: next ? next.min : null, progress, isMax: !next }
+}
+
 module.exports = {
   generateId: generateId,
   formatTime: formatTime,
@@ -305,5 +328,6 @@ module.exports = {
   requireLogin: requireLogin,
   refreshMessageBadge: refreshMessageBadge,
   requestSubscribe: requestSubscribe,
-  SUBSCRIBE_TEMPLATES: SUBSCRIBE_TEMPLATES
+  SUBSCRIBE_TEMPLATES: SUBSCRIBE_TEMPLATES,
+  getLevel: getLevel
 }

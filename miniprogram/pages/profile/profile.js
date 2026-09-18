@@ -21,7 +21,11 @@ Page({
     followList: [],
 
     // 管理员（登录后自动识别，无需密钥）
-    isAdmin: false
+    isAdmin: false,
+
+    // P1：积分等级
+    level: { name: '初心者', icon: '🌱', progress: 0, isMax: false, nextMin: 20 },
+    levelNextName: '公益使者'
   },
 
   onShow() {
@@ -49,8 +53,26 @@ Page({
   loadUserInfo() {
     const userInfo = app.getUserInfo()
     if (userInfo) {
-      this.setData({ userInfo, openid: app.getOpenid() || '' })
+      const level = util.getLevel(userInfo.points)
+      // 下一等级名称（用于"距XX还差N分"）
+      const levelNames = { 初心者: '公益使者', 公益使者: '公益达人', 公益达人: '公益先锋', 公益先锋: '公益大使', 公益大使: '' }
+      this.setData({
+        userInfo,
+        openid: app.getOpenid() || '',
+        level,
+        levelNextName: levelNames[level.name] || ''
+      })
     }
+  },
+
+  // P1：跳转积分明细
+  goPointLogs() {
+    wx.navigateTo({ url: '/pages/pointLogs/pointLogs' })
+  },
+
+  // P1：跳转公益排行榜
+  goRank() {
+    wx.navigateTo({ url: '/pages/rank/rank' })
   },
 
   // 展开/收起"我的交易"分组（手风琴）
