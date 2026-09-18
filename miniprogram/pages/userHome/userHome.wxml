@@ -46,7 +46,7 @@
     <!-- 标签栏 -->
     <view class="home-tabs">
       <view class="home-tab {{activeTab === 'items' ? 'active' : ''}}" data-tab="items" bindtap="switchTab">宝贝 {{items.length}}</view>
-      <view class="home-tab {{activeTab === 'comments' ? 'active' : ''}}" data-tab="comments" bindtap="switchTab">评价</view>
+      <view class="home-tab {{activeTab === 'comments' ? 'active' : ''}}" data-tab="comments" bindtap="switchTab">评价 {{user.evaluationCount || 0}}</view>
     </view>
 
     <!-- 宝贝列表 -->
@@ -68,12 +68,28 @@
       </view>
     </view>
 
-    <!-- 评价列表（空态） -->
+    <!-- 评价列表（P5：真实评价数据） -->
     <view class="home-comments" wx:if="{{activeTab === 'comments'}}">
-      <view class="empty-state">
+      <view class="eval-summary" wx:if="{{evaluations.length > 0}}">
+        <view class="eval-score">{{user.avgRating}}</view>
+        <view class="eval-stars">{{user.avgStars}}<text class="gray">{{user.avgStarsGray}}</text></view>
+        <view class="eval-count">共 {{user.evaluationCount}} 条评价</view>
+      </view>
+      <view class="empty-state" wx:if="{{evaluations.length === 0}}">
         <view class="icon">💬</view>
         <view class="text">暂无评价</view>
         <view class="text sub">完成捐赠后即可获得对方的评价</view>
+      </view>
+      <view class="eval-item card" wx:for="{{evaluations}}" wx:key="id">
+        <view class="eval-head">
+          <view class="eval-from">{{item.fromNickName}}</view>
+          <view class="eval-stars-mini">{{item.ratingStars}}<text class="gray">{{item.ratingGray}}</text></view>
+        </view>
+        <view class="eval-comment" wx:if="{{item.comment}}">"{{item.comment}}"</view>
+        <view class="eval-foot">
+          <text class="eval-item-title">{{item.itemTitle}}</text>
+          <text class="eval-time">{{item.createTimeStr}}</text>
+        </view>
       </view>
     </view>
 

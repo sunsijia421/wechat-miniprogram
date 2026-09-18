@@ -7,6 +7,7 @@ Page({
     inputValue: '',
     peerName: '',
     itemTitle: '',
+    isWish: false,
     sending: false,
     scrollIntoView: '',
     loaded: false
@@ -54,6 +55,7 @@ Page({
           peerAvatar: res.peerAvatar || '',
           myAvatar: myInfo.avatarUrl || '',
           itemTitle: res.itemTitle || '',
+          isWish: !!res.wishId,
           loaded: true,
           canSendOneOnly
         })

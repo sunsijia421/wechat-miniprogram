@@ -3,7 +3,7 @@
 
   <!-- 顶部物品条 -->
   <view class="item-bar" wx:if="{{itemTitle}}">
-    <view class="item-bar-text">📦 {{itemTitle}}</view>
+    <view class="item-bar-text">{{isWish ? '🙋' : '📦'}} {{itemTitle}}</view>
   </view>
 
   <!-- 消息列表 -->

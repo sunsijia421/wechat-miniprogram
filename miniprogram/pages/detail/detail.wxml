@@ -130,6 +130,17 @@
       </view>
     </view>
 
+    <!-- P5：完成互评（物品已完成，本人是发布者或被选中的申请者，且未评价过） -->
+    <view class="card" wx:if="{{isCompleted && !evaluated && isLoggedIn && (isOwner || (hasApplied && applyStatus === 'approved'))}}">
+      <view class="section-title">⭐ 完成互评</view>
+      <view class="eval-prompt">本次赠送已完成，评价一下对方吧，帮助大家了解靠谱的公益伙伴</view>
+      <view class="eval-btn" bindtap="openEval">去评价 · 点亮星星</view>
+    </view>
+    <view class="card" wx:if="{{isCompleted && evaluated && isLoggedIn && (isOwner || (hasApplied && applyStatus === 'approved'))}}">
+      <view class="section-title">⭐ 完成互评</view>
+      <view class="eval-prompt eval-done">✅ 你已评价本次赠送，感谢反馈</view>
+    </view>
+
     <!-- P2：猜你喜欢（同分类可领取，按热度推荐） -->
     <view class="card" wx:if="{{relatedItems.length > 0}}">
       <view class="section-title">💡 猜你喜欢</view>
@@ -248,6 +259,25 @@
       <view class="modal-buttons">
         <button class="modal-btn-cancel" bindtap="closeReport">取消</button>
         <button class="modal-btn-confirm" style="background-color: #f44336;" bindtap="submitReport">提交举报</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 评价弹窗（P5） -->
+  <view class="modal-overlay" wx:if="{{showEvalModal}}" catchtap="closeEval">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">评价对方</view>
+      <view class="modal-subtitle">为本次赠送的对方点个星吧</view>
+      <view class="star-row">
+        <view wx:for="{{[1,2,3,4,5]}}" wx:key="*this"
+          class="star {{evalRating >= item ? 'star-on' : ''}}"
+          data-star="{{item}}" bindtap="onEvalRating">{{evalRating >= item ? '★' : '☆'}}</view>
+      </view>
+      <textarea class="modal-textarea" placeholder="写一句评价（选填，如：靠谱的同学，交接很顺利~）"
+        value="{{evalComment}}" bindinput="onEvalComment" maxlength="200" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeEval">取消</button>
+        <button class="modal-btn-confirm" bindtap="submitEvaluation" loading="{{submittingEval}}" disabled="{{submittingEval}}">提交评价</button>
       </view>
     </view>
   </view>

@@ -86,6 +86,10 @@
         <view class="quick-icon fav">❤️</view>
         <view class="quick-label">我的收藏</view>
       </view>
+      <view class="quick-item" bindtap="goWish">
+        <view class="quick-icon wish">🙋</view>
+        <view class="quick-label">心愿求购</view>
+      </view>
     </view>
 
     <!-- P3：公益公告横幅（闲鱼横幅风） -->

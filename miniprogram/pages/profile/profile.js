@@ -7,18 +7,11 @@ Page({
     openid: '',
     shortOpenid: '',
 
-    // 我发布的
-    publishedItems: [],
-
-    // 我申请的
-    appliedItems: [],
-
-    // 我举报的（受理结果）
-    myReports: [],
-
-    // P0 新增：我收藏的 / 我关注的
-    favoriteItems: [],
-    followList: [],
+    // 我的交易角标（轻量 count，替代原 4 个列表请求，性能改善）
+    publishCount: 0,
+    appliedCount: 0,
+    favoriteCount: 0,
+    reportCount: 0,
 
     // 管理员（登录后自动识别，无需密钥）
     isAdmin: false,
@@ -30,16 +23,12 @@ Page({
 
   onShow() {
     this.loadUserInfo()
-    this.loadPublishedItems()
-    this.loadAppliedItems()
-    this.loadMyReports()
-    this.loadFavorites()
-    this.loadFollows()
+    this.loadCounts()
     this.checkAdmin()
     util.refreshMessageBadge()
   },
 
-  // 统一处理云端返回的物品字段
+  // 统一处理云端返回的物品字段（保留兼容）
   normalizeItem(item) {
     return Object.assign({}, item, {
       id: item._id,
@@ -66,6 +55,21 @@ Page({
     }
   },
 
+  // 加载我的交易角标（一次 count 接口替代 4 个列表请求）
+  loadCounts() {
+    if (!app.getOpenid()) return
+    util.callApi('myCounts', {})
+      .then(res => {
+        this.setData({
+          publishCount: res.publishCount || 0,
+          appliedCount: res.appliedCount || 0,
+          favoriteCount: res.favoriteCount || 0,
+          reportCount: res.reportCount || 0
+        })
+      })
+      .catch(() => {})
+  },
+
   // 跳转个人主页
   goUserHome() {
     wx.navigateTo({ url: '/pages/userHome/userHome' })
@@ -86,6 +90,11 @@ Page({
     wx.navigateTo({ url: '/pages/rank/rank' })
   },
 
+  // P4：跳转我的公益证书
+  goCertificates() {
+    wx.navigateTo({ url: '/pages/certificates/certificates' })
+  },
+
   // 跳转"我的交易"独立列表页（published/applied/favorites/reported）
   goMyList(e) {
     const type = e.currentTarget.dataset.type
@@ -95,81 +104,6 @@ Page({
   // 跳转意见反馈
   goFeedback() {
     wx.navigateTo({ url: '/pages/feedback/feedback' })
-  },
-
-  // 加载我发布的物品（云端）
-  loadPublishedItems() {
-    if (!app.getOpenid()) return
-    util.callApi('myPublish', {})
-      .then(res => {
-        const list = res.list.map(it => this.normalizeItem(it))
-        this.setData({ publishedItems: list })
-      })
-      .catch(() => {})
-  },
-
-  // 加载我申请的物品（云端）
-  loadAppliedItems() {
-    if (!app.getOpenid()) return
-    util.callApi('myApply', {})
-      .then(res => {
-        const list = res.list.map(it => this.normalizeItem(it))
-        this.setData({ appliedItems: list })
-      })
-      .catch(() => {})
-  },
-
-  // 加载我提交的举报（受理结果）
-  loadMyReports() {
-    if (!app.getOpenid()) return
-    util.callApi('myReports', {})
-      .then(res => {
-        const list = res.list.map(r => ({
-          id: r._id,
-          itemId: r.itemId,
-          itemTitle: r.itemTitle || '(物品已删除)',
-          reason: r.reason,
-          createTimeStr: util.formatTime(r.createTime),
-          statusText: r.status === 'handled'
-            ? (r.result === 'offline' ? '已下架' : '已忽略')
-            : '待处理'
-        }))
-        this.setData({ myReports: list })
-      })
-      .catch(() => {})
-  },
-
-  // P0：加载我收藏的物品
-  loadFavorites() {
-    if (!app.getOpenid()) return
-    util.callApi('myFavorites', {})
-      .then(res => {
-        const list = res.list.map(f => Object.assign({}, f, {
-          id: f.id,
-          categoryName: util.getCategoryName(f.category || 'other'),
-          createTimeStr: util.formatTime(f.createTime)
-        }))
-        this.setData({ favoriteItems: list })
-      })
-      .catch(() => {})
-  },
-
-  // P0：加载我关注的发布者
-  loadFollows() {
-    if (!app.getOpenid()) return
-    util.callApi('myFollows', {})
-      .then(res => {
-        this.setData({ followList: res.list || [] })
-      })
-      .catch(() => {})
-  },
-
-  // 点击物品跳转详情
-  onItemTap(e) {
-    const id = e.currentTarget.dataset.id
-    wx.navigateTo({
-      url: `/pages/detail/detail?id=${id}`
-    })
   },
 
   // 检查管理员身份（登录后自动识别，结果同步到全局）
@@ -235,9 +169,10 @@ Page({
           this.setData({
             userInfo: null,
             isAdmin: false,
-            publishedItems: [],
-            appliedItems: [],
-            myReports: []
+            publishCount: 0,
+            appliedCount: 0,
+            favoriteCount: 0,
+            reportCount: 0
           })
           wx.showToast({ title: '本地数据已清除', icon: 'success' })
         }

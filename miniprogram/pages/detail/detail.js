@@ -39,7 +39,14 @@ Page({
     applyStatus: '',
 
     // P2：猜你喜欢
-    relatedItems: []
+    relatedItems: [],
+
+    // P5：完成互评
+    evaluated: false,
+    showEvalModal: false,
+    evalRating: 0,
+    evalComment: '',
+    submittingEval: false
   },
 
   onLoad(options) {
@@ -118,6 +125,10 @@ Page({
       if (app.getUserInfo() && !res.isOwner) {
         this.loadFavoriteStatus()
         this.loadFollowStatus()
+      }
+      // P5：已完成物品加载评价状态（本人参与方）
+      if (app.getUserInfo() && item.status === 'completed') {
+        this.loadEvaluationStatus()
       }
     } catch (e) {
       wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
@@ -261,7 +272,7 @@ Page({
       .then(() => {
         app.updateUserStats(10, 1)
         this.loadItem()
-        wx.showToast({ title: '物品已确认送出，积分+10', icon: 'success' })
+        wx.showToast({ title: '已送出 +10分，公益证书已生成', icon: 'success' })
       })
       .catch(e => {
         wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
@@ -415,6 +426,57 @@ Page({
       })
       .catch(() => {
         wx.showToast({ title: '操作失败', icon: 'none' })
+      })
+  },
+
+  // ========== P5：完成互评 ==========
+
+  // 加载我是否已评价该物品
+  loadEvaluationStatus() {
+    util.callApi('evaluationStatus', { itemId: this.data.itemId })
+      .then(res => this.setData({ evaluated: !!res.evaluated }))
+      .catch(() => {})
+  },
+
+  // 打开评价弹窗
+  openEval() {
+    if (!util.requireLogin()) return
+    this.setData({ showEvalModal: true, evalRating: 0, evalComment: '' })
+  },
+
+  closeEval() {
+    this.setData({ showEvalModal: false })
+  },
+
+  onEvalRating(e) {
+    this.setData({ evalRating: Number(e.currentTarget.dataset.star) })
+  },
+
+  onEvalComment(e) {
+    this.setData({ evalComment: e.detail.value })
+  },
+
+  // 提交评价
+  submitEvaluation() {
+    const rating = this.data.evalRating
+    if (!rating) {
+      wx.showToast({ title: '请选择评分', icon: 'none' })
+      return
+    }
+    if (this.data.submittingEval) return
+    this.setData({ submittingEval: true })
+    util.callApi('submitEvaluation', {
+      itemId: this.data.itemId,
+      rating,
+      comment: this.data.evalComment.trim()
+    })
+      .then(res => {
+        this.setData({ showEvalModal: false, evaluated: true, submittingEval: false })
+        wx.showToast({ title: '评价成功，感谢反馈！', icon: 'success' })
+      })
+      .catch(e => {
+        this.setData({ submittingEval: false })
+        wx.showToast({ title: typeof e === 'string' ? e : '评价失败', icon: 'none' })
       })
   },
 

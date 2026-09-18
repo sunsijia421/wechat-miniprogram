@@ -7,6 +7,7 @@ Page({
     followCount: 0,
     fanCount: 0,
     items: [],
+    evaluations: [],
     activeTab: 'items', // items | comments
     loading: false,
     isMe: true
@@ -35,11 +36,22 @@ Page({
           statusText: it.status === 'completed' ? '已送出' : it.status === 'offline' ? '已下架' : '可领取',
           statusClass: it.status === 'completed' ? 'completed' : it.status === 'offline' ? 'offline' : 'available'
         }))
+        // P5：评价列表（预计算星串，wxml 不支持方法调用）
+        const evaluations = (res.evaluations || []).map(ev => Object.assign({}, ev, {
+          ratingStars: '★★★★★'.slice(0, ev.rating || 5),
+          ratingGray: '★★★★★'.slice(0, 5 - (ev.rating || 5))
+        }))
+        const user = res.user || {}
+        const avg = Number(user.avgRating) || 0
+        const fullStars = Math.round(avg)
+        user.avgStars = '★★★★★'.slice(0, fullStars)
+        user.avgStarsGray = '★★★★★'.slice(0, 5 - fullStars)
         this.setData({
-          user: res.user,
+          user,
           followCount: res.followCount || 0,
           fanCount: res.fanCount || 0,
           items,
+          evaluations,
           loading: false
         })
       })

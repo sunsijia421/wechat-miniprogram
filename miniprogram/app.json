@@ -13,7 +13,11 @@
     "pages/myList/myList",
     "pages/feedback/feedback",
     "pages/settings/settings",
-    "pages/userHome/userHome"
+    "pages/userHome/userHome",
+    "pages/certificates/certificates",
+    "pages/wish-list/wish-list",
+    "pages/wish-publish/wish-publish",
+    "pages/wish-detail/wish-detail"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",

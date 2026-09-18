@@ -1,0 +1,35 @@
+<!-- 我的公益证书（P4 亮点） -->
+<view class="container">
+
+  <!-- 空态 -->
+  <view class="empty" wx:if="{{isEmpty && !loading}}">
+    <view class="empty-icon">🏅</view>
+    <view class="empty-text">还没有公益证书</view>
+    <view class="empty-sub">每成功送出 1 件闲置，即可获得一张公益证书</view>
+  </view>
+
+  <!-- 证书列表 -->
+  <view class="cert-card" wx:for="{{list}}" wx:key="id" bindtap="viewCert" data-id="{{item.id}}">
+    <view class="cert-icon">🏅</view>
+    <view class="cert-info">
+      <view class="cert-title">{{item.itemTitle}}</view>
+      <view class="cert-no">编号 {{item.certNo}}</view>
+      <view class="cert-time">{{item.createTimeStr}}</view>
+    </view>
+    <view class="cert-arrow">›</view>
+  </view>
+
+  <view class="tip" wx:if="{{list.length > 0}}">点击证书可查看大图并保存到相册，分享你的公益善举</view>
+
+</view>
+
+<!-- 证书弹层 -->
+<view class="mask" wx:if="{{showCert}}" bindtap="closeCert">
+  <view class="cert-modal" catchtap="stopPropagation">
+    <canvas type="2d" id="certCanvas" class="cert-canvas"></canvas>
+    <view class="cert-btns">
+      <button class="btn-save" bindtap="saveCert" loading="{{saving}}" disabled="{{saving}}">保存到相册</button>
+      <view class="btn-close" bindtap="closeCert">关闭</view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,45 @@
+<!-- 求购详情（P6） -->
+<view class="container" wx:if="{{wish}}">
+
+  <view class="detail-card">
+    <view class="wish-head">
+      <view class="wish-title">{{wish.title}}</view>
+      <view class="wish-tag">{{wish.categoryName}}</view>
+    </view>
+    <view class="wish-status {{wish.status === 'open' ? 'open' : 'done'}}">{{wish.statusText}}</view>
+    <view class="wish-desc">{{wish.description}}</view>
+  </view>
+
+  <view class="publisher-card">
+    <image class="avatar" src="{{wish.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+    <view class="pub-info">
+      <view class="pub-name">{{wish.nickName || '同学'}}</view>
+      <view class="pub-time">发布于 {{wish.createTimeStr}}</view>
+    </view>
+  </view>
+
+  <view class="tip" wx:if="{{wish.isMine}}">这是你发布的求购，可在"我的求购"中标记已满足</view>
+
+  <view class="offer-btn" wx:if="{{!wish.isMine && wish.status === 'open' && isLoggedIn}}" bindtap="openOffer">
+    🙋 我有闲置，联系TA
+  </view>
+  <view class="offer-btn disabled" wx:if="{{!wish.isMine && wish.status !== 'open'}}">该求购已结束</view>
+  <view class="offer-btn" wx:if="{{!wish.isMine && wish.status === 'open' && !isLoggedIn}}" bindtap="openOffer">
+    🔐 登录后联系求购者
+  </view>
+
+  <!-- 联系弹窗 -->
+  <view class="modal-overlay" wx:if="{{showOfferModal}}" catchtap="closeOffer">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">我有闲置要帮忙</view>
+      <view class="modal-subtitle">告诉求购者你手里有什么（如：我有这本教材，9成新）</view>
+      <textarea class="modal-textarea" placeholder="写一段话给求购者吧~"
+        value="{{offerMessage}}" bindinput="onOfferInput" maxlength="200" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeOffer">取消</button>
+        <button class="modal-btn-confirm" bindtap="submitOffer" loading="{{submitting}}" disabled="{{submitting}}">发送</button>
+      </view>
+    </view>
+  </view>
+
+</view>

@@ -750,6 +750,7 @@
 .quick-icon.rank { background: #FFF3E0; }
 .quick-icon.points { background: #E3F2FD; }
 .quick-icon.fav { background: #FCE4EC; }
+.quick-icon.wish { background: #E8EAF6; }
 .quick-label {
   font-size: 11px;
   color: #555;

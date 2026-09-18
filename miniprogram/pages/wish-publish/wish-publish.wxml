@@ -1,0 +1,18 @@
+<!-- 发布求购（P6） -->
+<view class="container">
+  <view class="form-card">
+    <view class="form-label">求购标题</view>
+    <input class="form-input" placeholder="如：求一本《计算机网络》教材" maxlength="30"
+      value="{{title}}" bindinput="onTitleInput" />
+    <view class="form-label">分类</view>
+    <picker range="{{categories}}" value="{{categoryIndex}}" bindchange="onCategoryChange">
+      <view class="form-picker">{{categories[categoryIndex]}} ›</view>
+    </picker>
+    <view class="form-label">求购说明</view>
+    <textarea class="form-textarea" placeholder="描述一下你需要的物品、新旧程度要求、交换意向等（必填）"
+      maxlength="500" value="{{description}}" bindinput="onDescInput" />
+    <view class="form-tip">发布后，有闲置的同学可通过站内消息联系你</view>
+  </view>
+
+  <button class="submit-btn" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">发布求购</button>
+</view>

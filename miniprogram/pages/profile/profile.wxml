@@ -51,25 +51,25 @@
         <view class="entry-row" data-type="published" bindtap="goMyList">
           <view class="entry-icon">📦</view>
           <view class="entry-label">我发布的</view>
-          <view class="entry-count" wx:if="{{publishedItems.length > 0}}">{{publishedItems.length}}</view>
+          <view class="entry-count" wx:if="{{publishCount > 0}}">{{publishCount}}</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" data-type="applied" bindtap="goMyList">
           <view class="entry-icon">📋</view>
           <view class="entry-label">我申请的</view>
-          <view class="entry-count" wx:if="{{appliedItems.length > 0}}">{{appliedItems.length}}</view>
+          <view class="entry-count" wx:if="{{appliedCount > 0}}">{{appliedCount}}</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" data-type="favorites" bindtap="goMyList">
           <view class="entry-icon">❤️</view>
           <view class="entry-label">我收藏的</view>
-          <view class="entry-count" wx:if="{{favoriteItems.length > 0}}">{{favoriteItems.length}}</view>
+          <view class="entry-count" wx:if="{{favoriteCount > 0}}">{{favoriteCount}}</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" data-type="reported" bindtap="goMyList">
           <view class="entry-icon">🚨</view>
           <view class="entry-label">我举报的</view>
-          <view class="entry-count" wx:if="{{myReports.length > 0}}">{{myReports.length}}</view>
+          <view class="entry-count" wx:if="{{reportCount > 0}}">{{reportCount}}</view>
           <view class="entry-arrow">›</view>
         </view>
       </view>
@@ -87,6 +87,11 @@
         <view class="entry-row" bindtap="goPointLogs">
           <view class="entry-icon">📜</view>
           <view class="entry-label">积分明细</view>
+          <view class="entry-arrow">›</view>
+        </view>
+        <view class="entry-row" bindtap="goCertificates">
+          <view class="entry-icon">🏅</view>
+          <view class="entry-label">我的公益证书</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" wx:if="{{isAdmin}}" bindtap="goAdmin">

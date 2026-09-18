@@ -222,3 +222,66 @@
   font-size: 13px;
   padding: 40rpx;
 }
+
+/* P5：评价 */
+.eval-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 30rpx 0 20rpx;
+}
+.eval-score {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #FAAD14;
+}
+.eval-stars {
+  font-size: 30rpx;
+  color: #FAAD14;
+}
+.eval-stars .gray,
+.eval-stars-mini .gray {
+  color: #ddd;
+}
+.eval-count {
+  font-size: 24rpx;
+  color: #999;
+}
+.eval-item {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.eval-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.eval-from {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
+}
+.eval-stars-mini {
+  font-size: 26rpx;
+  color: #FAAD14;
+}
+.eval-comment {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+}
+.eval-foot {
+  margin-top: 12rpx;
+  display: flex;
+  justify-content: space-between;
+  font-size: 22rpx;
+  color: #999;
+}
+.eval-item-title {
+  max-width: 400rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

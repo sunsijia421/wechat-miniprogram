@@ -84,6 +84,10 @@ Page({
   goFavorites() {
     wx.navigateTo({ url: '/pages/myList/myList?type=favorites' })
   },
+  // P6：心愿求购
+  goWish() {
+    wx.navigateTo({ url: '/pages/wish-list/wish-list' })
+  },
 
   // 排序切换（最新/最热）
   onSortChange(e) {
