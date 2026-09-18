@@ -405,10 +405,6 @@ Page({
       })
   },
 
-  goMessages() {
-    wx.navigateTo({ url: '/pages/messages/messages' })
-  },
-
   // ========== 举报流程 ==========
   openReport() {
     // 游客只能浏览，举报需先登录（避免匿名滥用）

@@ -428,11 +428,6 @@ Page({
     })
   },
 
-  // P0：进入消息中心
-  goMessages() {
-    wx.navigateTo({ url: '/pages/messages/messages' })
-  },
-
   // 查看协议详情
   viewAgreementDetail() {
     wx.showModal({

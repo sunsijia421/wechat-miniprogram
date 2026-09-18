@@ -1,4 +1,4 @@
-<!-- 个人中心页面 -->
+<!-- 个人中心（闲鱼风格） -->
 <view class="container">
 
   <!-- 未登录 -->
@@ -11,62 +11,48 @@
 
   <!-- 已登录 -->
   <block wx:if="{{userInfo}}">
-    <!-- 用户信息卡片 -->
-    <view class="user-card">
-      <view class="user-bg"></view>
-      <view class="user-info">
+
+    <!-- 顶部用户信息区 -->
+    <view class="user-header">
+      <view class="user-top">
         <image class="avatar-lg" src="{{userInfo.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
-        <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
-        <view class="openid-debug" wx:if="{{openid}}">我的标识：{{openid}}</view>
+        <view class="user-id-box">
+          <view class="user-name">{{userInfo.nickName || '公益参与者'}}</view>
+          <view class="user-account" wx:if="{{openid}}">账号：{{openid}}</view>
+        </view>
       </view>
+      <!-- 积分 / 捐赠并排 -->
       <view class="user-stats">
-        <view class="user-stat-item">
+        <view class="stat-item">
           <view class="stat-num">{{userInfo.points || 0}}</view>
           <view class="stat-label">公益积分</view>
         </view>
         <view class="stat-divider"></view>
-        <view class="user-stat-item">
+        <view class="stat-item">
           <view class="stat-num">{{userInfo.donateCount || 0}}</view>
           <view class="stat-label">捐赠次数</view>
         </view>
       </view>
     </view>
 
-    <!-- Tab 切换 -->
-    <view class="tab-bar">
-      <view class="tab-item {{activeTab === 'published' ? 'active' : ''}}"
-        data-tab="published" bindtap="switchTab">
-        📦 我发布的
-      </view>
-      <view class="tab-item {{activeTab === 'applied' ? 'active' : ''}}"
-        data-tab="applied" bindtap="switchTab">
-        📋 我申请的
-      </view>
-      <view class="tab-item {{activeTab === 'favorites' ? 'active' : ''}}"
-        data-tab="favorites" bindtap="switchTab">
-        ❤️ 我收藏的
-      </view>
-      <view class="tab-item {{activeTab === 'reported' ? 'active' : ''}}"
-        data-tab="reported" bindtap="switchTab">
-        🚨 我举报的
-      </view>
-    </view>
-
-    <!-- 我发布的 -->
-    <view wx:if="{{activeTab === 'published'}}">
-      <view wx:if="{{publishedItems.length === 0}}" class="empty-state">
-        <view class="icon">📭</view>
-        <view class="text">还没有发布过物品</view>
-      </view>
-      <view class="item-list" wx:else>
-        <view class="item-card card" wx:for="{{publishedItems}}" wx:key="id"
-          data-id="{{item.id}}" bindtap="onItemTap">
-          <view class="item-card-row">
-            <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
-            <view class="item-info flex-1">
-              <view class="item-title text-ellipsis">{{item.title}}</view>
-              <view class="item-desc text-ellipsis-2">{{item.description}}</view>
-              <view class="item-meta">
+    <!-- ===== 我的交易 ===== -->
+    <view class="group">
+      <view class="group-title">我的交易</view>
+      <view class="group-card">
+        <view class="entry-row {{expandedTab === 'published' ? 'expanded' : ''}}" data-tab="published" bindtap="toggleExpand">
+          <view class="entry-icon">📦</view>
+          <view class="entry-label">我发布的</view>
+          <view class="entry-count" wx:if="{{publishedItems.length > 0}}">{{publishedItems.length}}</view>
+          <view class="entry-arrow">{{expandedTab === 'published' ? '▾' : '›'}}</view>
+        </view>
+        <!-- 我发布的列表 -->
+        <view class="expand-list" wx:if="{{expandedTab === 'published'}}">
+          <view wx:if="{{publishedItems.length === 0}}" class="expand-empty">还没有发布过物品</view>
+          <view class="entry-item" wx:for="{{publishedItems}}" wx:key="id" data-id="{{item.id}}" bindtap="onItemTap">
+            <image class="entry-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="entry-item-info">
+              <view class="entry-item-title text-ellipsis">{{item.title}}</view>
+              <view class="entry-item-meta">
                 <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
                 <view class="status-{{item.status === 'completed' ? 'completed' : (item.status === 'offline' ? 'offline' : 'available')}}">
                   {{item.status === 'completed' ? '已送出' : item.status === 'offline' ? '已下架' : '可领取'}}
@@ -75,49 +61,44 @@
             </view>
           </view>
         </view>
-      </view>
-    </view>
 
-    <!-- 我申请的 -->
-    <view wx:if="{{activeTab === 'applied'}}">
-      <view wx:if="{{appliedItems.length === 0}}" class="empty-state">
-        <view class="icon">📋</view>
-        <view class="text">还没有申请过物品</view>
-      </view>
-        <view class="item-list" wx:else>
-          <view class="item-card card" wx:for="{{appliedItems}}" wx:key="id"
-            data-id="{{item.id}}" bindtap="onItemTap">
-            <view class="item-card-row">
-              <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
-              <view class="item-info flex-1">
-                <view class="item-title text-ellipsis">{{item.title}}</view>
-                <view class="item-desc text-ellipsis-2">{{item.description}}</view>
-                <view class="item-meta">
-                  <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
-                  <view class="status-{{item.applyStatus === 'pending' ? 'available' : 'completed'}}">
-                    {{item.applyStatus === 'pending' ? '申请中' : item.applyStatus === 'approved' ? '已通过' : '未选中'}}
-                  </view>
+        <view class="entry-row {{expandedTab === 'applied' ? 'expanded' : ''}}" data-tab="applied" bindtap="toggleExpand">
+          <view class="entry-icon">📋</view>
+          <view class="entry-label">我申请的</view>
+          <view class="entry-count" wx:if="{{appliedItems.length > 0}}">{{appliedItems.length}}</view>
+          <view class="entry-arrow">{{expandedTab === 'applied' ? '▾' : '›'}}</view>
+        </view>
+        <!-- 我申请的列表 -->
+        <view class="expand-list" wx:if="{{expandedTab === 'applied'}}">
+          <view wx:if="{{appliedItems.length === 0}}" class="expand-empty">还没有申请过物品</view>
+          <view class="entry-item" wx:for="{{appliedItems}}" wx:key="id" data-id="{{item.id}}" bindtap="onItemTap">
+            <image class="entry-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="entry-item-info">
+              <view class="entry-item-title text-ellipsis">{{item.title}}</view>
+              <view class="entry-item-meta">
+                <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                <view class="status-{{item.applyStatus === 'pending' ? 'available' : 'completed'}}">
+                  {{item.applyStatus === 'pending' ? '申请中' : item.applyStatus === 'approved' ? '已通过' : '未选中'}}
                 </view>
               </view>
             </view>
           </view>
         </view>
-    </view>
 
-    <!-- 我收藏的 -->
-    <view wx:if="{{activeTab === 'favorites'}}">
-      <view wx:if="{{favoriteItems.length === 0}}" class="empty-state">
-        <view class="icon">❤️</view>
-        <view class="text">还没有收藏物品，去逛逛吧</view>
-      </view>
-      <view class="item-list" wx:else>
-        <view class="item-card card" wx:for="{{favoriteItems}}" wx:key="id"
-          data-id="{{item.itemId}}" bindtap="onItemTap">
-          <view class="item-card-row">
-            <image class="item-thumb" src="{{item.itemImage || '/images/default-item.png'}}" mode="aspectFill" />
-            <view class="item-info flex-1">
-              <view class="item-title text-ellipsis">{{item.itemTitle}}</view>
-              <view class="item-meta">
+        <view class="entry-row {{expandedTab === 'favorites' ? 'expanded' : ''}}" data-tab="favorites" bindtap="toggleExpand">
+          <view class="entry-icon">❤️</view>
+          <view class="entry-label">我收藏的</view>
+          <view class="entry-count" wx:if="{{favoriteItems.length > 0}}">{{favoriteItems.length}}</view>
+          <view class="entry-arrow">{{expandedTab === 'favorites' ? '▾' : '›'}}</view>
+        </view>
+        <!-- 我收藏的列表 -->
+        <view class="expand-list" wx:if="{{expandedTab === 'favorites'}}">
+          <view wx:if="{{favoriteItems.length === 0}}" class="expand-empty">还没有收藏物品</view>
+          <view class="entry-item" wx:for="{{favoriteItems}}" wx:key="id" data-id="{{item.itemId}}" bindtap="onItemTap">
+            <image class="entry-thumb" src="{{item.itemImage || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="entry-item-info">
+              <view class="entry-item-title text-ellipsis">{{item.itemTitle}}</view>
+              <view class="entry-item-meta">
                 <view class="status-{{item.itemStatus === 'completed' ? 'completed' : (item.itemStatus === 'offline' ? 'offline' : 'available')}}">
                   {{item.itemStatus === 'completed' ? '已送出' : item.itemStatus === 'offline' ? '已下架' : '可领取'}}
                 </view>
@@ -125,46 +106,48 @@
             </view>
           </view>
         </view>
-      </view>
-    </view>
 
-    <!-- 我举报的（受理结果） -->
-    <view wx:if="{{activeTab === 'reported'}}">
-      <view wx:if="{{myReports.length === 0}}" class="empty-state">
-        <view class="icon">🚨</view>
-        <view class="text">还没有提交过举报</view>
-      </view>
-      <view class="item-list" wx:else>
-        <view class="report-card card" wx:for="{{myReports}}" wx:key="id">
-          <view class="report-head flex-between">
-            <view class="report-item-title">{{item.itemTitle}}</view>
-            <view class="status-tag {{item.statusText === '待处理' ? 'status-pending' : 'status-handled'}}">{{item.statusText}}</view>
-          </view>
-          <view class="report-reason-text">举报理由：{{item.reason}}</view>
-          <view class="report-meta">
-            <text>{{item.createTimeStr}}</text>
+        <view class="entry-row {{expandedTab === 'reported' ? 'expanded' : ''}}" data-tab="reported" bindtap="toggleExpand">
+          <view class="entry-icon">🚨</view>
+          <view class="entry-label">我举报的</view>
+          <view class="entry-count" wx:if="{{myReports.length > 0}}">{{myReports.length}}</view>
+          <view class="entry-arrow">{{expandedTab === 'reported' ? '▾' : '›'}}</view>
+        </view>
+        <!-- 我举报的列表 -->
+        <view class="expand-list" wx:if="{{expandedTab === 'reported'}}">
+          <view wx:if="{{myReports.length === 0}}" class="expand-empty">还没有提交过举报</view>
+          <view class="entry-item" wx:for="{{myReports}}" wx:key="id">
+            <view class="entry-item-info">
+              <view class="entry-item-title text-ellipsis">{{item.itemTitle}}</view>
+              <view class="entry-item-meta">
+                <view class="status-tag {{item.statusText === '待处理' ? 'status-pending' : 'status-handled'}}">{{item.statusText}}</view>
+                <text class="entry-item-time">{{item.createTimeStr}}</text>
+              </view>
+            </view>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- 设置区域 -->
-    <view class="settings-area">
-      <view class="setting-item" bindtap="goMessages">
-        <text>💬 我的消息</text>
-        <text class="setting-arrow">›</text>
-      </view>
-      <view class="setting-item" wx:if="{{isAdmin}}" bindtap="goAdmin">
-        <text>🛡️ 举报管理</text>
-        <text class="setting-arrow">›</text>
-      </view>
-      <view class="setting-item" bindtap="logout">
-        <text>🚪 退出登录</text>
-        <text class="setting-arrow">›</text>
-      </view>
-      <view class="setting-item" bindtap="clearAllData">
-        <text>🗑️ 清除所有数据</text>
-        <text class="setting-arrow">›</text>
+    <!-- ===== 常用工具 ===== -->
+    <view class="group">
+      <view class="group-title">常用工具</view>
+      <view class="group-card">
+        <view class="entry-row" wx:if="{{isAdmin}}" bindtap="goAdmin">
+          <view class="entry-icon">🛡️</view>
+          <view class="entry-label">举报管理</view>
+          <view class="entry-arrow">›</view>
+        </view>
+        <view class="entry-row" bindtap="logout">
+          <view class="entry-icon">🚪</view>
+          <view class="entry-label">退出登录</view>
+          <view class="entry-arrow">›</view>
+        </view>
+        <view class="entry-row" bindtap="clearAllData">
+          <view class="entry-icon">🗑️</view>
+          <view class="entry-label">清除所有数据</view>
+          <view class="entry-arrow">›</view>
+        </view>
       </view>
     </view>
 

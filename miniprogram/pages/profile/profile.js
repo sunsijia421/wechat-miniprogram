@@ -4,7 +4,8 @@ const util = require('../../utils/util')
 Page({
   data: {
     userInfo: null,
-    activeTab: 'published', // published | applied | reported | favorites | follows
+    openid: '',
+    expandedTab: '', // published | applied | favorites | reported（手风琴展开）
 
     // 我发布的
     publishedItems: [],
@@ -51,10 +52,10 @@ Page({
     }
   },
 
-  // 切换 Tab
-  switchTab(e) {
+  // 展开/收起"我的交易"分组（手风琴）
+  toggleExpand(e) {
     const tab = e.currentTarget.dataset.tab
-    this.setData({ activeTab: tab })
+    this.setData({ expandedTab: this.data.expandedTab === tab ? '' : tab })
   },
 
   // 加载我发布的物品（云端）
@@ -122,11 +123,6 @@ Page({
         this.setData({ followList: res.list || [] })
       })
       .catch(() => {})
-  },
-
-  // P0：进入消息中心
-  goMessages() {
-    wx.navigateTo({ url: '/pages/messages/messages' })
   },
 
   // 点击物品跳转详情
