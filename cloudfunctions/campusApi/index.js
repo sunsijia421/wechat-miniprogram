@@ -404,7 +404,7 @@ async function login(event, openid) {
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (users.data.length === 0) {
     await db.collection(COL.users).add({
-      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, createTime: db.serverDate() }
+      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, status: 'normal', createTime: db.serverDate() }
     })
     return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', points: 0, donateCount: 0, isAdmin: await isAdminUser(openid) }
   } else {
@@ -416,8 +416,20 @@ async function login(event, openid) {
   }
 }
 
+// 用户是否被封禁（封禁后仅可浏览，禁止发布/申请/举报等写操作）
+async function isBannedUser(openid) {
+  if (!openid) return false
+  try {
+    const res = await db.collection(COL.users).where({ _openid: openid }).get()
+    return res.data.length > 0 && res.data[0].status === 'banned'
+  } catch (e) {
+    return false
+  }
+}
+
 // 发布物品（含内容安全审核）
 async function publish(event, openid) {
+  if (await isBannedUser(openid)) return { success: false, message: '账号已被封禁，无法发布物品' }
   const {
     title, description, category, images, allowBarter, location, locationName,
     publisherNickName, publisherAvatarUrl
@@ -559,6 +571,7 @@ async function myPublish(openid, event) {
 
 // 申请领取（含内容安全审核 + 防重复申请）
 async function apply(event, openid) {
+  if (await isBannedUser(openid)) return { success: false, message: '账号已被封禁，无法申请物品' }
   const { itemId, message, itemTitle, applicantNickName, applicantAvatarUrl } = event
   if (!itemId) return { success: false, message: '物品ID缺失' }
   if (!message || !message.trim()) return { success: false, message: '请填写申请留言' }
@@ -670,6 +683,7 @@ async function handleApply(event, openid) {
 
 // 举报
 async function report(event, openid) {
+  if (await isBannedUser(openid)) return { success: false, message: '账号已被封禁，无法举报' }
   const { itemId, itemTitle, reason } = event
   if (!itemId) return { success: false, message: '物品ID缺失' }
   if (!reason || !reason.trim()) return { success: false, message: '请填写举报理由' }
@@ -742,6 +756,125 @@ async function adminReports(openid) {
     })
   })
   return { success: true, list }
+}
+
+// ===================== 管理后台（管理员专用） =====================
+
+// 数据总览：核心运营指标
+async function adminStats(openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const [userCnt, itemCnt, availCnt, completedCnt, offlineCnt, appCnt, reportCnt, pendingReportCnt, bannedCnt] = await Promise.all([
+    db.collection(COL.users).count(),
+    db.collection(COL.items).count(),
+    db.collection(COL.items).where({ status: 'available' }).count(),
+    db.collection(COL.items).where({ status: 'completed' }).count(),
+    db.collection(COL.items).where({ status: 'offline' }).count(),
+    db.collection(COL.applications).count(),
+    db.collection(COL.reports).count(),
+    db.collection(COL.reports).where({ status: 'pending' }).count(),
+    db.collection(COL.users).where({ status: 'banned' }).count()
+  ])
+  // 分类分布（用于管理看板）
+  const cats = ['books', 'clothes', 'electronics', 'other']
+  const catCounts = {}
+  for (const c of cats) {
+    const r = await db.collection(COL.items).where({ status: 'available', category: c }).count()
+    catCounts[c] = r.total
+  }
+  return {
+    success: true,
+    stats: {
+      userCount: userCnt.total,
+      itemCount: itemCnt.total,
+      availableCount: availCnt.total,
+      completedCount: completedCnt.total,
+      offlineCount: offlineCnt.total,
+      applicationCount: appCnt.total,
+      reportCount: reportCnt.total,
+      pendingReportCount: pendingReportCnt.total,
+      bannedCount: bannedCnt.total,
+      categoryCounts: catCounts
+    }
+  }
+}
+
+// 全部物品管理（分页 + 状态筛选 + 关键词）
+async function adminItems(event, openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const { page = 1, pageSize = 20, status = '', keyword = '' } = event
+  const conditions = []
+  if (status) conditions.push({ status })
+  if (keyword && keyword.trim()) conditions.push({ title: db.RegExp({ regexp: keyword.trim(), options: 'i' }) })
+  let q = db.collection(COL.items)
+  if (conditions.length) q = q.where(_.and(conditions))
+  const countRes = await q.count()
+  const listRes = await q.orderBy('createTime', 'desc').skip((page - 1) * pageSize).limit(pageSize).get()
+  return {
+    success: true,
+    list: listRes.data,
+    total: countRes.total,
+    hasMore: page * pageSize < countRes.total
+  }
+}
+
+// 管理员下架 / 重新上架物品（completed 不可变更）
+async function adminSetItemStatus(event, openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const { id, status } = event
+  if (!id) return { success: false, message: '物品ID缺失' }
+  if (status !== 'available' && status !== 'offline') return { success: false, message: '无效的状态' }
+  const res = await db.collection(COL.items).doc(id).get()
+  if (!res.data) return { success: false, message: '物品不存在' }
+  if (res.data.status === 'completed') return { success: false, message: '已送出的物品不可变更状态' }
+  await db.collection(COL.items).doc(id).update({ data: { status } })
+  return { success: true, status }
+}
+
+// 管理员删除物品（级联清理申请/举报/收藏/会话）
+async function adminDeleteItem(event, openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const { id } = event
+  if (!id) return { success: false, message: '物品ID缺失' }
+  const res = await db.collection(COL.items).doc(id).get()
+  if (!res.data) return { success: false, message: '物品不存在' }
+  await db.collection(COL.items).doc(id).remove()
+  await db.collection(COL.applications).where({ itemId: id }).remove()
+  await db.collection(COL.reports).where({ itemId: id }).remove()
+  await db.collection(COL.favorites).where({ itemId: id }).remove()
+  await db.collection(COL.conversations).where({ itemId: id }).remove()
+  await db.collection(COL.messages).where({ convId: id }).remove()
+  return { success: true }
+}
+
+// 用户列表（分页 + 关键词昵称搜索）
+async function adminUsers(event, openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const { page = 1, pageSize = 20, keyword = '' } = event
+  let q = db.collection(COL.users)
+  if (keyword && keyword.trim()) {
+    q = q.where({ nickName: db.RegExp({ regexp: keyword.trim(), options: 'i' }) })
+  }
+  const countRes = await q.count()
+  const listRes = await q.orderBy('createTime', 'desc').skip((page - 1) * pageSize).limit(pageSize).get()
+  const list = listRes.data.map(u => Object.assign({}, u, {
+    id: u._id,
+    isAdminUser: !!(u.isAdmin || false),
+    statusText: u.status === 'banned' ? '已封禁' : '正常',
+    createTimeStr: formatServerTime(u.createTime)
+  }))
+  return { success: true, list, total: countRes.total, hasMore: page * pageSize < countRes.total }
+}
+
+// 封禁 / 解封用户（封禁后不能发布/申请/举报）
+async function adminBanUser(event, openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const { userId, ban } = event
+  if (!userId) return { success: false, message: '用户ID缺失' }
+  const res = await db.collection(COL.users).doc(userId).get()
+  if (!res.data) return { success: false, message: '用户不存在' }
+  if (res.data._openid === openid) return { success: false, message: '不能封禁自己' }
+  await db.collection(COL.users).doc(userId).update({ data: { status: ban ? 'banned' : 'normal' } })
+  return { success: true, status: ban ? 'banned' : 'normal' }
 }
 
 // 管理员验证：输入正确密钥后，将当前用户标记为管理员
@@ -822,6 +955,12 @@ exports.main = async (event, context) => {
       case 'toggleFollow': return await toggleFollow(event, openid)
       case 'myFollows': return await myFollows(openid)
       case 'followStatus': return await followStatus(event, openid)
+      case 'adminStats': return await adminStats(openid)
+      case 'adminItems': return await adminItems(event, openid)
+      case 'adminSetItemStatus': return await adminSetItemStatus(event, openid)
+      case 'adminDeleteItem': return await adminDeleteItem(event, openid)
+      case 'adminUsers': return await adminUsers(event, openid)
+      case 'adminBanUser': return await adminBanUser(event, openid)
       default: return { success: false, message: '未知操作: ' + action }
     }
   } catch (e) {

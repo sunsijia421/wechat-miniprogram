@@ -1,4 +1,4 @@
-<!-- 举报管理页（仅管理员） -->
+<!-- 管理后台（仅管理员） -->
 <view class="container">
 
   <!-- 非管理员 -->
@@ -12,37 +12,143 @@
   <!-- 管理员 -->
   <block wx:if="{{isAdmin}}">
     <view class="admin-header">
-      <view class="admin-title">🛡️ 举报管理</view>
-      <view class="admin-actions">
-        <view class="admin-count">共 {{reports.length}} 条</view>
-        <view class="back-user-btn" bindtap="backToUser">返回用户端 ›</view>
+      <view class="admin-title">🛡️ 管理后台</view>
+      <view class="back-user-btn" bindtap="backToUser">返回用户端 ›</view>
+    </view>
+
+    <!-- Tab 切换 -->
+    <view class="admin-tabs">
+      <view class="admin-tab {{activeTab === 'overview' ? 'active' : ''}}" data-tab="overview" bindtap="switchTab">📊 总览</view>
+      <view class="admin-tab {{activeTab === 'items' ? 'active' : ''}}" data-tab="items" bindtap="switchTab">📦 物品</view>
+      <view class="admin-tab {{activeTab === 'users' ? 'active' : ''}}" data-tab="users" bindtap="switchTab">👥 用户</view>
+      <view class="admin-tab {{activeTab === 'reports' ? 'active' : ''}}" data-tab="reports" bindtap="switchTab">🚨 举报</view>
+    </view>
+
+    <!-- ===== 数据总览 ===== -->
+    <view wx:if="{{activeTab === 'overview'}}">
+      <view class="stat-grid" wx:if="{{stats}}">
+        <view class="stat-card" wx:for="{{statCards}}" wx:key="label">
+          <view class="stat-icon">{{item.icon}}</view>
+          <view class="stat-num">{{item.value}}</view>
+          <view class="stat-label">{{item.label}}</view>
+        </view>
+      </view>
+      <view class="empty-state" wx:if="{{!loading && !stats}}">
+        <view class="icon">📊</view>
+        <view class="text">暂无数据</view>
       </view>
     </view>
 
-    <!-- 空状态 -->
-    <view class="empty-state" wx:if="{{!loading && reports.length === 0}}">
-      <view class="icon">✅</view>
-      <view class="text">暂无举报</view>
+    <!-- ===== 物品管理 ===== -->
+    <view wx:if="{{activeTab === 'items'}}">
+      <!-- 搜索 + 状态筛选 -->
+      <view class="admin-search">
+        <view class="search-input-wrap">
+          <input class="search-input" placeholder="搜索物品标题..." value="{{itemKeyword}}"
+            bindinput="onItemKeywordInput" confirm-type="search" bindconfirm="searchItems" />
+          <view class="search-clear" wx:if="{{itemKeyword}}" bindtap="clearItemKeyword">✕</view>
+        </view>
+        <view class="filter-row">
+          <view class="filter-chip {{itemStatusFilter === '' ? 'active' : ''}}" data-status="" bindtap="setItemStatusFilter">全部</view>
+          <view class="filter-chip {{itemStatusFilter === 'available' ? 'active' : ''}}" data-status="available" bindtap="setItemStatusFilter">可领取</view>
+          <view class="filter-chip {{itemStatusFilter === 'offline' ? 'active' : ''}}" data-status="offline" bindtap="setItemStatusFilter">已下架</view>
+          <view class="filter-chip {{itemStatusFilter === 'completed' ? 'active' : ''}}" data-status="completed" bindtap="setItemStatusFilter">已送出</view>
+        </view>
+      </view>
+
+      <view class="empty-state" wx:if="{{!loading && items.length === 0}}">
+        <view class="icon">📭</view>
+        <view class="text">暂无物品</view>
+      </view>
+
+      <view class="item-list" wx:if="{{items.length > 0}}">
+        <view class="item-card card" wx:for="{{items}}" wx:key="id">
+          <view class="item-card-row">
+            <image class="item-thumb" src="{{item.images[0] || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="item-info flex-1">
+              <view class="item-title text-ellipsis">{{item.title}}</view>
+              <view class="item-meta">
+                <view class="tag tag-{{item.category}}">{{item.categoryName}}</view>
+                <view class="status-{{item.statusClass}}">{{item.statusText}}</view>
+              </view>
+              <view class="item-desc text-ellipsis">{{item.publisherNickName || '匿名'}} · {{item.createTimeStr}}</view>
+            </view>
+          </view>
+          <view class="item-actions">
+            <view wx:if="{{item.status !== 'completed'}}" class="mini-btn {{item.status === 'offline' ? 'green' : 'warn'}}"
+              data-id="{{item.id}}" data-status="{{item.status}}" bindtap="adminToggleItem">
+              {{item.status === 'offline' ? '重新上架' : '下架'}}
+            </view>
+            <view class="mini-btn danger" data-id="{{item.id}}" bindtap="adminDeleteItem">删除</view>
+          </view>
+        </view>
+      </view>
+      <view class="load-more" wx:if="{{itemHasMore && items.length > 0}}" bindtap="loadMoreItems">加载更多</view>
     </view>
 
-    <!-- 举报列表 -->
-    <view class="report-list" wx:if="{{reports.length > 0}}">
-      <view class="report-card card" wx:for="{{reports}}" wx:key="id" wx:for-item="r">
-        <view class="report-head flex-between">
-          <view class="report-item-title" data-itemid="{{r.itemId}}" bindtap="goDetail">{{r.itemTitle}}</view>
-          <view class="status-tag status-{{r.status}}">{{r.statusText}}</view>
+    <!-- ===== 用户管理 ===== -->
+    <view wx:if="{{activeTab === 'users'}}">
+      <view class="admin-search">
+        <view class="search-input-wrap">
+          <input class="search-input" placeholder="搜索用户昵称..." value="{{userKeyword}}"
+            bindinput="onUserKeywordInput" confirm-type="search" bindconfirm="searchUsers" />
+          <view class="search-clear" wx:if="{{userKeyword}}" bindtap="clearUserKeyword">✕</view>
         </view>
-        <view class="report-reason-text">举报理由：{{r.reason}}</view>
-        <view class="report-meta">
-          <text>物品状态：{{r.itemStatusText}}</text>
-          <text>{{r.createTimeStr}}</text>
+      </view>
+
+      <view class="empty-state" wx:if="{{!loading && users.length === 0}}">
+        <view class="icon">👥</view>
+        <view class="text">暂无用户</view>
+      </view>
+
+      <view class="user-list" wx:if="{{users.length > 0}}">
+        <view class="user-card card" wx:for="{{users}}" wx:key="id">
+          <image class="user-avatar" src="{{item.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+          <view class="user-info flex-1">
+            <view class="user-name text-ellipsis">{{item.nickName || '匿名'}}</view>
+            <view class="user-meta">
+              <text>积分 {{item.points || 0}}</text>
+              <text>捐赠 {{item.donateCount || 0}}次</text>
+              <text wx:if="{{item.isAdminUser}}" class="admin-tag">管理员</text>
+              <text class="ban-tag {{item.status === 'banned' ? 'banned' : ''}}">{{item.statusText}}</text>
+            </view>
+          </view>
+          <view class="mini-btn {{item.status === 'banned' ? 'green' : 'danger'}}"
+            data-id="{{item.id}}" data-banned="{{item.status === 'banned'}}" bindtap="adminBanUser">
+            {{item.status === 'banned' ? '解封' : '封禁'}}
+          </view>
         </view>
-        <view class="report-actions" wx:if="{{r.status === 'pending'}}">
-          <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
-          <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+      </view>
+      <view class="load-more" wx:if="{{userHasMore && users.length > 0}}" bindtap="loadMoreUsers">加载更多</view>
+    </view>
+
+    <!-- ===== 举报管理 ===== -->
+    <view wx:if="{{activeTab === 'reports'}}">
+      <view class="empty-state" wx:if="{{!loading && reports.length === 0}}">
+        <view class="icon">✅</view>
+        <view class="text">暂无举报</view>
+      </view>
+
+      <view class="report-list" wx:if="{{reports.length > 0}}">
+        <view class="report-card card" wx:for="{{reports}}" wx:key="id" wx:for-item="r">
+          <view class="report-head flex-between">
+            <view class="report-item-title" data-itemid="{{r.itemId}}" bindtap="goDetail">{{r.itemTitle}}</view>
+            <view class="status-tag status-{{r.status}}">{{r.statusText}}</view>
+          </view>
+          <view class="report-reason-text">举报理由：{{r.reason}}</view>
+          <view class="report-meta">
+            <text>物品状态：{{r.itemStatusText}}</text>
+            <text>{{r.createTimeStr}}</text>
+          </view>
+          <view class="report-actions" wx:if="{{r.status === 'pending'}}">
+            <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
+            <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+          </view>
         </view>
       </view>
     </view>
+
+    <view class="loading" wx:if="{{loading}}">加载中...</view>
   </block>
 
 </view>

@@ -1,5 +1,6 @@
 {
-  "navigationBarTitleText": "举报管理",
+  "navigationBarTitleText": "管理后台",
   "navigationBarBackgroundColor": "#4CAF50",
-  "navigationBarTextStyle": "white"
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
 }
