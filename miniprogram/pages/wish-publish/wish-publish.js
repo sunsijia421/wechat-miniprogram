@@ -7,8 +7,8 @@ Page({
     description: '',
     category: 'books',
     categoryIndex: 0,
-    categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '📦 其他'],
-    categoryValues: ['books', 'clothes', 'electronics', 'other'],
+    categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '🍳 日常用品', '📦 其他'],
+    categoryValues: ['books', 'clothes', 'electronics', 'daily', 'other'],
     submitting: false
   },
 

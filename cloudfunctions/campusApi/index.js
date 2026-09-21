@@ -1520,7 +1520,7 @@ async function adminStats(openid) {
     db.collection(COL.users).where({ status: 'banned' }).count()
   ])
   // 分类分布（用于管理看板）
-  const cats = ['books', 'clothes', 'electronics', 'other']
+  const cats = ['books', 'clothes', 'electronics', 'daily', 'other']
   const catCounts = {}
   for (const c of cats) {
     const r = await db.collection(COL.items).where({ status: 'available', category: c }).count()

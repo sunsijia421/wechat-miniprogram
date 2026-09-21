@@ -114,11 +114,12 @@ var CATEGORIES = {
   'books': '📚 书籍',
   'clothes': '👔 衣物',
   'electronics': '💻 电子产品',
+  'daily': '🍳 日常用品',
   'other': '📦 其他'
 }
 
-var CATEGORY_LIST = ['全部', '书籍', '衣物', '电子产品', '其他']
-var CATEGORY_KEYS = ['all', 'books', 'clothes', 'electronics', 'other']
+var CATEGORY_LIST = ['全部', '书籍', '衣物', '电子产品', '日常用品', '其他']
+var CATEGORY_KEYS = ['all', 'books', 'clothes', 'electronics', 'daily', 'other']
 
 /**
  * 获取分类显示名称
