@@ -82,7 +82,7 @@
 
 .avatar-btn {
   position: relative;
-  margin: 0;
+  margin: 0 0 0 auto;
   padding: 0;
   background: transparent;
   border: none;
