@@ -13,15 +13,15 @@
   margin-right: 4rpx;
 }
 .hot-keyword {
-  padding: 8rpx 20rpx;
+  padding: 10rpx 24rpx;
   background: #fff;
-  border-radius: 24rpx;
+  border-radius: 28rpx;
   font-size: 12px;
-  color: #666;
-  border: 1rpx solid #f0f0f0;
+  color: #4E5969;
+  box-shadow: 0 2rpx 8rpx rgba(29, 33, 41, 0.04);
 }
 .hot-keyword:active {
-  background: #f0f0f0;
+  background: #F2F3F5;
 }
 
 /* P2：热门物品榜 */
@@ -180,10 +180,10 @@
   display: flex;
   align-items: center;
   background: #fff;
-  border-radius: 16rpx;
-  margin: 0 20rpx 16rpx;
-  padding: 20rpx;
-  border: 1rpx solid #f0f0f0;
+  border-radius: 24rpx;
+  margin: 0 20rpx 20rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(29, 33, 41, 0.04);
 }
 .checkin-left {
   flex: 1;
@@ -246,22 +246,22 @@
   font-weight: 600;
 }
 .checkin-btn {
-  width: 150rpx;
-  height: 68rpx;
-  line-height: 68rpx;
+  width: 156rpx;
+  height: 72rpx;
+  line-height: 72rpx;
   padding: 0;
   margin: 0;
-  border-radius: 34rpx;
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  border-radius: 36rpx;
+  background: linear-gradient(135deg, #4CAF50, #43A047);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   flex-shrink: 0;
-  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.25);
+  box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
 }
 .checkin-btn.done {
-  background: #f0f0f0;
-  color: #bbb;
+  background: #F2F3F5;
+  color: #86909C;
   box-shadow: none;
 }
 

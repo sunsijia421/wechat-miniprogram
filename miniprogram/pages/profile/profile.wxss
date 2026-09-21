@@ -202,15 +202,22 @@ button.entry-row::after {
 }
 
 .entry-icon {
-  font-size: 34rpx;
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
   margin-right: 22rpx;
   flex-shrink: 0;
+  background: #F6F7F9;
+  border-radius: 16rpx;
 }
 
 .entry-label {
   flex: 1;
   font-size: 16px;
-  color: #333;
+  color: #1D2129;
   font-weight: 500;
 }
 
@@ -230,7 +237,8 @@ button.entry-row::after {
 
 .entry-arrow {
   font-size: 28rpx;
-  color: #ccc;
+  color: #C9CDD4;
+  font-weight: 300;
 }
 
 /* ========== 展开列表 ========== */
