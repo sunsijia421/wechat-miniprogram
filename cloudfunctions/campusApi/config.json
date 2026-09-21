@@ -2,7 +2,15 @@
   "permissions": {
     "openapi": [
       "security.msgSecCheck",
-      "security.imgSecCheck"
+      "security.imgSecCheck",
+      "subscribeMessage.send"
     ]
-  }
+  },
+  "triggers": [
+    {
+      "name": "dailyExpireCheck",
+      "type": "timer",
+      "config": "0 0 3 * * * *"
+    }
+  ]
 }

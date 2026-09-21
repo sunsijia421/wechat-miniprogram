@@ -536,12 +536,12 @@ async function myPointLogs(openid) {
 // 公益排行榜：积分 Top N + 捐赠次数 Top N（排除封禁用户）
 async function rankList() {
   const byPoints = await db.collection(COL.users)
-    .where({ status: _.neq('banned') })
+    .where({ status: _.neq('banned'), points: _.gt(0) })
     .orderBy('points', 'desc')
     .limit(10)
     .get()
   const byDonate = await db.collection(COL.users)
-    .where({ status: _.neq('banned') })
+    .where({ status: _.neq('banned'), donateCount: _.gt(0) })
     .orderBy('donateCount', 'desc')
     .limit(10)
     .get()
@@ -2104,6 +2104,13 @@ exports.main = async (event, context) => {
   const { action } = event
   const wxContext = cloud.getWXContext()
   const openid = wxContext.OPENID
+
+  // 定时触发器：每天凌晨3点自动处理超时未确认的赠送（3天未确认→物品重新上架）
+  if (!action || action === 'timer' || event.Type === 'timer') {
+    await ensureCollections()
+    await expireOverdueConfirmations()
+    return { success: true, timer: 'expireOverdueConfirmations done' }
+  }
 
   try {
     await ensureCollections()
