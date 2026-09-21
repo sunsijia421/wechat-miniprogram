@@ -202,39 +202,43 @@
 }
 .checkin-week {
   display: flex;
-  gap: 10rpx;
-  margin-top: 14rpx;
+  gap: 12rpx;
+  margin-top: 16rpx;
+  justify-content: space-between;
 }
 .checkin-day {
-  width: 56rpx;
+  width: 48rpx;
   text-align: center;
 }
 .checkin-day-dot {
-  width: 44rpx;
-  height: 44rpx;
-  line-height: 44rpx;
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
   margin: 0 auto;
   border-radius: 50%;
-  border: 2rpx dashed #ddd;
+  background: #f5f5f5;
   color: transparent;
-  font-size: 20rpx;
+  font-size: 22rpx;
   box-sizing: border-box;
+  transition: all 0.2s;
 }
 .checkin-day.signed .checkin-day-dot {
-  background: #4CAF50;
-  border: none;
+  background: linear-gradient(135deg, #43A047, #66BB6A);
   color: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(76, 175, 80, 0.3);
 }
 .checkin-day.today .checkin-day-dot {
+  background: #fff;
   border: 2rpx solid #4CAF50;
-  box-shadow: 0 0 0 4rpx rgba(76, 175, 80, 0.15);
+  box-shadow: 0 0 0 3rpx rgba(76, 175, 80, 0.12);
 }
 .checkin-day.signed.today .checkin-day-dot {
+  background: linear-gradient(135deg, #43A047, #66BB6A);
   border: 2rpx solid #fff;
-  box-shadow: 0 0 0 4rpx rgba(76, 175, 80, 0.3);
+  box-shadow: 0 0 0 3rpx rgba(76, 175, 80, 0.25);
 }
 .checkin-day-label {
-  font-size: 9px;
+  font-size: 10px;
   color: #999;
   margin-top: 6rpx;
 }
@@ -243,21 +247,23 @@
   font-weight: 600;
 }
 .checkin-btn {
-  width: 170rpx;
-  height: 72rpx;
-  line-height: 72rpx;
+  width: 150rpx;
+  height: 68rpx;
+  line-height: 68rpx;
   padding: 0;
   margin: 0;
-  border-radius: 36rpx;
+  border-radius: 34rpx;
   background: linear-gradient(135deg, #43A047, #66BB6A);
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   flex-shrink: 0;
+  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.25);
 }
 .checkin-btn.done {
-  background: #e0e0e0;
-  color: #999;
+  background: #f0f0f0;
+  color: #bbb;
+  box-shadow: none;
 }
 
 /* ========== P3：新手引导 ========== */
@@ -376,25 +382,26 @@
 .view-toggle {
   display: flex;
   margin: 0 20rpx 16rpx;
-  background-color: #ffffff;
-  border-radius: 40rpx;
-  padding: 6rpx;
-  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+  background-color: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 4rpx;
 }
 
 .toggle-btn {
   flex: 1;
   text-align: center;
-  padding: 16rpx 0;
-  border-radius: 36rpx;
-  font-size: 14px;
-  color: #666;
+  padding: 12rpx 0;
+  border-radius: 10rpx;
+  font-size: 13px;
+  color: #888;
+  transition: all 0.2s;
 }
 
 .toggle-btn.active {
-  background-color: #4CAF50;
-  color: #ffffff;
-  font-weight: bold;
+  background-color: #fff;
+  color: #4CAF50;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
 }
 
 /* ========== 搜索栏 ========== */
