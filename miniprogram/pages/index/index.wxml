@@ -70,7 +70,7 @@
         <view class="quick-icon publish">📦</view>
         <view class="quick-label">发布闲置</view>
       </view>
-      <view class="quick-item" bindtap="doCheckIn">
+      <view class="quick-item" bindtap="goCheckin">
         <view class="quick-icon checkin">📅</view>
         <view class="quick-label">每日签到</view>
       </view>

@@ -1,0 +1,54 @@
+<!-- 签到日历 -->
+<view class="container">
+
+  <!-- 顶部统计 -->
+  <view class="stat-card">
+    <view class="stat-item">
+      <view class="stat-num">{{streak}}</view>
+      <view class="stat-label">连续签到（天）</view>
+    </view>
+    <view class="stat-divider"></view>
+    <view class="stat-item">
+      <view class="stat-num">{{total}}</view>
+      <view class="stat-label">累计签到（天）</view>
+    </view>
+  </view>
+
+  <!-- 月份切换 -->
+  <view class="month-bar">
+    <view class="month-nav" bindtap="prevMonth">‹</view>
+    <view class="month-title">{{monthLabel}}</view>
+    <view class="month-nav" bindtap="nextMonth">›</view>
+  </view>
+
+  <!-- 月历 -->
+  <view class="cal-card">
+    <view class="cal-week">
+      <view class="cal-week-cell" wx:for="{{weekHeader}}" wx:key="*this">{{item}}</view>
+    </view>
+    <view class="cal-grid">
+      <block wx:for="{{days}}" wx:key="key" wx:for-item="d">
+        <view class="cal-cell {{!d ? 'empty' : ''}}">
+          <view wx:if="{{d}}" class="cal-day {{d.signed ? 'signed' : ''}} {{d.isToday ? 'today' : ''}} {{d.isFuture ? 'future' : ''}}">
+            <text class="cal-day-num">{{d.day}}</text>
+            <text class="cal-day-mark" wx:if="{{d.signed}}">✓</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 签到按钮 -->
+  <button class="checkin-btn {{signedToday ? 'done' : ''}}" bindtap="doCheckIn" disabled="{{signedToday}}">
+    {{signedToday ? '今日已签到' : '今日签到 +2 分'}}
+  </button>
+
+  <!-- 奖励规则 -->
+  <view class="rule-card">
+    <view class="rule-title">🎁 签到奖励规则</view>
+    <view class="rule-item">· 每日签到 +2 公益积分</view>
+    <view class="rule-item">· 连续签到满 7 天，额外奖励 +5 分</view>
+    <view class="rule-item">· 中途断签，连续天数重新计算</view>
+  </view>
+
+</view>

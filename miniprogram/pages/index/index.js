@@ -110,6 +110,12 @@ Page({
       .catch(() => {})
   },
 
+  // 跳转签到日历页
+  goCheckin() {
+    if (!util.requireLogin()) return
+    wx.navigateTo({ url: '/pages/checkin/checkin' })
+  },
+
   // P3：执行签到
   doCheckIn() {
     if (!util.requireLogin()) return

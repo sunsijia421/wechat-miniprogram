@@ -16,6 +16,7 @@
     "pages/userHome/userHome",
     "pages/certificates/certificates",
     "pages/shop/shop",
+    "pages/checkin/checkin",
     "pages/wish-list/wish-list",
     "pages/wish-publish/wish-publish",
     "pages/wish-detail/wish-detail"

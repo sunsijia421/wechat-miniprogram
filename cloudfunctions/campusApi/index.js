@@ -629,6 +629,29 @@ async function checkIn(openid) {
   return { success: true, points, streak, bonus }
 }
 
+// 日历页：查询某用户某月已签到的日期列表
+async function checkinMonth(event, openid) {
+  if (!openid) return { success: false, message: '登录后查看' }
+  // month 格式 'YYYY-MM'，默认当前月
+  const now = new Date(Date.now() + 8 * 3600 * 1000)
+  const month = (event && event.month) || (now.getUTCFullYear() + '-' + String(now.getUTCMonth() + 1).padStart(2, '0'))
+  const start = month + '-01'
+  // 取下月1号作为结束
+  const [y, m] = month.split('-').map(Number)
+  const end = (m === 12) ? (y + 1) + '-01-01' : y + '-' + String(m + 1).padStart(2, '0') + '-01'
+  const res = await db.collection(COL.checkins)
+    .where({ _openid: openid, date: _.gte(start), date: _.lt(end) })
+    .get()
+  // 累计签到总次数
+  const totalRes = await db.collection(COL.checkins).where({ _openid: openid }).count()
+  return {
+    success: true,
+    month,
+    signedDates: res.data.map(r => r.date),
+    total: totalRes.total
+  }
+}
+
 // 意见反馈：内容 + 联系方式（选填），写入 feedbacks 集合
 async function submitFeedback(event, openid) {
   const { content, contact } = event
@@ -2033,6 +2056,7 @@ exports.main = async (event, context) => {
       case 'rankList': return await rankList()
       case 'checkInStatus': return await checkInStatus(openid)
       case 'checkIn': return await checkIn(openid)
+      case 'checkinMonth': return await checkinMonth(event, openid)
       case 'submitFeedback': return await submitFeedback(event, openid)
       case 'updateProfile': return await updateProfile(event, openid)
       case 'userProfile': return await userProfile(event, openid)
