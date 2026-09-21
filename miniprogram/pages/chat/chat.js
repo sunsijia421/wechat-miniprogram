@@ -66,6 +66,10 @@ Page({
           loaded: true,
           canSendOneOnly
         })
+        // 导航栏标题改成对方昵称
+        if (res.peerName) {
+          wx.setNavigationBarTitle({ title: res.peerName })
+        }
         this.scrollToBottom()
         this.startPolling()
         // P7：检查与对方的拉黑状态
