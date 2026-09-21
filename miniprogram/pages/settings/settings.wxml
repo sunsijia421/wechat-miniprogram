@@ -5,10 +5,12 @@
   <view class="group">
     <view class="group-title">个人资料</view>
     <view class="group-card">
-      <view class="set-row">
+      <view class="set-row avatar-row">
         <view class="set-label">头像</view>
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
-          <image class="set-avatar" src="{{avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+          <image wx:if="{{avatarUrl}}" class="set-avatar" src="{{avatarUrl}}" mode="aspectFill" />
+          <view wx:else class="set-avatar avatar-placeholder">👤</view>
+          <view class="avatar-badge">📷</view>
         </button>
       </view>
       <view class="set-divider"></view>
