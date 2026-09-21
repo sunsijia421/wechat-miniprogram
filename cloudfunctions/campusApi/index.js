@@ -1117,6 +1117,7 @@ async function apply(event, openid) {
   // 校验物品存在且处于可领取状态（禁止对已送出/已下架/已删除物品申请）
   const itemCheck = await db.collection(COL.items).doc(itemId).get()
   if (!itemCheck.data) return { success: false, message: '物品不存在' }
+  if (itemCheck.data._openid === openid) return { success: false, message: '不能申请自己发布的物品' }
   if (itemCheck.data.status !== 'available') return { success: false, message: '该物品当前不可申请' }
 
   // P7：拉黑校验——任一方拉黑另一方，不能申请其物品
