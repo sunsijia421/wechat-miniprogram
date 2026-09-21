@@ -37,7 +37,12 @@ Page({
     reports: [],
     reportPage: 1,
     reportHasMore: true,
-    reportLoading: false
+    reportLoading: false,
+
+    // 意见反馈
+    feedbackList: [],
+    feedbackUnread: 0,
+    feedbackLoading: false
   },
 
   onShow() {
@@ -71,6 +76,7 @@ Page({
     else if (tab === 'items') this.loadItems(true)
     else if (tab === 'users') this.loadUsers(true)
     else if (tab === 'reports') this.loadReports(true)
+    else if (tab === 'feedbacks') this.loadFeedbacks()
   },
 
   // 切换 Tab
@@ -396,6 +402,47 @@ Page({
     const itemId = e.currentTarget.dataset.itemid
     if (!itemId) return
     wx.navigateTo({ url: '/pages/detail/detail?id=' + itemId })
+  },
+
+  // ========== 意见反馈 ==========
+  loadFeedbacks() {
+    if (this.data.feedbackLoading) return
+    this.setData({ loading: true, feedbackLoading: true })
+    util.callApi('adminFeedbacks', {})
+      .then(res => {
+        const list = (res.list || []).map(f => {
+          const statusText = f.status === 'pending' ? '未读'
+            : f.status === 'read' ? '已读' : '已处理'
+          return Object.assign({}, f, {
+            createTimeStr: util.formatTime(f.createTime),
+            statusText
+          })
+        })
+        this.setData({
+          feedbackList: list,
+          feedbackUnread: res.unread || 0,
+          loading: false,
+          feedbackLoading: false
+        })
+      })
+      .catch(e => {
+        this.setData({ loading: false, feedbackLoading: false })
+        wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
+      })
+  },
+
+  // 标记反馈状态
+  markFeedback(e) {
+    const id = e.currentTarget.dataset.id
+    const status = e.currentTarget.dataset.status
+    util.callApi('handleFeedback', { feedbackId: id, status })
+      .then(() => {
+        wx.showToast({ title: '已更新', icon: 'success' })
+        this.loadFeedbacks()
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
+      })
   },
 
   // 处理举报：offline=下架物品；ban=封禁被举报用户；ignore=忽略单条

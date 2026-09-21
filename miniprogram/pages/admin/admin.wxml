@@ -22,6 +22,10 @@
       <view class="admin-tab {{activeTab === 'items' ? 'active' : ''}}" data-tab="items" bindtap="switchTab">📦 物品</view>
       <view class="admin-tab {{activeTab === 'users' ? 'active' : ''}}" data-tab="users" bindtap="switchTab">👥 用户</view>
       <view class="admin-tab {{activeTab === 'reports' ? 'active' : ''}}" data-tab="reports" bindtap="switchTab">🚨 举报</view>
+      <view class="admin-tab {{activeTab === 'feedbacks' ? 'active' : ''}}" data-tab="feedbacks" bindtap="switchTab">
+        💬 反馈
+        <view class="tab-badge" wx:if="{{feedbackUnread > 0}}">{{feedbackUnread}}</view>
+      </view>
     </view>
 
     <!-- ===== 数据总览 ===== -->
@@ -160,6 +164,33 @@
               <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
               <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
             </block>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ===== 意见反馈 ===== -->
+    <view wx:if="{{activeTab === 'feedbacks'}}">
+      <view class="empty-state" wx:if="{{!loading && feedbackList.length === 0}}">
+        <view class="icon">📭</view>
+        <view class="text">暂无反馈</view>
+      </view>
+
+      <view class="feedback-list" wx:if="{{feedbackList.length > 0}}">
+        <view class="feedback-card card" wx:for="{{feedbackList}}" wx:key="_id">
+          <view class="feedback-head">
+            <image class="feedback-avatar" src="{{item.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+            <view class="feedback-user">
+              <view class="feedback-nick">{{item.nickName}}</view>
+              <view class="feedback-time">{{item.createTimeStr}}</view>
+            </view>
+            <view class="status-tag status-{{item.status}}">{{item.statusText}}</view>
+          </view>
+          <view class="feedback-content">{{item.content}}</view>
+          <view class="feedback-contact" wx:if="{{item.contact}}">联系方式：{{item.contact}}</view>
+          <view class="feedback-actions">
+            <view wx:if="{{item.status === 'pending'}}" class="feedback-action normal" data-id="{{item._id}}" data-status="read" bindtap="markFeedback">标记已读</view>
+            <view wx:if="{{item.status !== 'done'}}" class="feedback-action normal" data-id="{{item._id}}" data-status="done" bindtap="markFeedback">已处理</view>
           </view>
         </view>
       </view>

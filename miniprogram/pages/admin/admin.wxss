@@ -120,6 +120,95 @@
   color: #4CAF50;
 }
 
+.status-read {
+  background-color: #E3F2FD;
+  color: #2196F3;
+}
+
+.status-done {
+  background-color: #E8F5E9;
+  color: #4CAF50;
+}
+
+/* Tab 未读角标 */
+.tab-badge {
+  display: inline-block;
+  min-width: 30rpx;
+  height: 30rpx;
+  line-height: 30rpx;
+  padding: 0 8rpx;
+  margin-left: 6rpx;
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 18rpx;
+  border-radius: 15rpx;
+  text-align: center;
+}
+
+/* 意见反馈卡片 */
+.feedback-list {
+  padding: 20rpx;
+}
+.feedback-card {
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  border-radius: 16rpx;
+}
+.feedback-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.feedback-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: #f0f0f0;
+  margin-right: 16rpx;
+}
+.feedback-user {
+  flex: 1;
+  min-width: 0;
+}
+.feedback-nick {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+.feedback-time {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4rpx;
+}
+.feedback-content {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+  word-break: break-all;
+}
+.feedback-contact {
+  font-size: 12px;
+  color: #666;
+  background: #f7f7f7;
+  padding: 10rpx 16rpx;
+  border-radius: 8rpx;
+  margin-bottom: 16rpx;
+}
+.feedback-actions {
+  display: flex;
+  gap: 16rpx;
+}
+.feedback-action {
+  padding: 10rpx 28rpx;
+  border-radius: 28rpx;
+  font-size: 12px;
+}
+.feedback-action.normal {
+  background: #E8F5E9;
+  color: #4CAF50;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;

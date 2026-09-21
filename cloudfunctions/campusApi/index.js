@@ -1656,6 +1656,45 @@ async function adminBanUser(event, openid) {
   return { success: true, status: ban ? 'banned' : 'normal' }
 }
 
+// 意见反馈列表（管理员）：按时间倒序，关联提交人昵称
+async function adminFeedbacks(openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const res = await db.collection(COL.feedbacks).orderBy('createTime', 'desc').limit(200).get()
+  const openids = [...new Set(res.data.map(f => f._openid).filter(Boolean))]
+  const nickMap = {}
+  if (openids.length) {
+    try {
+      const users = await db.collection(COL.users).where({ _openid: _.in(openids) }).field({ nickName: true, avatarUrl: true }).get()
+      users.data.forEach(u => { nickMap[u._openid] = { nickName: u.nickName || '匿名', avatarUrl: u.avatarUrl || '' } })
+    } catch (e) {}
+  }
+  const list = res.data.map(f => {
+    const u = nickMap[f._openid] || {}
+    return {
+      _id: f._id,
+      content: f.content,
+      contact: f.contact || '',
+      status: f.status || 'pending',
+      createTime: f.createTime,
+      nickName: u.nickName || '匿名',
+      avatarUrl: u.avatarUrl || ''
+    }
+  })
+  const unread = list.filter(f => f.status === 'pending').length
+  return { success: true, list, unread }
+}
+
+// 标记反馈状态：pending（未读）/ read（已读）/ done（已处理）
+async function handleFeedback(event, openid) {
+  if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
+  const { feedbackId, status } = event
+  if (!feedbackId) return { success: false, message: '反馈ID缺失' }
+  const valid = ['pending', 'read', 'done']
+  if (!valid.includes(status)) return { success: false, message: '状态无效' }
+  await db.collection(COL.feedbacks).doc(feedbackId).update({ data: { status } })
+  return { success: true }
+}
+
 // 管理员验证：输入正确密钥后，将当前用户标记为管理员
 // 密钥从云开发环境变量 ADMIN_SECRET 读取（未配置则不可用，避免密钥出现在公开仓库）
 async function becomeAdmin(event, openid) {
@@ -2013,6 +2052,8 @@ exports.main = async (event, context) => {
       case 'adminDeleteItem': return await adminDeleteItem(event, openid)
       case 'adminUsers': return await adminUsers(event, openid)
       case 'adminBanUser': return await adminBanUser(event, openid)
+      case 'adminFeedbacks': return await adminFeedbacks(openid)
+      case 'handleFeedback': return await handleFeedback(event, openid)
       default: return { success: false, message: '未知操作: ' + action }
     }
   } catch (e) {
