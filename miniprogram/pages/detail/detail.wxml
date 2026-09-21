@@ -141,7 +141,7 @@
     </view>
     <view class="card" wx:if="{{isCompleted && evaluated && isLoggedIn && (isOwner || (hasApplied && (applyStatus === 'approved' || applyStatus === 'confirmed')))}}">
       <view class="section-title">⭐ 完成互评</view>
-      <view class="eval-prompt eval-done">✅ 你已评价本次赠送，感谢反馈</view>
+      <view class="eval-prompt eval-done">你已评价本次赠送，感谢反馈</view>
     </view>
 
     <!-- P2：猜你喜欢（同分类可领取，按热度推荐） -->
@@ -186,7 +186,7 @@
     <!-- 自己发布的 & 待对方确认（P7） -->
     <block wx:if="{{isOwner && isWaitingConfirm}}">
       <button class="btn-disabled bottom-btn" disabled>
-        ⏳ 等待对方确认（3天内自动重新上架）
+        等待对方确认（3天内自动重新上架）
       </button>
     </block>
 
@@ -214,13 +214,13 @@
     <!-- 不是自己发布的 & 待对方确认（申请者视角：确认收到按钮） -->
     <block wx:if="{{!isOwner && isWaitingConfirm}}">
       <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
-        {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
+        {{favorited ? '已收藏' : '收藏'}}
       </view>
       <button wx:if="{{hasApplied && applyStatus === 'approved'}}" class="btn-primary bottom-btn" data-id="{{myApplicationId}}" bindtap="confirmReceive">
-        ✅ 确认收到
+        确认收到
       </button>
       <button wx:else class="btn-disabled bottom-btn" disabled>
-        ⏳ 物品待确认
+        物品待确认
       </button>
     </block>
 
@@ -228,25 +228,25 @@
     <block wx:if="{{!isOwner && !isCompleted && !isOffline && !isWaitingConfirm}}">
       <!-- 已登录：收藏 + 发起申请/交换 -->
       <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
-        {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
+        {{favorited ? '已收藏' : '收藏'}}
       </view>
       <!-- 已申请：按钮置灰，不可重复申请 -->
       <button wx:if="{{isLoggedIn && hasApplied}}" class="btn-disabled bottom-btn" disabled>
-        {{applyStatus === 'approved' ? '✅ 申请已通过' : applyStatus === 'rejected' ? '😢 申请未通过' : '⏳ 已申请 · 待处理'}}
+        {{applyStatus === 'approved' ? '申请已通过' : applyStatus === 'rejected' ? '申请未通过' : '已申请 · 待处理'}}
       </button>
       <button wx:elif="{{isLoggedIn}}" class="btn-primary bottom-btn" bindtap="openApply">
-        🙋 我要申请
+        我要申请
       </button>
       <!-- 未登录：游客只读，引导登录后才能交换 -->
       <button wx:else class="btn-outline bottom-btn" bindtap="goLogin">
-        🔐 登录后可申请
+        登录后可申请
       </button>
     </block>
 
     <!-- 不是自己发布的 & 已完成：仍可收藏 -->
     <block wx:if="{{!isOwner && isCompleted}}">
       <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
-        {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
+        {{favorited ? '已收藏' : '收藏'}}
       </view>
       <button class="btn-disabled bottom-btn" disabled>
         已被他人领取
