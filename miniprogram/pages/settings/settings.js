@@ -32,6 +32,29 @@ Page({
       donateCount: userInfo.donateCount || 0,
       level: util.getLevel(userInfo.points)
     })
+    // 以云端为准刷新积分（避免本地缓存滞后）
+    util.callApi('userProfile', { openid }).then(res => {
+      if (res.success !== false && res.points !== undefined) {
+        const updated = Object.assign({}, userInfo, {
+          points: res.points || 0,
+          donateCount: res.donateCount || 0,
+          nickName: res.nickName || userInfo.nickName,
+          avatarUrl: res.avatarUrl || userInfo.avatarUrl,
+          bio: res.bio || '',
+          region: res.region || ''
+        })
+        app.saveUserInfo(updated)
+        this.setData({
+          points: updated.points,
+          donateCount: updated.donateCount,
+          nickName: updated.nickName,
+          avatarUrl: updated.avatarUrl,
+          bio: updated.bio,
+          region: updated.region,
+          level: util.getLevel(updated.points)
+        })
+      }
+    }).catch(() => {})
   },
 
   // 微信新版头像选择

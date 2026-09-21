@@ -43,7 +43,6 @@ Page({
     const userInfo = app.getUserInfo()
     if (userInfo) {
       const level = util.getLevel(userInfo.points)
-      // 下一等级名称（用于"距XX还差N分"）
       const levelNames = { 初心者: '公益使者', 公益使者: '公益达人', 公益达人: '公益先锋', 公益先锋: '公益大使', 公益大使: '' }
       this.setData({
         userInfo,
@@ -53,6 +52,24 @@ Page({
         levelNextName: levelNames[level.name] || ''
       })
     }
+    // 以云端为准刷新积分/捐赠次数
+    util.callApi('userProfile', { openid: app.getOpenid() || '' }).then(res => {
+      if (res.success !== false && res.points !== undefined) {
+        const updated = Object.assign({}, app.getUserInfo() || {}, {
+          points: res.points || 0,
+          donateCount: res.donateCount || 0,
+          nickName: res.nickName,
+          avatarUrl: res.avatarUrl,
+          bio: res.bio || '',
+          region: res.region || ''
+        })
+        app.saveUserInfo(updated)
+        this.setData({
+          userInfo: updated,
+          level: util.getLevel(updated.points)
+        })
+      }
+    }).catch(() => {})
   },
 
   // 加载我的交易角标（一次 count 接口替代 4 个列表请求）
