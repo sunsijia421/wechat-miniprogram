@@ -247,7 +247,8 @@ function callApi(action, data) {
 var SUBSCRIBE_TEMPLATES = {
   applyNotice: 'KONb9VrH39tCvnNZmDedUM3AwUoF94-jqaLKfzcvqeA',   // 物品被申请时通知发布者
   applyResult: 'Abrj1ds3NiI04kR2EoTEcg83gIFXYdlgTa7MY1fKUYA',    // 申请被处理时通知申请者
-  reportResult: 'Jw1n_Vaw6W73fSuz72b9MGu15kWRwYwoQuo-aba1-_M'     // 举报处理结果通知举报者
+  reportResult: 'Jw1n_Vaw6W73fSuz72b9MGu15kWRwYwoQuo-aba1-_M',     // 举报处理结果通知举报者
+  arrivalNotice: 'icMSGnd8DDchZFkOYOHPjSyRulR4EA8wKl72gUq5COw'     // 新物品到货提醒
 }
 
 // 请求订阅授权（一次性订阅；用户授权一次可收到一次推送）。模板未配置时静默跳过。

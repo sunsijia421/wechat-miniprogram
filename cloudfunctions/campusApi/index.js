@@ -41,9 +41,10 @@ const BADGES = [
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
 // 目前为占位符：申请/处理结果通知需要用户自行配置模板后填写真实 ID
 const SUBSCRIBE_TEMPLATES = {
-  applyNotice: 'KONb9VrH39tCvnNZmDedUM3AwUoF94-jqaLKfzcvqeA',      // 物品被申请时通知发布者（如"申请结果通知"类模板）
+  applyNotice: 'KONb9VrH39tCvnNZmDedUM3AwUoF94-jqaLKfzcvqeA',      // 物品被申请时通知发布者
   applyResult: 'Abrj1ds3NiI04kR2EoTEcg83gIFXYdlgTa7MY1fKUYA',      // 申请被处理时通知申请者
-  reportResult: 'Jw1n_Vaw6W73fSuz72b9MGu15kWRwYwoQuo-aba1-_M'      // 举报处理结果通知举报者
+  reportResult: 'Jw1n_Vaw6W73fSuz72b9MGu15kWRwYwoQuo-aba1-_M',      // 举报处理结果通知举报者
+  arrivalNotice: 'icMSGnd8DDchZFkOYOHPjSyRulR4EA8wKl72gUq5COw'      // 新物品到货提醒（关键词订阅）
 }
 
 // 管理员识别（二选一命中即为管理员）：
@@ -881,8 +882,8 @@ async function publish(event, openid) {
       if (notified.has(s._openid)) continue
       if (titleStr.indexOf((s.keyword || '').toLowerCase()) >= 0) {
         notified.add(s._openid)
-        tasks.push(() => sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyNotice, s._openid, 'pages/detail/detail?id=' + res._id, {
-          thing1: { value: '新物品到货：' + (title || '').slice(0, 18) },
+        tasks.push(() => sendSubscribeMessage(SUBSCRIBE_TEMPLATES.arrivalNotice, s._openid, 'pages/detail/detail?id=' + res._id, {
+          thing1: { value: (title || '').slice(0, 20) },
           thing2: { value: '您订阅的关键词有新匹配' },
           time1: { value: getNowStr() }
         }))

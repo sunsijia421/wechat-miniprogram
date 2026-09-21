@@ -143,7 +143,7 @@ Page({
   subscribeKeyword() {
     const kw = (this.data.keyword || '').trim()
     if (!kw) return
-    util.requestSubscribe('applyNotice').then(sub => {
+    util.requestSubscribe('arrivalNotice').then(sub => {
       return util.callApi('subscribeKeyword', { keyword: kw })
     }).then(() => {
       wx.showToast({ title: '订阅成功，有新物品会通知你', icon: 'none' })
