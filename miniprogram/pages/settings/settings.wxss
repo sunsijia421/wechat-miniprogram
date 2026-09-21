@@ -88,6 +88,10 @@
   border: none;
   line-height: 1;
   flex-shrink: 0;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  overflow: hidden;
 }
 
 .avatar-btn::after {
