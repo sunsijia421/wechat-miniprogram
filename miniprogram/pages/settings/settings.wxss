@@ -16,9 +16,9 @@
 
 .group-card {
   background: #fff;
-  border-radius: 16rpx;
-  border: 1rpx solid #f0f0f0;
-  padding: 4rpx 24rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 12rpx rgba(29, 33, 41, 0.04);
+  padding: 4rpx 28rpx;
 }
 
 .set-row {

@@ -315,11 +315,12 @@
 
 .bottom-btn {
   flex: 1;
-  border-radius: 44rpx;
+  border-radius: 48rpx;
   font-size: 16px;
-  font-weight: bold;
-  padding: 24rpx 0;
-  box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
+  font-weight: 600;
+  padding: 26rpx 0;
+  letter-spacing: 1rpx;
+  box-shadow: 0 8rpx 20rpx rgba(76, 175, 80, 0.3);
 }
 
 .bottom-btn:active {

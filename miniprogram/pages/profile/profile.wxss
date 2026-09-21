@@ -6,11 +6,24 @@
 
 /* ========== 顶部用户信息区 ========== */
 .user-header {
-  background: linear-gradient(135deg, #43A047, #66BB6A);
-  border-radius: 20rpx;
-  padding: 36rpx 32rpx 28rpx;
+  background: linear-gradient(135deg, #4CAF50 0%, #43A047 60%, #388E3C 100%);
+  border-radius: 28rpx;
+  padding: 40rpx 32rpx 32rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 6rpx 20rpx rgba(76, 175, 80, 0.25);
+  box-shadow: 0 8rpx 24rpx rgba(76, 175, 80, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+.user-header::before {
+  content: '';
+  position: absolute;
+  top: -60rpx;
+  right: -60rpx;
+  width: 200rpx;
+  height: 200rpx;
+  background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+  border-radius: 50%;
 }
 
 .user-top {
@@ -152,9 +165,9 @@
 
 .group-card {
   background: #ffffff;
-  border-radius: 20rpx;
+  border-radius: 24rpx;
   overflow: hidden;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2rpx 12rpx rgba(29, 33, 41, 0.04);
 }
 
 /* 入口行 */
