@@ -202,23 +202,22 @@
 }
 .checkin-week {
   display: flex;
-  gap: 12rpx;
+  gap: 14rpx;
   margin-top: 16rpx;
-  justify-content: space-between;
 }
 .checkin-day {
-  width: 48rpx;
+  width: 36rpx;
   text-align: center;
 }
 .checkin-day-dot {
-  width: 40rpx;
-  height: 40rpx;
-  line-height: 40rpx;
+  width: 36rpx;
+  height: 36rpx;
+  line-height: 36rpx;
   margin: 0 auto;
   border-radius: 50%;
   background: #f5f5f5;
   color: transparent;
-  font-size: 22rpx;
+  font-size: 18rpx;
   box-sizing: border-box;
   transition: all 0.2s;
 }
