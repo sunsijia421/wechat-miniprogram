@@ -670,11 +670,10 @@ async function login(event, openid) {
   }
 }
 
-// 更新个人资料（昵称/头像/简介/地区）
+// 更新个人资料（昵称/头像/简介/地区）；记录不存在时自动创建（upsert）
 async function updateProfile(event, openid) {
   const { nickName, avatarUrl, bio, region } = event
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
-  if (!users.data.length) return { success: false, message: '用户不存在' }
   const data = {}
   if (nickName !== undefined) {
     const name = (nickName || '').trim()
@@ -694,7 +693,22 @@ async function updateProfile(event, openid) {
     if (region.length > 30) return { success: false, message: '地区信息过长' }
     data.region = region.trim()
   }
-  await db.collection(COL.users).doc(users.data[0]._id).update({ data })
+  if (users.data.length) {
+    await db.collection(COL.users).doc(users.data[0]._id).update({ data })
+  } else {
+    // 自动补建用户记录（本地有缓存但云端记录丢失的场景）
+    await db.collection(COL.users).add({
+      data: {
+        _openid: openid,
+        nickName: data.nickName || '公益参与者',
+        avatarUrl: data.avatarUrl || '',
+        bio: data.bio || '',
+        region: data.region || '',
+        points: 0, donateCount: 0, credit: 100, status: 'normal',
+        createTime: db.serverDate()
+      }
+    })
+  }
   return { success: true }
 }
 
