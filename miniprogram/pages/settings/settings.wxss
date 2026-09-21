@@ -113,21 +113,6 @@
   justify-content: space-between;
 }
 
-.avatar-badge {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 32rpx;
-  height: 32rpx;
-  line-height: 32rpx;
-  text-align: center;
-  background: #4CAF50;
-  border-radius: 50%;
-  font-size: 18rpx;
-  border: 3rpx solid #fff;
-  box-sizing: border-box;
-}
-
 .set-divider {
   height: 1rpx;
   background: #f2f2f2;

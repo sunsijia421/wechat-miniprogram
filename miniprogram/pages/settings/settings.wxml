@@ -10,7 +10,6 @@
         <button class="avatar-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
           <image wx:if="{{avatarUrl}}" class="set-avatar" src="{{avatarUrl}}" mode="aspectFill" />
           <view wx:else class="set-avatar avatar-placeholder">👤</view>
-          <view class="avatar-badge">📷</view>
         </button>
       </view>
       <view class="set-divider"></view>
