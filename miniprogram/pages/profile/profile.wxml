@@ -84,47 +84,47 @@
       <view class="group-title">常用工具</view>
       <view class="group-card">
         <view class="entry-row" bindtap="goRank">
-          <view class="entry-icon icon-orange">榜</view>
+          <view class="entry-icon">🏆</view>
           <view class="entry-label">公益排行榜</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" bindtap="goPointLogs">
-          <view class="entry-icon icon-blue">分</view>
+          <view class="entry-icon">📜</view>
           <view class="entry-label">积分明细</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" bindtap="goShop">
-          <view class="entry-icon icon-purple">礼</view>
+          <view class="entry-icon">🎁</view>
           <view class="entry-label">积分商城</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" bindtap="goCertificates">
-          <view class="entry-icon icon-green">证</view>
+          <view class="entry-icon">🏅</view>
           <view class="entry-label">我的公益证书</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" wx:if="{{isAdmin}}" bindtap="goAdmin">
-          <view class="entry-icon icon-red">管</view>
+          <view class="entry-icon">🛡️</view>
           <view class="entry-label">举报管理</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" bindtap="goFeedback">
-          <view class="entry-icon icon-teal">馈</view>
+          <view class="entry-icon">💬</view>
           <view class="entry-label">意见反馈</view>
           <view class="entry-arrow">›</view>
         </view>
         <button class="entry-row share-entry" open-type="share">
-          <view class="entry-icon icon-pink">邀</view>
+          <view class="entry-icon">📢</view>
           <view class="entry-label">邀请好友加入</view>
           <view class="entry-arrow">›</view>
         </button>
         <view class="entry-row" bindtap="logout">
-          <view class="entry-icon icon-grey">出</view>
+          <view class="entry-icon">🚪</view>
           <view class="entry-label">退出登录</view>
           <view class="entry-arrow">›</view>
         </view>
         <view class="entry-row" bindtap="clearAllData">
-          <view class="entry-icon icon-grey">清</view>
+          <view class="entry-icon">🗑️</view>
           <view class="entry-label">清除所有数据</view>
           <view class="entry-arrow">›</view>
         </view>

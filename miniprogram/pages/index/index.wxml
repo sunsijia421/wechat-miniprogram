@@ -55,8 +55,9 @@
 
     <!-- 顶部：品牌 + 搜索框（闲鱼风） -->
     <view class="home-header">
-      <view class="brand">佳禾换物</view>
+      <view class="brand">🌱 佳禾换物</view>
       <view class="search-input-wrap home-search">
+        <text class="search-icon">🔍</text>
         <input class="search-input" placeholder="搜索物品名称" value="{{keyword}}"
           bindinput="onSearchInput" confirm-type="search" />
         <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
@@ -93,7 +94,7 @@
 
     <!-- P3：公益公告横幅（闲鱼横幅风） -->
     <view class="notice-bar" wx:if="{{notices.length > 0}}">
-      <view class="notice-icon">公告</view>
+      <view class="notice-icon">📢</view>
       <swiper class="notice-swiper" vertical autoplay interval="4000" circular="{{false}}">
         <swiper-item wx:for="{{notices}}" wx:key="*this">
           <view class="notice-text">{{item}}</view>
@@ -187,11 +188,12 @@
       </view>
 
       <view wx:if="{{displayItems.length === 0}}" class="empty-state">
+        <view class="icon">📭</view>
         <view class="text">{{keyword ? '未找到相关物品' : '暂无物品'}}</view>
         <view class="text sub" wx:if="{{keyword}}">试试热门搜索：{{hotKeywords.length > 0 ? hotKeywords[0].keyword : ''}}</view>
         <view class="text sub" wx:else>去发布第一件物品吧~</view>
-        <view class="hot-keyword" wx:if="{{keyword && hotKeywords.length > 0}}" data-keyword="{{hotKeywords[0].keyword}}" bindtap="onHotKeywordTap">搜 "{{hotKeywords[0].keyword}}"</view>
-        <view class="subscribe-btn" wx:if="{{keyword}}" bindtap="subscribeKeyword">订阅"{{keyword}}"到货提醒</view>
+        <view class="hot-keyword" wx:if="{{keyword && hotKeywords.length > 0}}" data-keyword="{{hotKeywords[0].keyword}}" bindtap="onHotKeywordTap">🔍 搜 "{{hotKeywords[0].keyword}}"</view>
+        <view class="subscribe-btn" wx:if="{{keyword}}" bindtap="subscribeKeyword">🔔 订阅"{{keyword}}"到货提醒</view>
       </view>
 
       <view class="item-list" wx:else>
@@ -251,9 +253,9 @@
         <view class="guide-dot {{guideStep === 3 ? 'active' : ''}}"></view>
       </view>
       <view class="guide-body">
-        <view class="guide-icon" wx:if="{{guideStep === 1}}">1</view>
-        <view class="guide-icon" wx:if="{{guideStep === 2}}">2</view>
-        <view class="guide-icon" wx:if="{{guideStep === 3}}">3</view>
+        <view class="guide-icon" wx:if="{{guideStep === 1}}">🔍</view>
+        <view class="guide-icon" wx:if="{{guideStep === 2}}">📦</view>
+        <view class="guide-icon" wx:if="{{guideStep === 3}}">🙋</view>
         <view class="guide-title" wx:if="{{guideStep === 1}}">浏览闲置好物</view>
         <view class="guide-title" wx:if="{{guideStep === 2}}">发布闲置物品</view>
         <view class="guide-title" wx:if="{{guideStep === 3}}">申请领取</view>
