@@ -846,7 +846,7 @@ async function publish(event, openid) {
     let kwWishes = 0
     if (titleWords.length) {
       kwWishes = await db.collection(COL.wishes)
-        .where({ status: 'open', title: _.regex({ regexp: titleWords.join('|'), options: 'i' }) })
+        .where({ status: 'open', title: db.RegExp({ regexp: titleWords.join('|'), options: 'i' }) })
         .count().catch(() => ({ total: 0 }))
       kwWishes = kwWishes.total || 0
     }

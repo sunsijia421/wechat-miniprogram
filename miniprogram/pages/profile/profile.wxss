@@ -163,6 +163,20 @@
   border-bottom: none;
 }
 
+/* 分享按钮覆盖 button 默认样式 */
+button.entry-row {
+  width: auto;
+  margin: 0;
+  padding: 30rpx 28rpx;
+  background: transparent;
+  border-radius: 0;
+  line-height: normal;
+  text-align: left;
+}
+button.entry-row::after {
+  border: none;
+}
+
 .entry-icon {
   font-size: 34rpx;
   margin-right: 22rpx;
