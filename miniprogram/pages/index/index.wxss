@@ -261,8 +261,8 @@
   box-shadow: 0 6rpx 16rpx rgba(76, 175, 80, 0.3);
 }
 .checkin-btn.done {
-  background: #F2F3F5;
-  color: #86909C;
+  background: #E8F5E9;
+  color: #43A047;
   box-shadow: none;
 }
 
