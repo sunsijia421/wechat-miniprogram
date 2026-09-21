@@ -621,6 +621,25 @@ Page({
       })
   },
 
+  // P2：分享物品给好友
+  onShareAppMessage() {
+    const item = this.data.item || {}
+    return {
+      title: '【佳禾换物】' + (item.title || '闲置物品免费送'),
+      path: '/pages/detail/detail?id=' + (item._id || ''),
+      imageUrl: (item.images && item.images[0]) || ''
+    }
+  },
+
+  // P2：分享到朋友圈
+  onShareTimeline() {
+    const item = this.data.item || {}
+    return {
+      title: '【佳禾换物】' + (item.title || '闲置物品免费送'),
+      query: 'id=' + (item._id || '')
+    }
+  },
+
   // 阻止弹窗冒泡
   stopPropagation() {}
 })

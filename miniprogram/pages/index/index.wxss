@@ -697,6 +697,15 @@
   border-radius: 36rpx;
   border: 1rpx solid #C8E6C9;
 }
+.subscribe-btn {
+  display: inline-block;
+  margin-top: 20rpx;
+  background: #4CAF50;
+  color: #fff;
+  font-size: 13px;
+  padding: 14rpx 36rpx;
+  border-radius: 36rpx;
+}
 .result-count {
   font-size: 12px;
   color: #999;

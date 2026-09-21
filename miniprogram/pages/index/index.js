@@ -116,6 +116,36 @@ Page({
     wx.navigateTo({ url: '/pages/checkin/checkin' })
   },
 
+  // P1：被封禁用户申诉弹窗
+  showBanAppeal() {
+    wx.showModal({
+      title: '账号已被限制使用',
+      content: '如您认为这是误判，请填写申诉理由，管理员会尽快审核。',
+      editable: true,
+      placeholderText: '请填写申诉理由（500字以内）',
+      success: (r) => {
+        if (r.confirm && r.content && r.content.trim()) {
+          util.callApi('appealBan', { reason: r.content.trim() }).then(() => {
+            wx.showToast({ title: '申诉已提交，等待审核', icon: 'none' })
+          }).catch(e => {
+            wx.showToast({ title: typeof e === 'string' ? e : '提交失败', icon: 'none' })
+          })
+        }
+      }
+    })
+  },
+
+  // P1：订阅关键词到货提醒
+  subscribeKeyword() {
+    const kw = (this.data.keyword || '').trim()
+    if (!kw) return
+    util.callApi('subscribeKeyword', { keyword: kw }).then(() => {
+      wx.showToast({ title: '订阅成功，有新物品会通知你', icon: 'none' })
+    }).catch(e => {
+      wx.showToast({ title: typeof e === 'string' ? e : '订阅失败', icon: 'none' })
+    })
+  },
+
   // P3：执行签到
   doCheckIn() {
     if (!util.requireLogin()) return
@@ -337,9 +367,14 @@ Page({
         userInfo.donateCount = res.donateCount || 0
         userInfo.bio = res.bio || ''
         userInfo.region = res.region || ''
+        userInfo.status = res.status || 'normal'
         if (nickName) userInfo.nickName = nickName
         if (avatarUrl) userInfo.avatarUrl = avatarUrl
         app.saveUserInfo(userInfo)
+        // P1：被封禁用户弹出申诉提示
+        if (res.status === 'banned') {
+          setTimeout(() => this.showBanAppeal(), 1500)
+        }
         // 管理员登录后自动进入管理界面（普通用户不受影响）
         if (res.isAdmin) {
           setTimeout(() => {

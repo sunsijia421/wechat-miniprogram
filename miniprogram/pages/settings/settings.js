@@ -110,6 +110,10 @@ Page({
       })
   },
 
+  goAgreement() {
+    wx.navigateTo({ url: '/pages/agreement/agreement' })
+  },
+
   logout() {
     wx.showModal({
       title: '退出登录',

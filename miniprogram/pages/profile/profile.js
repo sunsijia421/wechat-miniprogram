@@ -128,6 +128,16 @@ Page({
     wx.navigateTo({ url: '/pages/feedback/feedback' })
   },
 
+  // P2：分享小程序邀请好友
+  onShareAppMessage() {
+    const openid = app.getOpenid() || ''
+    return {
+      title: '🌱 佳禾换物小站——校园闲置免费流转，一起做公益',
+      path: '/pages/index/index?inviteBy=' + openid,
+      imageUrl: ''
+    }
+  },
+
   // 检查管理员身份（登录后自动识别，结果同步到全局）
   checkAdmin() {
     if (!app.getUserInfo()) return

@@ -1,0 +1,41 @@
+<!-- 用户协议与隐私政策 -->
+<view class="container">
+  <view class="doc-card">
+    <view class="doc-title">🌿 公益互助公约</view>
+    <view class="doc-section">
+      <view class="doc-h">一、平台宗旨</view>
+      <view class="doc-p">佳禾换物小站是校园内闲置物品免费流转平台，致力于让资源流动起来，减少浪费，传递公益互助精神。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">二、使用规则</view>
+      <view class="doc-p">1. 本平台仅用于校园内闲置物品的免费流转，禁止任何形式的金钱交易。</view>
+      <view class="doc-p">2. 请如实描述物品状况，不得发布违禁物品（如烟酒、管制刀具等）。</view>
+      <view class="doc-p">3. 物品流转由双方自行协商交接，本平台仅提供信息展示服务。</view>
+      <view class="doc-p">4. 发布物品即视为同意无偿赠送给有需要的人。</view>
+      <view class="doc-p">5. 以物易物需双方自愿协商，不得强制交易。</view>
+      <view class="doc-p">6. 如发现违规行为，可通过举报功能反馈。</view>
+      <view class="doc-p">7. 每次成功捐赠，您将获得10点公益积分。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">三、积分规则</view>
+      <view class="doc-p">1. 每日签到 +2 分；连续满7天额外 +5 分。</view>
+      <view class="doc-p">2. 发布物品 +2 分；成功送出物品 +10 分。</view>
+      <view class="doc-p">3. 积分可用于兑换徽章、幸运抽奖、物品置顶等。</view>
+      <view class="doc-p">4. 爽约（3天未确认收到）扣 20 信用分。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">四、隐私政策</view>
+      <view class="doc-p">1. 我们会申请您的位置信息（scope.userLocation），仅用于发布物品时标记位置与地图展示。</view>
+      <view class="doc-p">2. 您发布的物品信息、头像与昵称将在平台内展示，用于公益流转匹配。</view>
+      <view class="doc-p">3. 我们不会向第三方出售您的个人信息。</view>
+      <view class="doc-p">4. 您可随时在「我的」中退出登录并清除本地数据。</view>
+    </view>
+    <view class="doc-section">
+      <view class="doc-h">五、账号管理</view>
+      <view class="doc-p">1. 发布违规物品、恶意刷屏、骚扰他人等行为将被警告或封禁。</view>
+      <view class="doc-p">2. 被封禁用户可通过意见反馈功能提交申诉。</view>
+      <view class="doc-p">3. 平台保留根据公益氛围调整规则的权利。</view>
+    </view>
+    <view class="doc-footer">—— 最后更新：2026年9月 ——</view>
+  </view>
+</view>

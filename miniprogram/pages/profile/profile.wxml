@@ -109,6 +109,11 @@
           <view class="entry-label">意见反馈</view>
           <view class="entry-arrow">›</view>
         </view>
+        <button class="entry-row share-entry" open-type="share">
+          <view class="entry-icon">📢</view>
+          <view class="entry-label">邀请好友加入</view>
+          <view class="entry-arrow">›</view>
+        </button>
         <view class="entry-row" bindtap="logout">
           <view class="entry-icon">🚪</view>
           <view class="entry-label">退出登录</view>

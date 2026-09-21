@@ -54,6 +54,11 @@
         <view class="set-label">捐赠次数</view>
         <view class="set-value accent">{{donateCount}}</view>
       </view>
+      <view class="set-divider"></view>
+      <view class="set-row" bindtap="goAgreement">
+        <view class="set-label">协议政策</view>
+        <view class="set-value">用户协议与隐私政策 ›</view>
+      </view>
     </view>
   </view>
 

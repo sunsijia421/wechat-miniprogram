@@ -21,6 +21,7 @@ const COL = {
   pointLogs: 'point_logs',    // P1：积分明细流水
   checkins: 'checkins',        // P3：每日签到
   feedbacks: 'feedbacks',       // 意见反馈
+  keywordSubs: 'keywordSubs',   // P1：关键词到货提醒订阅
   certificates: 'certificates', // P4：电子公益证书
   evaluations: 'evaluations',   // P5：完成捐赠双方互评
   wishes: 'wishes',              // P6：心愿求购
@@ -64,7 +65,7 @@ const SECURITY_STRICT = process.env.SECURITY_STRICT === 'true'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins, COL.feedbacks, COL.certificates, COL.evaluations, COL.wishes, COL.blacklists, COL.badges, COL.lotteries]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins, COL.feedbacks, COL.certificates, COL.evaluations, COL.wishes, COL.blacklists, COL.badges, COL.lotteries, COL.keywordSubs]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -689,7 +690,7 @@ async function login(event, openid) {
       try { await db.collection(COL.users).doc(u._id).update({ data: { credit: 100 } }) } catch (e) {}
     }
     // 改善：不再用前端传入值覆盖昵称/头像（防止多设备旧缓存覆盖云端新值），返回云端权威资料
-    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, credit: u.credit != null ? u.credit : 100, isAdmin: await isAdminUser(openid) }
+    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, credit: u.credit != null ? u.credit : 100, status: u.status || 'normal', isAdmin: await isAdminUser(openid) }
   }
 }
 
@@ -836,7 +837,42 @@ async function publish(event, openid) {
   try {
     await addPoints(openid, 2, 0, '发布物品', title.trim())
   } catch (e) { /* 加分失败不影响发布 */ }
-  return { success: true, id: res._id }
+
+  // P1：查询与该物品匹配的开放求购数量（同分类 + 标题关键词重合）
+  let matchWishCount = 0
+  try {
+    const catWishes = await db.collection(COL.wishes).where({ status: 'open', category: category || 'other' }).count()
+    const titleWords = (title || '').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, ' ').split(/\s+/).filter(w => w.length >= 2)
+    let kwWishes = 0
+    if (titleWords.length) {
+      kwWishes = await db.collection(COL.wishes)
+        .where({ status: 'open', title: _.regex({ regexp: titleWords.join('|'), options: 'i' }) })
+        .count().catch(() => ({ total: 0 }))
+      kwWishes = kwWishes.total || 0
+    }
+    matchWishCount = Math.max(catWishes.total || 0, kwWishes)
+  } catch (e) { matchWishCount = 0 }
+
+  // P1：通知订阅了相关关键词的用户
+  try {
+    const titleStr = (title || '').toLowerCase()
+    const subs = await db.collection(COL.keywordSubs).get()
+    const notified = new Set()
+    for (const s of subs.data) {
+      if (s._openid === openid) continue
+      if (notified.has(s._openid)) continue
+      if (titleStr.indexOf((s.keyword || '').toLowerCase()) >= 0) {
+        notified.add(s._openid)
+        await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyNotice, s._openid, 'pages/detail/detail?id=' + res._id, {
+          thing1: { value: '新物品到货：' + (title || '').slice(0, 18) },
+          thing2: { value: '您订阅的关键词有新匹配' },
+          time1: { value: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) }
+        })
+      }
+    }
+  } catch (e) { /* 通知失败不影响发布 */ }
+
+  return { success: true, id: res._id, matchWishCount }
 }
 
 // 物品列表（分页 + 分类/关键词/仅看可换筛选 + 热门排序），默认只返回 available
@@ -1718,6 +1754,51 @@ async function handleFeedback(event, openid) {
   return { success: true }
 }
 
+// P1：订阅关键词到货提醒
+async function subscribeKeyword(event, openid) {
+  const { keyword } = event
+  const kw = (keyword || '').trim()
+  if (!kw || kw.length > 20) return { success: false, message: '关键词无效' }
+  const exist = await db.collection(COL.keywordSubs).where({ _openid: openid, keyword: kw }).get()
+  if (exist.data.length) return { success: true, already: true }
+  await db.collection(COL.keywordSubs).add({
+    data: { _openid: openid, keyword: kw, createTime: db.serverDate() }
+  })
+  return { success: true }
+}
+
+async function unsubscribeKeyword(event, openid) {
+  const { keyword } = event
+  const kw = (keyword || '').trim()
+  await db.collection(COL.keywordSubs).where({ _openid: openid, keyword: kw }).remove()
+  return { success: true }
+}
+
+async function myKeywordSubs(openid) {
+  const res = await db.collection(COL.keywordSubs).where({ _openid: openid }).orderBy('createTime', 'desc').get()
+  return { success: true, list: res.data.map(r => ({ keyword: r.keyword, createTime: r.createTime })) }
+}
+
+// P1：被封禁用户申诉
+async function appealBan(event, openid) {
+  const { reason } = event
+  const text = (reason || '').trim()
+  if (!text) return { success: false, message: '请填写申诉理由' }
+  if (text.length > 500) return { success: false, message: '申诉理由不能超过500字' }
+  // 写入 feedbacks，标记为封禁申诉
+  await db.collection(COL.feedbacks).add({
+    data: {
+      _openid: openid,
+      content: '【封禁申诉】' + text,
+      contact: '',
+      type: 'banAppeal',
+      status: 'pending',
+      createTime: db.serverDate()
+    }
+  })
+  return { success: true }
+}
+
 // 管理员验证：输入正确密钥后，将当前用户标记为管理员
 // 密钥从云开发环境变量 ADMIN_SECRET 读取（未配置则不可用，避免密钥出现在公开仓库）
 async function becomeAdmin(event, openid) {
@@ -2078,6 +2159,10 @@ exports.main = async (event, context) => {
       case 'adminBanUser': return await adminBanUser(event, openid)
       case 'adminFeedbacks': return await adminFeedbacks(openid)
       case 'handleFeedback': return await handleFeedback(event, openid)
+      case 'subscribeKeyword': return await subscribeKeyword(event, openid)
+      case 'unsubscribeKeyword': return await unsubscribeKeyword(event, openid)
+      case 'myKeywordSubs': return await myKeywordSubs(openid)
+      case 'appealBan': return await appealBan(event, openid)
       default: return { success: false, message: '未知操作: ' + action }
     }
   } catch (e) {

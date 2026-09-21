@@ -208,8 +208,22 @@ Page({
           publisherAvatarUrl: (userInfo && userInfo.avatarUrl) || ''
         })
       })
-      .then(() => {
-        wx.showToast({ title: '发布成功！', icon: 'success', duration: 1500 })
+      .then((res) => {
+        wx.showToast({ title: '发布成功！', icon: 'success', duration: 1200 })
+        // P1：提示有 N 个求购匹配
+        if (res && res.matchWishCount > 0) {
+          setTimeout(() => {
+            wx.showModal({
+              title: '🎉 有同学在找这类物品',
+              content: `当前有 ${res.matchWishCount} 条求购和你发布的物品匹配，快去心愿求购页看看谁需要它吧！`,
+              confirmText: '去看看',
+              cancelText: '知道了',
+              success: (r) => {
+                if (r.confirm) wx.navigateTo({ url: '/pages/wish-list/wish-list' })
+              }
+            })
+          }, 1300)
+        }
         setTimeout(() => { this.resetForm() }, 1500)
       })
       .catch(err => {

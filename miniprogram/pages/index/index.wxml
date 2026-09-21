@@ -193,6 +193,7 @@
         <view class="text sub" wx:if="{{keyword}}">试试热门搜索：{{hotKeywords.length > 0 ? hotKeywords[0].keyword : ''}}</view>
         <view class="text sub" wx:else>去发布第一件物品吧~</view>
         <view class="hot-keyword" wx:if="{{keyword && hotKeywords.length > 0}}" data-keyword="{{hotKeywords[0].keyword}}" bindtap="onHotKeywordTap">🔍 搜 "{{hotKeywords[0].keyword}}"</view>
+        <view class="subscribe-btn" wx:if="{{keyword}}" bindtap="subscribeKeyword">🔔 订阅"{{keyword}}"到货提醒</view>
       </view>
 
       <view class="item-list" wx:else>
