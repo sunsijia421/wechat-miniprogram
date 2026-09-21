@@ -173,8 +173,7 @@ async function sendSubscribeMessage(templateId, touser, page, data) {
       touser: touser,
       page: page || 'pages/index/index',
       lang: 'zh_CN',
-      data: data,
-      miniprogramState: 'formal'
+      data: data
     })
     if (res.errCode === 0) return { sent: true }
     // 43101: 用户未订阅/订阅次数用尽，属正常业务状态，不报错
@@ -688,6 +687,11 @@ async function login(event, openid) {
         const inviter = await db.collection(COL.users).where({ _openid: inviteBy }).get()
         if (inviter.data.length) {
           await db.collection(COL.users).doc(inviter.data[0]._id).update({ data: { points: _.inc(5) } })
+          try {
+            await db.collection(COL.pointLogs).add({
+              data: { _openid: inviteBy, points: 5, donateCount: 0, reason: '邀请好友注册', itemTitle: '', createTime: db.serverDate() }
+            })
+          } catch (e) {}
           await addPoints(openid, 5, 0, '好友邀请奖励', '通过好友邀请注册')
         }
       } catch (e) { /* 邀请奖励失败不影响登录 */ }
@@ -1368,8 +1372,9 @@ async function confirmReceive(event, openid) {
 
   await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
   await db.collection(COL.applications).doc(applicationId).update({ data: { status: 'confirmed', confirmTime: db.serverDate() } })
-  // 其余待处理申请自动拒绝
+  // 其余申请自动关闭（pending + 其他 approved）
   await db.collection(COL.applications).where({ itemId, status: 'pending' }).update({ data: { status: 'rejected' } })
+  await db.collection(COL.applications).where({ itemId, status: 'approved', _openid: _.neq(openid) }).update({ data: { status: 'rejected' } })
   // 结算：发布者 +10 分/1 捐赠 + 证书；申请者 +5 分
   await addPoints(item._openid, 10, 1, '物品成功送出', item.title)
   await addPoints(openid, 5, 0, '申请被选中', item.title)
