@@ -60,7 +60,11 @@ Page({
     guideStep: 1
   },
 
-  onLoad() {
+  onLoad(options) {
+    // P2：从分享链接解析邀请人 openid
+    if (options && options.inviteBy) {
+      app.globalData.inviteBy = options.inviteBy
+    }
     this.initPrivacyAndLogin()
   },
 
@@ -135,11 +139,13 @@ Page({
     })
   },
 
-  // P1：订阅关键词到货提醒
+  // P1：订阅关键词到货提醒（先申请订阅消息授权）
   subscribeKeyword() {
     const kw = (this.data.keyword || '').trim()
     if (!kw) return
-    util.callApi('subscribeKeyword', { keyword: kw }).then(() => {
+    util.requestSubscribe('applyNotice').then(sub => {
+      return util.callApi('subscribeKeyword', { keyword: kw })
+    }).then(() => {
       wx.showToast({ title: '订阅成功，有新物品会通知你', icon: 'none' })
     }).catch(e => {
       wx.showToast({ title: typeof e === 'string' ? e : '订阅失败', icon: 'none' })
@@ -356,7 +362,8 @@ Page({
 
   // 同步登录态到云端（获取并保存 openid、管理员身份与最新积分）
   syncLogin(nickName, avatarUrl) {
-    util.callApi('login', { nickName, avatarUrl })
+    const inviteBy = app.globalData.inviteBy || ''
+    util.callApi('login', { nickName, avatarUrl, inviteBy })
       .then(res => {
         app.setOpenid(res.openid)
         app.setIsAdmin(res.isAdmin)

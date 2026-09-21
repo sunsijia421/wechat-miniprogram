@@ -676,12 +676,22 @@ async function submitFeedback(event, openid) {
 
 // 登录 / 同步用户资料
 async function login(event, openid) {
-  const { nickName, avatarUrl } = event
+  const { nickName, avatarUrl, inviteBy } = event
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (users.data.length === 0) {
     await db.collection(COL.users).add({
       data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, credit: 100, status: 'normal', createTime: db.serverDate() }
     })
+    // P2：邀请好友奖励——新用户首次登录，邀请人和新人各+5分
+    if (inviteBy && inviteBy !== openid) {
+      try {
+        const inviter = await db.collection(COL.users).where({ _openid: inviteBy }).get()
+        if (inviter.data.length) {
+          await db.collection(COL.users).doc(inviter.data[0]._id).update({ data: { points: _.inc(5) } })
+          await addPoints(openid, 5, 0, '好友邀请奖励', '通过好友邀请注册')
+        }
+      } catch (e) { /* 邀请奖励失败不影响登录 */ }
+    }
     return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, credit: 100, isAdmin: await isAdminUser(openid) }
   } else {
     const u = users.data[0]
@@ -853,10 +863,10 @@ async function publish(event, openid) {
     matchWishCount = Math.max(catWishes.total || 0, kwWishes)
   } catch (e) { matchWishCount = 0 }
 
-  // P1：通知订阅了相关关键词的用户
+  // P1：通知订阅了相关关键词的用户（只投影必要字段）
   try {
     const titleStr = (title || '').toLowerCase()
-    const subs = await db.collection(COL.keywordSubs).get()
+    const subs = await db.collection(COL.keywordSubs).field({ keyword: true, _openid: true }).get()
     const notified = new Set()
     for (const s of subs.data) {
       if (s._openid === openid) continue

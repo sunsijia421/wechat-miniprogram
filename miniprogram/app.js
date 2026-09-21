@@ -7,7 +7,8 @@ App({
     isAgreed: false,
     openid: '',
     isAdmin: false,
-    cloudReady: false
+    cloudReady: false,
+    inviteBy: ''
   },
 
   onLaunch() {

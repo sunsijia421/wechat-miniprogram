@@ -650,6 +650,10 @@
   overflow: hidden;
   background-color: #f0f0f0;
   line-height: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .avatar-btn::after {
@@ -659,19 +663,22 @@
 .setup-avatar {
   width: 140rpx;
   height: 140rpx;
+  border-radius: 50%;
 }
 
 .setup-avatar-placeholder {
   width: 140rpx;
   height: 140rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
   text-align: center;
-  padding: 0 10rpx;
+  padding: 0;
   box-sizing: border-box;
+  line-height: 1.4;
 }
 
 .nickname-input {
