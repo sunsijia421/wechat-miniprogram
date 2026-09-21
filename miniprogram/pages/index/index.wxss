@@ -202,8 +202,9 @@
 }
 .checkin-week {
   display: flex;
-  gap: 14rpx;
+  justify-content: space-between;
   margin-top: 16rpx;
+  padding-right: 8rpx;
 }
 .checkin-day {
   width: 48rpx;
