@@ -55,6 +55,17 @@
   font-size: 20px;
   font-weight: 700;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+.user-title-badge {
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 2rpx 14rpx;
+  border-radius: 20rpx;
 }
 
 .user-account {

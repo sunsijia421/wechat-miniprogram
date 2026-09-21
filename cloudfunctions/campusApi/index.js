@@ -705,7 +705,7 @@ async function login(event, openid) {
       try { await db.collection(COL.users).doc(u._id).update({ data: { credit: 100 } }) } catch (e) {}
     }
     // 改善：不再用前端传入值覆盖昵称/头像（防止多设备旧缓存覆盖云端新值），返回云端权威资料
-    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, credit: u.credit != null ? u.credit : 100, status: u.status || 'normal', isAdmin: await isAdminUser(openid) }
+    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, credit: u.credit != null ? u.credit : 100, status: u.status || 'normal', title: u.title || '', isAdmin: await isAdminUser(openid) }
   }
 }
 
@@ -783,20 +783,24 @@ async function userProfile(event, openid) {
   const avgRating = evaluations.length
     ? (evaluations.reduce((s, e) => s + e.rating, 0) / evaluations.length).toFixed(1)
     : '0'
+  const user = {
+    openid: target,
+    nickName: u.nickName || '公益参与者',
+    avatarUrl: u.avatarUrl || '',
+    bio: u.bio || '',
+    region: u.region || '',
+    points: u.points || 0,
+    donateCount: u.donateCount || 0,
+    credit: u.credit != null ? u.credit : 100,
+    title: u.title || '',
+    evaluationCount: evaluations.length,
+    avgRating: Number(avgRating)
+  }
   return {
     success: true,
-    user: {
-      openid: target,
-      nickName: u.nickName || '公益参与者',
-      avatarUrl: u.avatarUrl || '',
-      bio: u.bio || '',
-      region: u.region || '',
-      points: u.points || 0,
-      donateCount: u.donateCount || 0,
-      credit: u.credit != null ? u.credit : 100,
-      evaluationCount: evaluations.length,
-      avgRating: Number(avgRating)
-    },
+    user,
+    // 平铺到顶层，兼容前端 res.points / res.nickName 等直接读取
+    ...user,
     followCount: followCnt.total,
     fanCount: fanCnt.total,
     items,
@@ -1930,9 +1934,20 @@ async function lottery(openid) {
   else if (r < 0.60) result = { type: 'points', text: '积分+10', points: 10, title: '' }
   else if (r < 0.65) result = { type: 'title', text: '锦鲤附体称号', points: 0, title: '锦鲤附体' }
   await addPoints(openid, -10 + result.points, 0, '幸运抽奖：' + result.text, '')
+  // 称号中奖：写入用户档案，前端展示
+  if (result.type === 'title' && result.title) {
+    try {
+      const users = await db.collection(COL.users).where({ _openid: openid }).get()
+      if (users.data.length) {
+        await db.collection(COL.users).doc(users.data[0]._id).update({
+          data: { title: result.title }
+        })
+      }
+    } catch (e) {}
+  }
   try {
     await db.collection(COL.lotteries).add({
-      data: { _openid: openid, result: result.text, points: -10 + result.points, createTime: db.serverDate() }
+      data: { _openid: openid, result: result.text, points: -10 + result.points, title: result.title || '', createTime: db.serverDate() }
     })
   } catch (e) {}
   return { success: true, result, netPoints: -10 + result.points }

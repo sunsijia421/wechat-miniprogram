@@ -273,6 +273,7 @@ Page({
 
   // ========== 完成捐赠核心逻辑 ==========
   doCompleteItem(applicationId) {
+    const isApprove = !!applicationId
     util.callApi('handleApply', {
       itemId: this.data.itemId,
       applicationId: applicationId || '',
@@ -280,7 +281,7 @@ Page({
     })
       .then(() => {
         this.loadItem()
-        wx.showToast({ title: '已送出，等待对方确认', icon: 'success' })
+        wx.showToast({ title: isApprove ? '已送出，等待对方确认' : '已记录送出，感谢公益分享', icon: 'success' })
       })
       .catch(e => {
         wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
