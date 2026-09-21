@@ -867,22 +867,31 @@ async function publish(event, openid) {
     matchWishCount = Math.max(catWishes.total || 0, kwWishes)
   } catch (e) { matchWishCount = 0 }
 
-  // P1：通知订阅了相关关键词的用户（只投影必要字段）
+  // P1：通知订阅了相关关键词的用户（投影+并发+上限保护）
   try {
     const titleStr = (title || '').toLowerCase()
-    const subs = await db.collection(COL.keywordSubs).field({ keyword: true, _openid: true }).get()
+    const subs = await db.collection(COL.keywordSubs)
+      .field({ keyword: true, _openid: true })
+      .limit(200)
+      .get()
     const notified = new Set()
+    const tasks = []
     for (const s of subs.data) {
       if (s._openid === openid) continue
       if (notified.has(s._openid)) continue
       if (titleStr.indexOf((s.keyword || '').toLowerCase()) >= 0) {
         notified.add(s._openid)
-        await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyNotice, s._openid, 'pages/detail/detail?id=' + res._id, {
+        tasks.push(() => sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyNotice, s._openid, 'pages/detail/detail?id=' + res._id, {
           thing1: { value: '新物品到货：' + (title || '').slice(0, 18) },
           thing2: { value: '您订阅的关键词有新匹配' },
-          time1: { value: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) }
-        })
+          time1: { value: getNowStr() }
+        }))
       }
+    }
+    // 并发发送，最多一批10个，避免云函数超时
+    const batch = 10
+    for (let i = 0; i < tasks.length; i += batch) {
+      await Promise.all(tasks.slice(i, i + batch).map(fn => fn()))
     }
   } catch (e) { /* 通知失败不影响发布 */ }
 
