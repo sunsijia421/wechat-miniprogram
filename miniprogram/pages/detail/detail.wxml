@@ -26,11 +26,12 @@
     <view class="detail-header card">
       <view class="flex-between">
         <view class="detail-title">{{item.title}}</view>
-        <view class="status-{{item.status === 'completed' ? 'completed' : (item.status === 'offline' ? 'offline' : 'available')}}">
-          {{item.status === 'completed' ? '已被领取' : item.status === 'offline' ? '已下架' : '可领取'}}
+        <view class="status-{{item.status === 'completed' ? 'completed' : (item.status === 'offline' ? 'offline' : (item.status === 'waiting_confirm' ? 'waiting' : 'available'))}}">
+          {{item.status === 'completed' ? '已被领取' : item.status === 'offline' ? '已下架' : item.status === 'waiting_confirm' ? '待确认收到' : '可领取'}}
         </view>
       </view>
       <view class="tag tag-{{item.category}} detail-category">{{item.categoryName}}</view>
+      <view class="top-tip" wx:if="{{isOwner && topUntil}}">📌 置顶中，至 {{topUntil}} 结束</view>
     </view>
 
     <!-- 描述 -->
@@ -78,6 +79,7 @@
         <view wx:if="{{isLoggedIn && !isOwner}}" class="follow-btn {{followed ? 'followed' : ''}}" bindtap="toggleFollow">
           {{followed ? '✓ 已关注' : '+ 关注'}}
         </view>
+        <view wx:if="{{isLoggedIn && !isOwner}}" class="report-user-btn" bindtap="openReportUser">举报</view>
       </view>
     </view>
 
@@ -86,23 +88,24 @@
       📴 该物品已被发布者下架，暂不可申请
     </view>
 
-    <!-- 申请记录列表（仅发布者可见） -->
+    <!-- 申请记录列表（仅发布者可见；P7：积分降序 + 展示积分/等级） -->
     <view class="card" wx:if="{{isOwner && applications.length > 0}}">
-      <view class="section-title">📨 申请记录（{{applications.length}}条）</view>
+      <view class="section-title">📨 申请记录（{{applications.length}}条 · 按公益积分排序）</view>
       <view class="application-list">
         <view class="application-item" wx:for="{{applications}}" wx:key="id">
           <view class="app-header flex-between">
             <view class="flex-row">
               <image class="avatar-sm" src="{{item.applicantAvatar || '/images/default-item.png'}}" mode="aspectFill" />
               <view class="app-name">{{item.applicantName}}</view>
+              <view class="app-points" wx:if="{{item.applicantPoints > 0}}">{{item.applicantLevel}} · {{item.applicantPoints}}分</view>
             </view>
             <view class="app-status app-status-{{item.status}}">
-              {{item.status === 'pending' ? '待确认' : item.status === 'approved' ? '已送出' : '未选中'}}
+              {{item.status === 'pending' ? '待确认' : item.status === 'approved' ? '已送出待确认' : item.status === 'confirmed' ? '已完成' : item.status === 'missed' ? '已爽约' : '未选中'}}
             </view>
           </view>
           <view class="app-message">"{{item.message}}"</view>
-          <!-- 发布者可见的确认按钮 -->
-          <view wx:if="{{isOwner && item.status === 'pending' && !isCompleted}}"
+          <!-- 发布者可见的确认按钮（P7：进入待确认状态） -->
+          <view wx:if="{{isOwner && item.status === 'pending' && !isCompleted && !isWaitingConfirm}}"
             class="approve-btn" data-id="{{item.id}}" bindtap="approveApplication">
             确认送给TA
           </view>
@@ -130,13 +133,13 @@
       </view>
     </view>
 
-    <!-- P5：完成互评（物品已完成，本人是发布者或被选中的申请者，且未评价过） -->
-    <view class="card" wx:if="{{isCompleted && !evaluated && isLoggedIn && (isOwner || (hasApplied && applyStatus === 'approved'))}}">
+    <!-- P5：完成互评（物品已完成，本人是发布者或被选中的申请者，且未评价过；P7：confirmed=已确认收到也可评价） -->
+    <view class="card" wx:if="{{isCompleted && !evaluated && isLoggedIn && (isOwner || (hasApplied && (applyStatus === 'approved' || applyStatus === 'confirmed')))}}">
       <view class="section-title">⭐ 完成互评</view>
       <view class="eval-prompt">本次赠送已完成，评价一下对方吧，帮助大家了解靠谱的公益伙伴</view>
       <view class="eval-btn" bindtap="openEval">去评价 · 点亮星星</view>
     </view>
-    <view class="card" wx:if="{{isCompleted && evaluated && isLoggedIn && (isOwner || (hasApplied && applyStatus === 'approved'))}}">
+    <view class="card" wx:if="{{isCompleted && evaluated && isLoggedIn && (isOwner || (hasApplied && (applyStatus === 'approved' || applyStatus === 'confirmed')))}}">
       <view class="section-title">⭐ 完成互评</view>
       <view class="eval-prompt eval-done">✅ 你已评价本次赠送，感谢反馈</view>
     </view>
@@ -166,12 +169,25 @@
 
   <!-- 底部操作栏 -->
   <view class="bottom-bar">
-    <!-- 自己发布的 & 未完成（可编辑/下架/送出） -->
-    <block wx:if="{{isOwner && !isCompleted}}">
+    <!-- 自己发布的 & 未完成 & 可领取（可编辑/置顶/下架/送出） -->
+    <block wx:if="{{isOwner && !isCompleted && !isOffline && !isWaitingConfirm}}">
       <button class="btn-outline bottom-btn" bindtap="goEdit">✏️ 编辑</button>
-      <button wx:if="{{isOffline}}" class="btn-primary bottom-btn" bindtap="toggleOffline">🔼 上架</button>
-      <button wx:else class="btn-outline bottom-btn" bindtap="toggleOffline">📴 下架</button>
-      <button wx:if="{{!isOffline}}" class="btn-primary bottom-btn" bindtap="confirmComplete">✅ 送出</button>
+      <button class="btn-outline bottom-btn" bindtap="topItem">📌 置顶</button>
+      <button class="btn-outline bottom-btn" bindtap="toggleOffline">📴 下架</button>
+      <button class="btn-primary bottom-btn" bindtap="confirmComplete">✅ 送出</button>
+    </block>
+
+    <!-- 自己发布的 & 下架状态 -->
+    <block wx:if="{{isOwner && isOffline}}">
+      <button class="btn-outline bottom-btn" bindtap="goEdit">✏️ 编辑</button>
+      <button class="btn-primary bottom-btn" bindtap="toggleOffline">🔼 上架</button>
+    </block>
+
+    <!-- 自己发布的 & 待对方确认（P7） -->
+    <block wx:if="{{isOwner && isWaitingConfirm}}">
+      <button class="btn-disabled bottom-btn" disabled>
+        ⏳ 等待对方确认（3天内自动重新上架）
+      </button>
     </block>
 
     <!-- 自己发布的 & 已完成状态 -->
@@ -195,8 +211,21 @@
       </button>
     </block>
 
+    <!-- 不是自己发布的 & 待对方确认（申请者视角：确认收到按钮） -->
+    <block wx:if="{{!isOwner && isWaitingConfirm}}">
+      <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
+        {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
+      </view>
+      <button wx:if="{{hasApplied && applyStatus === 'approved'}}" class="btn-primary bottom-btn" data-id="{{myApplicationId}}" bindtap="confirmReceive">
+        ✅ 确认收到
+      </button>
+      <button wx:else class="btn-disabled bottom-btn" disabled>
+        ⏳ 物品待确认
+      </button>
+    </block>
+
     <!-- 不是自己发布的 & 可领取 -->
-    <block wx:if="{{!isOwner && !isCompleted && !isOffline}}">
+    <block wx:if="{{!isOwner && !isCompleted && !isOffline && !isWaitingConfirm}}">
       <!-- 已登录：收藏 + 发起申请/交换 -->
       <view wx:if="{{isLoggedIn}}" class="fav-btn {{favorited ? 'fav-active' : ''}}" bindtap="toggleFavorite">
         {{favorited ? '❤️ 已收藏' : '🤍 收藏'}}
@@ -249,16 +278,17 @@
     </view>
   </view>
 
-  <!-- 举报弹窗 -->
+  <!-- 举报弹窗（P7：物品/用户共用，reportTarget 区分提交接口） -->
   <view class="modal-overlay" wx:if="{{showReportModal}}" catchtap="closeReport">
     <view class="modal-content" catchtap="stopPropagation">
-      <view class="modal-title">举报物品</view>
-      <view class="modal-subtitle">如发现违规物品，请填写举报理由</view>
+      <view class="modal-title">{{reportTarget === 'user' ? '举报用户' : '举报物品'}}</view>
+      <view class="modal-subtitle">{{reportTarget === 'user' ? '如遇骚扰、诈骗等违规行为，请填写举报理由' : '如发现违规物品，请填写举报理由'}}</view>
       <textarea class="modal-textarea" placeholder="请描述举报原因（必填）"
         value="{{reportReason}}" bindinput="onReportReasonInput" maxlength="300" />
       <view class="modal-buttons">
         <button class="modal-btn-cancel" bindtap="closeReport">取消</button>
-        <button class="modal-btn-confirm" style="background-color: #f44336;" bindtap="submitReport">提交举报</button>
+        <button wx:if="{{reportTarget === 'user'}}" class="modal-btn-confirm" style="background-color: #f44336;" bindtap="submitReportUser">提交举报</button>
+        <button wx:else class="modal-btn-confirm" style="background-color: #f44336;" bindtap="submitReport">提交举报</button>
       </view>
     </view>
   </view>

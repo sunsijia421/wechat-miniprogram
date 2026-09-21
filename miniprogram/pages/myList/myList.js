@@ -63,10 +63,18 @@ Page({
       title: isFav ? it.itemTitle : it.title,
       image: isFav ? it.itemImage : (it.images && it.images[0]),
       categoryName: util.getCategoryName(it.category),
-      statusText: it.status === 'completed' ? '已送出' : it.status === 'offline' ? '已下架' : '可领取',
-      statusClass: it.status === 'completed' ? 'completed' : it.status === 'offline' ? 'offline' : 'available',
+      statusText: it.status === 'completed' ? '已送出' : it.status === 'offline' ? '已下架' : it.status === 'waiting_confirm' ? '待确认收到' : '可领取',
+      statusClass: it.status === 'completed' ? 'completed' : it.status === 'offline' ? 'offline' : it.status === 'waiting_confirm' ? 'pending' : 'available',
       applyStatus: it.applyStatus,
-      applyText: it.applyStatus === 'pending' ? '申请中' : it.applyStatus === 'approved' ? '已通过' : '未选中'
+      applyText: it.applyStatus === 'pending' ? '申请中'
+        : it.applyStatus === 'approved' ? (it.status === 'waiting_confirm' ? '待我确认收到' : '已通过')
+        : it.applyStatus === 'confirmed' ? '已完成'
+        : it.applyStatus === 'missed' ? '超时未确认'
+        : '未选中',
+      applyClass: it.applyStatus === 'missed' ? 'missed'
+        : it.applyStatus === 'approved' && it.status === 'waiting_confirm' ? 'waiting'
+        : it.applyStatus === 'confirmed' ? 'confirmed'
+        : it.applyStatus === 'pending' ? 'pending' : 'rejected'
     }))
   },
 

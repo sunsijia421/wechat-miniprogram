@@ -102,6 +102,16 @@
   margin-top: 12rpx;
 }
 
+/* P7：置顶提示 */
+.top-tip {
+  margin-top: 12rpx;
+  font-size: 12px;
+  color: #1E88E5;
+  background-color: #E3F2FD;
+  border-radius: 8rpx;
+  padding: 8rpx 16rpx;
+}
+
 /* ========== 区块 ========== */
 .section-title {
   font-size: 15px;
@@ -214,6 +224,17 @@
   color: #333;
 }
 
+/* P7：申请者积分/等级徽标 */
+.app-points {
+  font-size: 11px;
+  color: #43A047;
+  background-color: #E8F5E9;
+  border: 1rpx solid #C8E6C9;
+  padding: 2rpx 12rpx;
+  border-radius: 20rpx;
+  margin-left: 12rpx;
+}
+
 .app-status {
   font-size: 11px;
   padding: 4rpx 12rpx;
@@ -233,6 +254,12 @@
 .app-status-rejected {
   background-color: #f5f5f5;
   color: #999;
+}
+
+.app-status-confirmed,
+.app-status-missed {
+  background-color: #f5f5f5;
+  color: #666;
 }
 
 .app-message {
@@ -257,6 +284,17 @@
 
 .approve-btn:active {
   transform: scale(0.97);
+}
+
+/* P7：举报用户 */
+.report-user-btn {
+  font-size: 11px;
+  color: #999;
+  background: #f5f5f5;
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  margin-left: 12rpx;
+  flex-shrink: 0;
 }
 
 /* ========== 底部操作栏 ========== */

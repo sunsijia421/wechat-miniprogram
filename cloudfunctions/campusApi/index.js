@@ -23,8 +23,19 @@ const COL = {
   feedbacks: 'feedbacks',       // 意见反馈
   certificates: 'certificates', // P4：电子公益证书
   evaluations: 'evaluations',   // P5：完成捐赠双方互评
-  wishes: 'wishes'              // P6：心愿求购
+  wishes: 'wishes',              // P6：心愿求购
+  blacklists: 'blacklists',      // P7：拉黑
+  badges: 'badges',              // P7：已兑换徽章
+  lotteries: 'lotteries'         // P7：抽奖记录
 }
+
+// 积分商城：公益徽章目录（P7 积分消费出口）
+const BADGES = [
+  { id: 'eco', name: '环保卫士', icon: '🌱', price: 20, desc: '完成1次物品流转，为地球减负' },
+  { id: 'helper', name: '公益帮手', icon: '🤝', price: 50, desc: '累计捐赠3件闲置物品' },
+  { id: 'star', name: '校园公益之星', icon: '⭐', price: 100, desc: '累计捐赠10件闲置物品' },
+  { id: 'legend', name: '公益传奇', icon: '🏆', price: 200, desc: '平台的公益精神图腾' }
+]
 
 // 微信订阅消息模板 ID（需在 mp.weixin.qq.com → 订阅消息 中申请对应模板后填入）
 // 目前为占位符：申请/处理结果通知需要用户自行配置模板后填写真实 ID
@@ -53,7 +64,7 @@ const SECURITY_STRICT = process.env.SECURITY_STRICT === 'true'
 let collectionsReady = false
 async function ensureCollections() {
   if (collectionsReady) return
-  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins, COL.feedbacks, COL.certificates, COL.evaluations, COL.wishes]) {
+  for (const name of [COL.items, COL.applications, COL.reports, COL.users, COL.conversations, COL.messages, COL.favorites, COL.follows, COL.searchLogs, COL.pointLogs, COL.checkins, COL.feedbacks, COL.certificates, COL.evaluations, COL.wishes, COL.blacklists, COL.badges, COL.lotteries]) {
     try {
       await db.createCollection(name)
     } catch (e) {
@@ -111,7 +122,16 @@ async function checkImages(images) {
   return { passed: true }
 }
 
-// 给发布者增加积分，并写入积分流水（P1：激励信用）
+// 积分等级名称（P1 五级激励）
+function levelName(points) {
+  if (points >= 500) return '公益大使'
+  if (points >= 300) return '公益先锋'
+  if (points >= 150) return '公益达人'
+  if (points >= 50) return '公益使者'
+  return '初心者'
+}
+
+// 给发布者增加积分，并写入积分流水（P1：激励信用；points 可为负数——积分消费）
 async function addPoints(openid, points, donateCount, reason, itemTitle) {
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (!users.data.length) return
@@ -333,6 +353,7 @@ async function conversationMessages(event, openid) {
     success: true,
     list,
     role: conv.applicantOpenid === openid ? 'applicant' : 'owner',
+    peerOpenid: conv.ownerOpenid === openid ? conv.applicantOpenid : conv.ownerOpenid,
     peerName: conv.ownerOpenid === openid ? conv.applicantNickName : conv.ownerNickName,
     peerAvatar: conv.ownerOpenid === openid ? (conv.applicantAvatarUrl || '') : (conv.ownerAvatarUrl || ''),
     itemTitle: conv.itemTitle,
@@ -358,6 +379,11 @@ async function sendMessage(event, openid) {
     return { success: false, message: '无权在该会话发言' }
   }
   const toOpenid = conv.ownerOpenid === openid ? conv.applicantOpenid : conv.ownerOpenid
+
+  // P7：拉黑校验——任一方拉黑另一方，双方均不能再发消息
+  if (await hasBlockRelation(openid, toOpenid)) {
+    return { success: false, message: '你们已处于拉黑状态，无法发送消息' }
+  }
 
   // 申请者限发规则：发布者回复前，申请者最多发一条（类抖音私信）
   if (conv.applicantOpenid === openid) {
@@ -630,13 +656,17 @@ async function login(event, openid) {
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (users.data.length === 0) {
     await db.collection(COL.users).add({
-      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, status: 'normal', createTime: db.serverDate() }
+      data: { _openid: openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, credit: 100, status: 'normal', createTime: db.serverDate() }
     })
-    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, isAdmin: await isAdminUser(openid) }
+    return { success: true, openid, nickName: nickName || '公益参与者', avatarUrl: avatarUrl || '', bio: '', region: '', points: 0, donateCount: 0, credit: 100, isAdmin: await isAdminUser(openid) }
   } else {
     const u = users.data[0]
+    // 老用户补 credit 默认值
+    if (u.credit == null) {
+      try { await db.collection(COL.users).doc(u._id).update({ data: { credit: 100 } }) } catch (e) {}
+    }
     // 改善：不再用前端传入值覆盖昵称/头像（防止多设备旧缓存覆盖云端新值），返回云端权威资料
-    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, isAdmin: await isAdminUser(openid) }
+    return { success: true, openid, nickName: u.nickName || '公益参与者', avatarUrl: u.avatarUrl || '', bio: u.bio || '', region: u.region || '', points: u.points || 0, donateCount: u.donateCount || 0, credit: u.credit != null ? u.credit : 100, isAdmin: await isAdminUser(openid) }
   }
 }
 
@@ -710,6 +740,7 @@ async function userProfile(event, openid) {
       region: u.region || '',
       points: u.points || 0,
       donateCount: u.donateCount || 0,
+      credit: u.credit != null ? u.credit : 100,
       evaluationCount: evaluations.length,
       avgRating: Number(avgRating)
     },
@@ -773,6 +804,8 @@ async function publish(event, openid) {
 
 // 物品列表（分页 + 分类/关键词/仅看可换筛选 + 热门排序），默认只返回 available
 async function listItems(event) {
+  // P7：惰性处理超时未确认的赠送（3天未确认→物品重新上架）
+  await expireOverdueConfirmations()
   const { category = 'all', page = 1, pageSize = 10, status = 'available', keyword = '', barterOnly = false, sort = 'new' } = event
   const conditions = []
   if (category !== 'all') conditions.push({ category })
@@ -801,10 +834,20 @@ async function listItems(event) {
     listRes = await q.orderBy('createTime', 'desc')
       .skip((page - 1) * pageSize).limit(pageSize).get()
   }
+  // P7：置顶物品排最前（topUntil 未过期，仅对"最新"排序生效，避免热榜被置顶干扰）
+  let arr = listRes.data
+  if (sort !== 'hot') {
+    const now = Date.now()
+    arr = [...arr].sort((x, y) => {
+      const xt = x.topUntil && new Date(x.topUntil).getTime() > now ? 1 : 0
+      const yt = y.topUntil && new Date(y.topUntil).getTime() > now ? 1 : 0
+      return (yt - xt) || (new Date(y.createTime) - new Date(x.createTime))
+    })
+  }
   return {
     success: true,
     // 隐私：列表不返回发布者 openid，仅展示昵称/头像（详情接口单独返回给需要校验的场景）
-    list: listRes.data.map(it => {
+    list: arr.map(it => {
       const { _openid, ...rest } = it
       return rest
     }),
@@ -830,6 +873,8 @@ async function hotKeywords() {
 
 // 物品详情（含是否本人发布；本人可见该物品举报记录；申请者可见申请状态）
 async function getItemDetail(event, openid) {
+  // P7：惰性处理超时未确认的赠送
+  await expireOverdueConfirmations()
   const { id } = event
   if (!id) return { success: false, message: '物品ID缺失' }
   const res = await db.collection(COL.items).doc(id).get()
@@ -851,11 +896,13 @@ async function getItemDetail(event, openid) {
   // 当前用户是否申请过该物品（用于前端"已申请"状态展示，避免重复申请）
   let hasApplied = false
   let applyStatus = ''
+  let applyId = ''
   if (openid) {
     const appRes = await db.collection(COL.applications).where({ itemId: id, _openid: openid }).limit(1).get()
     if (appRes.data.length) {
       hasApplied = true
       applyStatus = appRes.data[0].status || 'pending'
+      applyId = appRes.data[0]._id
     }
   }
   // P2：猜你喜欢 —— 同分类可领取物品（排除本物品，按热度降序取 6 条）
@@ -872,7 +919,7 @@ async function getItemDetail(event, openid) {
       .get()
     related = relatedRes.data
   } catch (e) { /* 推荐失败不影响详情 */ }
-  return { success: true, item: res.data, isOwner, reports, hasApplied, applyStatus, related }
+  return { success: true, item: res.data, isOwner, reports, hasApplied, applyStatus, applyId, related }
 }
 
 // 删除物品（仅发布者）
@@ -940,6 +987,8 @@ async function setStatus(event, openid) {
 
 // 我发布的物品
 async function myPublish(openid, event) {
+  // P7：惰性处理超时未确认的赠送
+  await expireOverdueConfirmations()
   const { page = 1, pageSize = 20, status = '' } = event
   let q = db.collection(COL.items).where({ _openid: openid })
   if (status) q = q.where({ status })
@@ -968,6 +1017,11 @@ async function apply(event, openid) {
   const itemCheck = await db.collection(COL.items).doc(itemId).get()
   if (!itemCheck.data) return { success: false, message: '物品不存在' }
   if (itemCheck.data.status !== 'available') return { success: false, message: '该物品当前不可申请' }
+
+  // P7：拉黑校验——任一方拉黑另一方，不能申请其物品
+  if (await hasBlockRelation(openid, itemCheck.data._openid)) {
+    return { success: false, message: '你们已处于拉黑状态，无法申请该物品' }
+  }
 
   const res = await db.collection(COL.applications).add({
     data: {
@@ -1037,15 +1091,36 @@ async function myApply(openid) {
   return { success: true, list }
 }
 
-// 某物品的申请记录（仅发布者可见）
+// 某物品的申请记录（仅发布者可见；P7：关联申请人积分/等级，按积分降序排列——高积分公益人优先展示）
 async function getApplications(event, openid) {
   const { itemId } = event
+  await expireOverdueConfirmations()
   const itemRes = await db.collection(COL.items).doc(itemId).get()
   if (!itemRes.data || itemRes.data._openid !== openid) {
     return { success: false, message: '无权查看申请记录' }
   }
   const apps = await db.collection(COL.applications).where({ itemId }).orderBy('createTime', 'desc').limit(50).get()
-  return { success: true, list: apps.data }
+  // 批量关联申请人积分/等级/信用
+  const openids = [...new Set(apps.data.map(a => a._openid).filter(Boolean))]
+  const userMap = {}
+  if (openids.length) {
+    try {
+      const users = await db.collection(COL.users).where({ _openid: _.in(openids) }).get()
+      users.data.forEach(u => { userMap[u._openid] = u })
+    } catch (e) {}
+  }
+  const list = apps.data.map(a => {
+    const u = userMap[a._openid] || {}
+    return Object.assign({}, a, {
+      id: a._id,
+      applicantPoints: u.points || 0,
+      applicantLevel: levelName(u.points || 0),
+      applicantCredit: u.credit != null ? u.credit : 100
+    })
+  })
+  // 积分降序，同分按申请时间早的在前
+  list.sort((x, y) => (y.applicantPoints - x.applicantPoints) || (new Date(x.createTime) - new Date(y.createTime)))
+  return { success: true, list }
 }
 
 // 生成电子公益证书（物品送出后自动创建，P4 亮点）
@@ -1103,17 +1178,17 @@ async function submitEvaluation(event, openid) {
   if (item.status !== 'completed') return { success: false, message: '仅已完成的物品可评价' }
   const isOwner = item._openid === openid
 
-  // 确定评价对象
+  // 确定评价对象（P7：approved=待确认、confirmed=已确认收到，均为有效参与方）
   let toOpenid = ''
   let toNickName = ''
   if (isOwner) {
-    const app = await db.collection(COL.applications).where({ itemId, status: 'approved' }).limit(1).get()
+    const app = await db.collection(COL.applications).where({ itemId, status: _.in(['approved', 'confirmed']) }).limit(1).get()
     if (!app.data.length) return { success: false, message: '未找到接收者' }
     toOpenid = app.data[0]._openid
     toNickName = app.data[0].applicantNickName || '同学'
   } else {
     // 非发布者必须是该物品被选中的申请者
-    const app = await db.collection(COL.applications).where({ itemId, _openid: openid, status: 'approved' }).get()
+    const app = await db.collection(COL.applications).where({ itemId, _openid: openid, status: _.in(['approved', 'confirmed']) }).get()
     if (!app.data.length) return { success: false, message: '仅参与本次赠送的双方可评价' }
     toOpenid = item._openid
     toNickName = item.publisherNickName || '发布者'
@@ -1147,7 +1222,7 @@ async function evaluationStatus(event, openid) {
   return { success: true, evaluated: exist.data.length > 0 }
 }
 
-// 发布者处理申请：approve=接受并标记完成；reject=拒绝；complete=直接标记完成
+// 发布者处理申请：approve=确认送给该申请者（进入待确认状态）；reject=拒绝；complete=直接标记完成（兼容旧流程）
 async function handleApply(event, openid) {
   const { itemId, applicationId, action } = event
   const itemRes = await db.collection(COL.items).doc(itemId).get()
@@ -1155,23 +1230,18 @@ async function handleApply(event, openid) {
     return { success: false, message: '无权操作该物品' }
   }
   // 防刷分：已完成的物品不可重复确认送出/完成（否则会重复加积分）
-  if (itemRes.data.status === 'completed') {
+  if (itemRes.data.status === 'completed' || itemRes.data.status === 'waiting_confirm') {
     return { success: false, message: '该物品已送出，请勿重复操作' }
   }
 
   if (action === 'approve' && applicationId) {
-    await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
-    await db.collection(COL.applications).where({ itemId, _id: applicationId }).update({ data: { status: 'approved' } })
-    await db.collection(COL.applications).where({ itemId, _id: _.neq(applicationId) }).update({ data: { status: 'rejected' } })
-    await addPoints(openid, 10, 1, '物品成功送出', itemRes.data.title)
-    // P1：被选中的申请者 +5 积分（激励主动申领）
+    // P7：送出 → 物品进入"待确认"状态，由申请者确认收到后才结算（防止虚假送出）
+    await db.collection(COL.items).doc(itemId).update({ data: { status: 'waiting_confirm', completeTime: db.serverDate() } })
+    await db.collection(COL.applications).where({ itemId, _id: applicationId }).update({ data: { status: 'approved', confirmTime: db.serverDate() } })
     const appRes = await db.collection(COL.applications).doc(applicationId).get()
     if (appRes.data) {
-      await addPoints(appRes.data._openid, 5, 0, '申请被选中', itemRes.data.title)
-      await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '申请已通过')
+      await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '待确认收到')
     }
-    // P4：送出即生成电子公益证书
-    await createCertificate(itemRes.data)
   } else if (action === 'complete') {
     await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
     await addPoints(openid, 10, 1, '物品成功送出', itemRes.data.title)
@@ -1187,19 +1257,82 @@ async function handleApply(event, openid) {
   return { success: true }
 }
 
-// 举报
+// ===================== P7：确认收到 + 爽约信用 =====================
+
+// 调整用户信用分（默认100起，爽约等失信行为扣减）
+async function changeCredit(openid, delta) {
+  try {
+    const users = await db.collection(COL.users).where({ _openid: openid }).get()
+    if (!users.data.length) return
+    const u = users.data[0]
+    const cur = u.credit != null ? u.credit : 100
+    await db.collection(COL.users).doc(u._id).update({ data: { credit: Math.max(0, cur + delta) } })
+  } catch (e) { /* 信用调整失败不影响主流程 */ }
+}
+
+// 申请者确认收到（P7）：物品由"待确认"转为"已完成"，此时才结算积分/证书/互评
+async function confirmReceive(event, openid) {
+  const { itemId, applicationId } = event
+  if (!itemId || !applicationId) return { success: false, message: '参数缺失' }
+  const appRes = await db.collection(COL.applications).doc(applicationId).get()
+  const app = appRes.data
+  if (!app || app.itemId !== itemId) return { success: false, message: '申请记录不存在' }
+  if (app._openid !== openid) return { success: false, message: '仅申请者本人可确认收到' }
+  if (app.status !== 'approved') return { success: false, message: '当前状态不可确认收到' }
+  const itemRes = await db.collection(COL.items).doc(itemId).get()
+  const item = itemRes.data
+  if (!item || item.status !== 'waiting_confirm') return { success: false, message: '物品状态异常，无法确认' }
+
+  await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
+  await db.collection(COL.applications).doc(applicationId).update({ data: { status: 'confirmed', confirmTime: db.serverDate() } })
+  // 其余待处理申请自动拒绝
+  await db.collection(COL.applications).where({ itemId, status: 'pending' }).update({ data: { status: 'rejected' } })
+  // 结算：发布者 +10 分/1 捐赠 + 证书；申请者 +5 分
+  await addPoints(item._openid, 10, 1, '物品成功送出', item.title)
+  await addPoints(openid, 5, 0, '申请被选中', item.title)
+  await createCertificate(item)
+  // 通知发布者：对方已确认收到
+  await notifyApplyResult(openid, item._openid, item.title, '已确认收到')
+  return { success: true }
+}
+
+// 惰性处理超时未确认（P7）：送出后 3 天内申请者未确认收到 → 判定爽约，物品恢复可领取，申请者信用 -20
+async function expireOverdueConfirmations() {
+  try {
+    const limit = new Date(Date.now() - 3 * 24 * 3600 * 1000)
+    const apps = await db.collection(COL.applications).where({ status: 'approved', confirmTime: _.lt(limit) }).limit(50).get()
+    for (const a of apps.data) {
+      await db.collection(COL.applications).doc(a._id).update({ data: { status: 'missed', missTime: db.serverDate() } })
+      await db.collection(COL.items).doc(a.itemId).update({ data: { status: 'available' } })
+      await changeCredit(a._openid, -20)
+      // 通知双方（若曾订阅）
+      const itemRes = await db.collection(COL.items).doc(a.itemId).get()
+      if (itemRes.data) {
+        await notifyApplyResult(a._openid, itemRes.data._openid, itemRes.data.title, '超时未确认')
+      }
+    }
+  } catch (e) { /* 惰性处理失败不影响查询 */ }
+}
+
+// 举报（P7：支持举报物品 targetType=item 或举报用户 targetType=user）
 async function report(event, openid) {
   if (await isBannedUser(openid)) return { success: false, message: '账号已被封禁，无法举报' }
-  const { itemId, itemTitle, reason } = event
-  if (!itemId) return { success: false, message: '物品ID缺失' }
+  const { itemId, itemTitle, reason, targetType, targetOpenid, targetNickName } = event
   if (!reason || !reason.trim()) return { success: false, message: '请填写举报理由' }
   const textCheck = await checkText(reason, openid)
   if (!textCheck.passed) return { success: false, code: 'CONTENT_RISK', message: textCheck.message }
+  const type = targetType === 'user' ? 'user' : 'item'
+  if (type === 'item' && !itemId) return { success: false, message: '物品ID缺失' }
+  if (type === 'user' && !targetOpenid) return { success: false, message: '举报对象缺失' }
+  if (type === 'user' && targetOpenid === openid) return { success: false, message: '不能举报自己' }
   await db.collection(COL.reports).add({
     data: {
       _openid: openid,
-      itemId,
-      itemTitle: itemTitle || '',
+      targetType: type,
+      itemId: type === 'item' ? itemId : '',
+      itemTitle: type === 'item' ? (itemTitle || '') : '',
+      targetOpenid: type === 'user' ? targetOpenid : '',
+      targetNickName: type === 'user' ? (targetNickName || '该用户') : '',
       reason: reason.trim(),
       status: 'pending',
       result: '',
@@ -1209,14 +1342,106 @@ async function report(event, openid) {
   return { success: true }
 }
 
-// 处理举报（管理员 或 物品发布者）：offline=下架物品并标记相关举报已处理；ignore=忽略单条举报
+// ===================== P7c：拉黑 =====================
+
+// 拉黑用户（A 拉黑 B：B 不能给 A 发消息、不能申请 A 的物品）
+async function blockUser(event, openid) {
+  const { targetOpenid } = event
+  if (!targetOpenid) return { success: false, message: '参数缺失' }
+  if (targetOpenid === openid) return { success: false, message: '不能拉黑自己' }
+  const exist = await db.collection(COL.blacklists).where({ _openid: openid, targetOpenid }).get()
+  if (!exist.data.length) {
+    await db.collection(COL.blacklists).add({
+      data: { _openid: openid, targetOpenid, createTime: db.serverDate() }
+    })
+  }
+  return { success: true }
+}
+
+// 取消拉黑
+async function unblockUser(event, openid) {
+  const { targetOpenid } = event
+  if (!targetOpenid) return { success: false, message: '参数缺失' }
+  await db.collection(COL.blacklists).where({ _openid: openid, targetOpenid }).remove()
+  return { success: true }
+}
+
+// 我的黑名单（含对方昵称头像）
+async function myBlacklist(openid) {
+  const list = await db.collection(COL.blacklists).where({ _openid: openid }).orderBy('createTime', 'desc').limit(50).get()
+  const openids = [...new Set(list.data.map(b => b.targetOpenid))]
+  const userMap = {}
+  if (openids.length) {
+    try {
+      const users = await db.collection(COL.users).where({ _openid: _.in(openids) }).get()
+      users.data.forEach(u => { userMap[u._openid] = u })
+    } catch (e) {}
+  }
+  return {
+    success: true,
+    list: list.data.map(b => ({
+      id: b._id,
+      targetOpenid: b.targetOpenid,
+      nickName: (userMap[b.targetOpenid] && userMap[b.targetOpenid].nickName) || '已注销用户',
+      avatarUrl: (userMap[b.targetOpenid] && userMap[b.targetOpenid].avatarUrl) || '',
+      createTimeStr: formatServerTime(b.createTime)
+    }))
+  }
+}
+
+// 我是否拉黑了对方 / 对方是否拉黑了我（聊天页、申请时校验）
+async function blockStatus(event, openid) {
+  const { targetOpenid } = event
+  if (!targetOpenid) return { success: false, message: '参数缺失' }
+  const mine = await db.collection(COL.blacklists).where({ _openid: openid, targetOpenid }).get()
+  const theirs = await db.collection(COL.blacklists).where({ _openid: targetOpenid, targetOpenid: openid }).get()
+  return {
+    success: true,
+    iBlocked: mine.data.length > 0,
+    blockedBy: theirs.data.length > 0
+  }
+}
+
+// 双方是否存在拉黑关系（内部，供 sendMessage / apply 使用）
+async function hasBlockRelation(openidA, openidB) {
+  try {
+    const [ab, ba] = await Promise.all([
+      db.collection(COL.blacklists).where({ _openid: openidA, targetOpenid: openidB }).count(),
+      db.collection(COL.blacklists).where({ _openid: openidB, targetOpenid: openidA }).count()
+    ])
+    return ab.total > 0 || ba.total > 0
+  } catch (e) {
+    return false
+  }
+}
+
+// 处理举报（管理员 或 物品发布者）：offline=下架物品并标记相关举报已处理；ignore=忽略单条举报（含用户举报）
 async function handleReport(event, openid) {
   const { itemId, reportId, action } = event
+  const isAdmin = await isAdminUser(openid)
+
+  if (action === 'ignore') {
+    if (!reportId) return { success: false, message: '举报ID缺失' }
+    if (!isAdmin) {
+      // 非管理员忽略单条举报：物品发布者可忽略本人物品的举报
+      if (!itemId) return { success: false, message: '物品ID缺失' }
+      const itemRes = await db.collection(COL.items).doc(itemId).get()
+      if (!itemRes.data || itemRes.data._openid !== openid) return { success: false, message: '无权处理该举报' }
+    }
+    await db.collection(COL.reports).doc(reportId).update({
+      data: { status: 'handled', result: 'ignored', handleTime: db.serverDate() }
+    })
+    // 订阅消息：通知该条举报者"已忽略"
+    const repRes = await db.collection(COL.reports).doc(reportId).get()
+    if (repRes.data) await notifyReportResult(openid, repRes.data._openid, repRes.data.reason, '已忽略')
+    return { success: true }
+  }
+
+  // 以下分支需要 itemId（物品举报专用：下架）
   if (!itemId) return { success: false, message: '物品ID缺失' }
   const itemRes = await db.collection(COL.items).doc(itemId).get()
   if (!itemRes.data) return { success: false, message: '物品不存在' }
   const isOwner = itemRes.data._openid === openid
-  const isAdmin = await isAdminUser(openid)
   if (!isOwner && !isAdmin) return { success: false, message: '无权处理该举报' }
 
   if (action === 'offline') {
@@ -1234,33 +1459,29 @@ async function handleReport(event, openid) {
         await addPoints(rep.data[0]._openid, 2, 0, '举报有效', itemRes.data.title)
       }
     }
-  } else if (action === 'ignore') {
-    if (!reportId) return { success: false, message: '举报ID缺失' }
-    await db.collection(COL.reports).doc(reportId).update({
-      data: { status: 'handled', result: 'ignored', handleTime: db.serverDate() }
-    })
-    // 订阅消息：通知该条举报者"已忽略"
-    const repRes = await db.collection(COL.reports).doc(reportId).get()
-    if (repRes.data) await notifyReportResult(openid, repRes.data._openid, repRes.data.reason, '已忽略')
   } else {
     return { success: false, message: '未知操作' }
   }
   return { success: true }
 }
 
-// 管理员：拉取全部举报（含物品当前状态）
+// 管理员：拉取全部举报（含物品当前状态；P7：区分物品举报与用户举报）
 async function adminReports(openid) {
   if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
   const reports = await db.collection(COL.reports).orderBy('createTime', 'desc').limit(100).get()
-  const itemIds = [...new Set(reports.data.map(r => r.itemId))]
+  const itemIds = [...new Set(reports.data.map(r => r.itemId).filter(Boolean))]
   const itemMap = {}
   if (itemIds.length) {
-    const items = await db.collection(COL.items).where({ _id: _.in(itemIds) }).get()
-    items.data.forEach(it => { itemMap[it._id] = it })
+    try {
+      const items = await db.collection(COL.items).where({ _id: _.in(itemIds) }).get()
+      items.data.forEach(it => { itemMap[it._id] = it })
+    } catch (e) {}
   }
   const list = reports.data.map(r => {
     const it = itemMap[r.itemId]
     return Object.assign({}, r, {
+      targetType: r.targetType || 'item',
+      targetNickName: r.targetNickName || '',
       itemStatus: it ? it.status : 'deleted',
       itemTitle: (it && it.title) || r.itemTitle || '(物品已删除)'
     })
@@ -1405,12 +1626,19 @@ async function adminUsers(event, openid) {
 // 封禁 / 解封用户（封禁后不能发布/申请/举报）
 async function adminBanUser(event, openid) {
   if (!(await isAdminUser(openid))) return { success: false, message: '无管理员权限' }
-  const { userId, ban } = event
-  if (!userId) return { success: false, message: '用户ID缺失' }
-  const res = await db.collection(COL.users).doc(userId).get()
+  const { userId, targetOpenid, ban } = event
+  let res
+  if (targetOpenid) {
+    const users = await db.collection(COL.users).where({ _openid: targetOpenid }).get()
+    if (!users.data.length) return { success: false, message: '用户不存在' }
+    res = { data: users.data[0] }
+  } else {
+    if (!userId) return { success: false, message: '用户ID缺失' }
+    res = await db.collection(COL.users).doc(userId).get()
+  }
   if (!res.data) return { success: false, message: '用户不存在' }
   if (res.data._openid === openid) return { success: false, message: '不能封禁自己' }
-  await db.collection(COL.users).doc(userId).update({ data: { status: ban ? 'banned' : 'normal' } })
+  await db.collection(COL.users).doc(res.data._id).update({ data: { status: ban ? 'banned' : 'normal' } })
   return { success: true, status: ban ? 'banned' : 'normal' }
 }
 
@@ -1467,6 +1695,95 @@ async function myCounts(openid) {
     db.collection(COL.reports).where({ _openid: openid }).count()
   ])
   return { success: true, publishCount: p.total, appliedCount: a.total, favoriteCount: f.total, reportCount: r.total }
+}
+
+// ===================== P7b：积分消费出口（徽章/抽奖/置顶） =====================
+
+// 获取用户积分（内部）
+async function getUserPoints(openid) {
+  const users = await db.collection(COL.users).where({ _openid: openid }).get()
+  if (!users.data.length) return -1
+  return users.data[0].points || 0
+}
+
+// 徽章目录 + 我的徽章
+async function badgeList(openid) {
+  const mine = await db.collection(COL.badges).where({ _openid: openid }).get()
+  const owned = new Set(mine.data.map(b => b.badgeId))
+  return {
+    success: true,
+    points: await getUserPoints(openid),
+    list: BADGES.map(b => Object.assign({}, b, { owned: owned.has(b.id) })),
+    myBadges: mine.data.map(b => {
+      const meta = BADGES.find(x => x.id === b.badgeId) || {}
+      return { id: b._id, badgeId: b.badgeId, name: meta.name || b.badgeId, icon: meta.icon || '🎖️', createTime: b.createTime }
+    })
+  }
+}
+
+// 兑换徽章（扣积分，积分可为负校验）
+async function exchangeBadge(event, openid) {
+  const { badgeId } = event
+  const meta = BADGES.find(b => b.id === badgeId)
+  if (!meta) return { success: false, message: '徽章不存在' }
+  const exist = await db.collection(COL.badges).where({ _openid: openid, badgeId }).get()
+  if (exist.data.length) return { success: false, message: '您已拥有该徽章' }
+  const points = await getUserPoints(openid)
+  if (points < meta.price) return { success: false, message: '积分不足，还差' + (meta.price - points) + '分' }
+  await addPoints(openid, -meta.price, 0, '兑换徽章「' + meta.name + '」', '')
+  await db.collection(COL.badges).add({
+    data: { _openid: openid, badgeId, createTime: db.serverDate() }
+  })
+  return { success: true, badge: meta }
+}
+
+// 幸运抽奖：10 分一次。中奖概率：+2(30%)/+5(20%)/+10(10%)/称号(5%)/空(35%)
+async function lottery(openid) {
+  const points = await getUserPoints(openid)
+  if (points < 10) return { success: false, message: '积分不足，抽奖需要10分' }
+  const r = Math.random()
+  let result = { type: 'empty', text: '谢谢参与，下次好运', points: 0, title: '' }
+  if (r < 0.30) result = { type: 'points', text: '积分+2', points: 2, title: '' }
+  else if (r < 0.50) result = { type: 'points', text: '积分+5', points: 5, title: '' }
+  else if (r < 0.60) result = { type: 'points', text: '积分+10', points: 10, title: '' }
+  else if (r < 0.65) result = { type: 'title', text: '锦鲤附体称号', points: 0, title: '锦鲤附体' }
+  await addPoints(openid, -10 + result.points, 0, '幸运抽奖：' + result.text, '')
+  try {
+    await db.collection(COL.lotteries).add({
+      data: { _openid: openid, result: result.text, points: -10 + result.points, createTime: db.serverDate() }
+    })
+  } catch (e) {}
+  return { success: true, result, netPoints: -10 + result.points }
+}
+
+// 我的抽奖记录
+async function myLotteries(openid) {
+  const list = await db.collection(COL.lotteries).where({ _openid: openid }).orderBy('createTime', 'desc').limit(20).get()
+  return {
+    success: true,
+    list: list.data.map(l => ({
+      id: l._id, result: l.result, points: l.points,
+      createTimeStr: formatServerTime(l.createTime)
+    }))
+  }
+}
+
+// 物品置顶 24 小时（20 分；仅发布者本人、仅可领取状态）
+async function topItem(event, openid) {
+  const { itemId } = event
+  if (!itemId) return { success: false, message: '物品ID缺失' }
+  const itemRes = await db.collection(COL.items).doc(itemId).get()
+  const item = itemRes.data
+  if (!item) return { success: false, message: '物品不存在' }
+  if (item._openid !== openid) return { success: false, message: '仅发布者本人可置顶' }
+  if (item.status !== 'available') return { success: false, message: '仅可领取状态的物品可置顶' }
+  const points = await getUserPoints(openid)
+  if (points < 20) return { success: false, message: '积分不足，置顶需要20分' }
+  await addPoints(openid, -20, 0, '物品置顶24小时', item.title)
+  await db.collection(COL.items).doc(itemId).update({
+    data: { topUntil: new Date(Date.now() + 24 * 3600 * 1000) }
+  })
+  return { success: true, topUntil: formatServerTime(new Date(Date.now() + 24 * 3600 * 1000)) }
 }
 
 // ===================== P6：心愿求购 =====================
@@ -1632,6 +1949,16 @@ exports.main = async (event, context) => {
       case 'myApply': return await myApply(openid)
       case 'applications': return await getApplications(event, openid)
       case 'handleApply': return await handleApply(event, openid)
+      case 'confirmReceive': return await confirmReceive(event, openid)
+      case 'badgeList': return await badgeList(openid)
+      case 'exchangeBadge': return await exchangeBadge(event, openid)
+      case 'lottery': return await lottery(openid)
+      case 'myLotteries': return await myLotteries(openid)
+      case 'topItem': return await topItem(event, openid)
+      case 'blockUser': return await blockUser(event, openid)
+      case 'unblockUser': return await unblockUser(event, openid)
+      case 'myBlacklist': return await myBlacklist(openid)
+      case 'blockStatus': return await blockStatus(event, openid)
       case 'report': return await report(event, openid)
       case 'handleReport': return await handleReport(event, openid)
       case 'adminReports': return await adminReports(openid)

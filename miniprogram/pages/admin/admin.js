@@ -374,13 +374,18 @@ Page({
   },
 
   normalizeReport(r) {
+    const isUserReport = r.targetType === 'user'
     return Object.assign({}, r, {
       id: r._id,
       createTimeStr: util.formatTime(r.createTime),
+      isUserReport,
+      // 用户举报展示被举报人昵称，物品举报展示物品标题
+      title: isUserReport ? ('用户：' + (r.targetNickName || '匿名')) : r.itemTitle,
       statusText: r.status === 'handled'
         ? (r.result === 'offline' ? '已下架' : '已忽略')
         : '待处理',
-      itemStatusText: r.itemStatus === 'offline' ? '已下架'
+      itemStatusText: isUserReport ? ''
+        : r.itemStatus === 'offline' ? '已下架'
         : r.itemStatus === 'completed' ? '已送出'
         : r.itemStatus === 'deleted' ? '已删除' : '可领取'
     })
@@ -393,31 +398,56 @@ Page({
     wx.navigateTo({ url: '/pages/detail/detail?id=' + itemId })
   },
 
-  // 处理举报：offline=下架物品；ignore=忽略单条
+  // 处理举报：offline=下架物品；ban=封禁被举报用户；ignore=忽略单条
   handleReport(e) {
     const action = e.currentTarget.dataset.action
     const itemId = e.currentTarget.dataset.itemid
     const reportId = e.currentTarget.dataset.id
     const isOffline = action === 'offline'
+    const isBan = action === 'ban'
     const that = this
+    const targetOpenid = e.currentTarget.dataset.targetopenid || ''
+
+    let content = ''
+    let confirmText = ''
+    let confirmColor = '#4CAF50'
+    if (isOffline) {
+      content = '确认下架该物品吗？下架后将从公开列表隐藏。'
+      confirmText = '确认下架'
+      confirmColor = '#f44336'
+    } else if (isBan) {
+      content = '确认封禁该用户吗？封禁后对方无法发布/申请/举报。'
+      confirmText = '确认封禁'
+      confirmColor = '#f44336'
+    } else {
+      content = '确认忽略该举报（认为举报不成立）吗？'
+      confirmText = '确认忽略'
+    }
+
     wx.showModal({
-      title: isOffline ? '下架该物品' : '忽略举报',
-      content: isOffline
-        ? '确认下架该物品吗？下架后将从公开列表隐藏。'
-        : '确认忽略该举报（认为物品合规）吗？',
-      confirmText: isOffline ? '确认下架' : '确认忽略',
-      confirmColor: isOffline ? '#f44336' : '#4CAF50',
+      title: isOffline ? '下架该物品' : isBan ? '封禁用户' : '忽略举报',
+      content,
+      confirmText,
+      confirmColor,
       cancelText: '取消',
       success: function (res) {
         if (!res.confirm) return
-        util.callApi('handleReport', { itemId: itemId, reportId: reportId, action: action })
+        // 封禁用户：先封禁，再忽略该条举报
+        const doHandle = () => util.callApi('handleReport', { itemId: itemId, reportId: reportId, action: 'ignore' })
           .then(() => {
             that.loadReports(true)
-            wx.showToast({ title: isOffline ? '物品已下架' : '已忽略', icon: 'success' })
+            wx.showToast({ title: isOffline ? '物品已下架' : isBan ? '用户已封禁' : '已忽略', icon: 'success' })
           })
           .catch(e => {
             wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
           })
+        if (isBan) {
+          util.callApi('adminBanUser', { targetOpenid: targetOpenid })
+            .then(() => doHandle())
+            .catch(e => wx.showToast({ title: typeof e === 'string' ? e : '封禁失败', icon: 'none' }))
+        } else {
+          doHandle()
+        }
       }
     })
   },

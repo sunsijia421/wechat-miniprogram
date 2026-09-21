@@ -95,6 +95,69 @@
   justify-content: center;
 }
 
+/* P7：信用分 */
+.home-credit {
+  margin-top: 16rpx;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.credit-item {
+  display: flex;
+  align-items: baseline;
+  gap: 12rpx;
+}
+
+.credit-label {
+  font-size: 12px;
+  color: #689F38;
+}
+
+.credit-num {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.credit-num.good { color: #2E7D32; }
+.credit-num.mid { color: #FF9800; }
+.credit-num.low { color: #E53935; }
+
+.credit-tip {
+  font-size: 10px;
+  color: #8D9A8D;
+}
+
+/* P7：徽章墙 */
+.home-badges {
+  margin-top: 16rpx;
+  display: flex;
+  gap: 16rpx;
+  flex-wrap: wrap;
+}
+
+.home-badge {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12rpx;
+  padding: 12rpx 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.home-badge .badge-icon {
+  font-size: 28rpx;
+}
+
+.home-badge .badge-name {
+  font-size: 12px;
+  color: #2E7D32;
+  font-weight: 600;
+}
+
 .home-btn {
   background: #fff;
   color: #2E7D32;

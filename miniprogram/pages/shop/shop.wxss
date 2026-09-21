@@ -1,0 +1,259 @@
+/* 积分商城（P7） */
+.container {
+  padding: 24rpx;
+  padding-bottom: 60rpx;
+}
+
+/* 积分余额卡 */
+.points-card {
+  background: linear-gradient(135deg, #43A047, #66BB6A);
+  border-radius: 20rpx;
+  padding: 40rpx 32rpx;
+  color: #fff;
+  margin-bottom: 24rpx;
+}
+
+.points-label {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.points-num {
+  font-size: 44px;
+  font-weight: 700;
+  margin: 12rpx 0;
+}
+
+.points-tip {
+  font-size: 12px;
+  opacity: 0.85;
+  text-decoration: underline;
+}
+
+/* 分组 */
+.group {
+  margin-bottom: 24rpx;
+}
+
+.group-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+/* 徽章墙 */
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.badge-card {
+  flex: 1 1 300rpx;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
+  text-align: center;
+  border: 1rpx solid #f0f0f0;
+}
+
+.badge-card.owned {
+  background: #f9f9f9;
+}
+
+.badge-icon {
+  font-size: 44px;
+}
+
+.badge-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 8rpx;
+}
+
+.badge-desc {
+  font-size: 11px;
+  color: #999;
+  margin-top: 4rpx;
+}
+
+.badge-cost {
+  font-size: 12px;
+  color: #FF9800;
+  margin-top: 8rpx;
+}
+
+.badge-own {
+  font-size: 12px;
+  color: #4CAF50;
+  margin-top: 8rpx;
+}
+
+.badge-btn {
+  margin-top: 12rpx;
+  background: linear-gradient(135deg, #43A047, #5CB85C);
+  color: #fff;
+  font-size: 13px;
+  padding: 10rpx 0;
+  border-radius: 30rpx;
+}
+
+.badge-btn:active {
+  opacity: 0.85;
+}
+
+/* 抽奖 */
+.lottery-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  border: 1rpx solid #f0f0f0;
+}
+
+.lottery-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.lottery-rules {
+  margin: 16rpx 0;
+  background: #fafafa;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.9;
+}
+
+.lottery-btn {
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 40rpx;
+}
+
+.lottery-btn::after {
+  border: none;
+}
+
+/* 抽奖记录 */
+.lottery-records {
+  margin-top: 16rpx;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 8rpx 24rpx;
+  border: 1rpx solid #f0f0f0;
+}
+
+.record-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 13px;
+}
+
+.record-row:last-child {
+  border-bottom: none;
+}
+
+.record-text {
+  color: #333;
+}
+
+.record-time {
+  color: #999;
+  font-size: 11px;
+}
+
+/* 抽奖弹窗 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  width: 600rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 36rpx 32rpx;
+  box-sizing: border-box;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 20rpx;
+}
+
+.lottery-result {
+  text-align: center;
+  padding: 30rpx 0;
+}
+
+.lottery-result.empty {
+  color: #999;
+}
+
+.result-icon {
+  font-size: 56px;
+}
+
+.result-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-top: 12rpx;
+}
+
+.result-sub {
+  font-size: 13px;
+  color: #FF9800;
+  margin-top: 8rpx;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.modal-btn-cancel,
+.modal-btn-confirm {
+  flex: 1;
+  font-size: 15px;
+  border-radius: 40rpx;
+  line-height: 2.4;
+}
+
+.modal-btn-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.modal-btn-confirm {
+  background: linear-gradient(135deg, #FF9800, #FFB74D);
+  color: #fff;
+}
+
+.modal-btn-cancel::after,
+.modal-btn-confirm::after {
+  border: none;
+}

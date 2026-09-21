@@ -6,11 +6,17 @@ Page({
     messages: [],
     inputValue: '',
     peerName: '',
+    peerAvatar: '',
+    peerOpenid: '',
     itemTitle: '',
     isWish: false,
     sending: false,
     scrollIntoView: '',
-    loaded: false
+    loaded: false,
+    // P7：拉黑状态
+    iBlocked: false,
+    blockedBy: false,
+    blockInputDisabled: false
   },
 
   onLoad(options) {
@@ -53,6 +59,7 @@ Page({
           messages: list,
           peerName: res.peerName || '',
           peerAvatar: res.peerAvatar || '',
+          peerOpenid: res.peerOpenid || '',
           myAvatar: myInfo.avatarUrl || '',
           itemTitle: res.itemTitle || '',
           isWish: !!res.wishId,
@@ -61,10 +68,67 @@ Page({
         })
         this.scrollToBottom()
         this.startPolling()
+        // P7：检查与对方的拉黑状态
+        this.checkBlockStatus()
       })
       .catch(e => {
         wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       })
+  },
+
+  // P7：拉黑状态检查（双方任一方拉黑则禁用输入）
+  checkBlockStatus() {
+    if (!this.data.peerOpenid) return
+    const that = this
+    util.callApi('blockStatus', { targetOpenid: this.data.peerOpenid })
+      .then(res => {
+        const disabled = !!res.iBlocked || !!res.blockedBy
+        that.setData({
+          iBlocked: !!res.iBlocked,
+          blockedBy: !!res.blockedBy,
+          blockInputDisabled: disabled
+        })
+      })
+      .catch(() => {})
+  },
+
+  // P7：拉黑 / 取消拉黑
+  toggleBlock() {
+    const that = this
+    if (this.data.iBlocked) {
+      wx.showModal({
+        title: '取消拉黑',
+        content: '取消拉黑后，你们可以继续聊天和申请物品。',
+        confirmText: '取消拉黑',
+        cancelText: '暂不',
+        success(res) {
+          if (!res.confirm) return
+          util.callApi('unblockUser', { targetOpenid: that.data.peerOpenid })
+            .then(() => {
+              that.setData({ iBlocked: false, blockInputDisabled: false })
+              wx.showToast({ title: '已取消拉黑', icon: 'success' })
+            })
+            .catch(e => wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' }))
+        }
+      })
+      return
+    }
+    wx.showModal({
+      title: '拉黑对方',
+      content: '拉黑后对方将无法给你发消息、无法申请你的物品，且你无法给对方发消息。',
+      confirmText: '拉黑',
+      confirmColor: '#f44336',
+      cancelText: '取消',
+      success(res) {
+        if (!res.confirm) return
+        util.callApi('blockUser', { targetOpenid: that.data.peerOpenid })
+          .then(() => {
+            that.setData({ iBlocked: true, blockInputDisabled: true })
+            wx.showToast({ title: '已拉黑', icon: 'none' })
+          })
+          .catch(e => wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' }))
+      }
+    })
   },
 
   startPolling() {
@@ -88,6 +152,11 @@ Page({
     const content = (this.data.inputValue || '').trim()
     if (!content) return
     if (this.data.sending) return
+    // P7：拉黑状态下禁止发送
+    if (this.data.blockInputDisabled) {
+      wx.showToast({ title: this.data.blockedBy ? '对方已拉黑你，无法发送' : '你已拉黑对方，无法发送', icon: 'none' })
+      return
+    }
 
     // 本地敏感词预校验
     const textCheck = util.checkTextContent(content)

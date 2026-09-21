@@ -95,6 +95,11 @@ Page({
     wx.navigateTo({ url: '/pages/certificates/certificates' })
   },
 
+  // P7：跳转积分商城（徽章兑换/抽奖）
+  goShop() {
+    wx.navigateTo({ url: '/pages/shop/shop' })
+  },
+
   // 跳转"我的交易"独立列表页（published/applied/favorites/reported）
   goMyList(e) {
     const type = e.currentTarget.dataset.type

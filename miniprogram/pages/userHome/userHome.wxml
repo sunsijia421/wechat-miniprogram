@@ -38,6 +38,21 @@
           <view class="home-stat-label">捐赠</view>
         </view>
       </view>
+      <!-- P7：信用分（爽约扣分，展示靠谱度） -->
+      <view class="home-credit">
+        <view class="credit-item">
+          <text class="credit-label">信用分</text>
+          <text class="credit-num {{user.credit >= 100 ? 'good' : (user.credit >= 80 ? 'mid' : 'low')}}">{{user.credit}}</text>
+        </view>
+        <view class="credit-tip">诚信履约享高分，爽约未确认会扣分</view>
+      </view>
+      <!-- P7：徽章墙 -->
+      <view class="home-badges" wx:if="{{myBadges.length > 0}}">
+        <view class="home-badge" wx:for="{{myBadges}}" wx:key="id">
+          <view class="badge-icon">{{item.icon}}</view>
+          <view class="badge-name">{{item.name}}</view>
+        </view>
+      </view>
       <view class="home-actions">
         <button class="home-btn" bindtap="goSettings">✏️ 编辑资料</button>
       </view>

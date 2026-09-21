@@ -1,0 +1,69 @@
+<!-- 积分商城（P7） -->
+<view class="container">
+
+  <!-- 积分余额卡 -->
+  <view class="points-card">
+    <view class="points-label">我的公益积分</view>
+    <view class="points-num">{{points}}</view>
+    <view class="points-tip" bindtap="goPointLogs">积分怎么赚？查看积分明细 ›</view>
+  </view>
+
+  <!-- 徽章兑换 -->
+  <view class="group">
+    <view class="group-title">🏅 徽章墙 · 积分兑换</view>
+    <view class="badge-grid">
+      <view class="badge-card {{item.owned ? 'owned' : ''}}" wx:for="{{badges}}" wx:key="id">
+        <view class="badge-icon">{{item.icon}}</view>
+        <view class="badge-name">{{item.name}}</view>
+        <view class="badge-desc">{{item.desc}}</view>
+        <view class="badge-cost" wx:if="{{!item.owned}}">{{item.points}} 积分</view>
+        <view class="badge-own" wx:else>✅ 已拥有</view>
+        <view class="badge-btn" wx:if="{{!item.owned}}" data-id="{{item.id}}" bindtap="exchangeBadge">兑换</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 幸运抽奖 -->
+  <view class="group">
+    <view class="group-title">🎰 幸运抽奖 · 10积分/次</view>
+    <view class="lottery-card">
+      <view class="lottery-desc">消耗10公益积分抽取好运，有机会获得额外积分或稀有称号！</view>
+      <view class="lottery-rules">
+        <view>🎁 +2分（30%）</view>
+        <view>🎁 +5分（20%）</view>
+        <view>🎁 +10分（10%）</view>
+        <view>👑 随机称号（5%）</view>
+        <view>😢 谢谢参与（35%）</view>
+      </view>
+      <button class="lottery-btn" bindtap="openLottery">开始抽奖（10分）</button>
+    </view>
+
+    <!-- 抽奖记录 -->
+    <view class="lottery-records" wx:if="{{lotteryRecords.length > 0}}">
+      <view class="record-row" wx:for="{{lotteryRecords}}" wx:key="id">
+        <text class="record-text">{{item.text}}</text>
+        <text class="record-time">{{item.createTimeStr}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 抽奖弹窗 -->
+  <view class="modal-overlay" wx:if="{{showLotteryModal}}" catchtap="closeLottery">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">🎰 幸运抽奖</view>
+      <view class="lottery-result" wx:if="{{lotteryResult}}">
+        <view class="result-icon">{{lotteryResult.title ? '👑' : (lotteryResult.points > 0 ? '🎉' : '😢')}}</view>
+        <view class="result-text">{{lotteryResult.text}}</view>
+        <view class="result-sub" wx:if="{{lotteryResult.title}}">获得称号：{{lotteryResult.title}}</view>
+      </view>
+      <view class="lottery-result empty" wx:else>
+        <view class="result-text">消耗10积分，试试手气！</view>
+      </view>
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeLottery" disabled="{{drawing}}">关闭</button>
+        <button class="modal-btn-confirm" bindtap="doLottery" loading="{{drawing}}" disabled="{{drawing}}">再抽一次</button>
+      </view>
+    </view>
+  </view>
+
+</view>

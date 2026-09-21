@@ -143,17 +143,23 @@
       <view class="report-list" wx:if="{{reports.length > 0}}">
         <view class="report-card card" wx:for="{{reports}}" wx:key="id" wx:for-item="r">
           <view class="report-head flex-between">
-            <view class="report-item-title" data-itemid="{{r.itemId}}" bindtap="goDetail">{{r.itemTitle}}</view>
+            <view class="report-item-title {{r.isUserReport ? 'no-tap' : ''}}" data-itemid="{{r.itemId}}" bindtap="goDetail">{{r.title}}</view>
             <view class="status-tag status-{{r.status}}">{{r.statusText}}</view>
           </view>
           <view class="report-reason-text">举报理由：{{r.reason}}</view>
           <view class="report-meta">
-            <text>物品状态：{{r.itemStatusText}}</text>
+            <text wx:if="{{!r.isUserReport}}">物品状态：{{r.itemStatusText}}</text>
             <text>{{r.createTimeStr}}</text>
           </view>
           <view class="report-actions" wx:if="{{r.status === 'pending'}}">
-            <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
-            <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+            <block wx:if="{{r.isUserReport}}">
+              <view class="report-action danger" data-action="ban" data-targetopenid="{{r.targetOpenid}}" data-id="{{r.id}}" bindtap="handleReport">封禁用户</view>
+              <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+            </block>
+            <block wx:else>
+              <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
+              <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+            </block>
           </view>
         </view>
       </view>

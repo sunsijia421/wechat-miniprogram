@@ -19,7 +19,7 @@
         <view class="item-meta">
           <view class="tag">{{item.categoryName}}</view>
           <view class="status-tag status-{{item.statusClass}}">{{item.statusText}}</view>
-          <view class="status-tag status-pending" wx:if="{{type === 'applied'}}">{{item.applyText}}</view>
+          <view class="status-tag apply-{{item.applyClass}}" wx:if="{{type === 'applied'}}">{{item.applyText}}</view>
         </view>
       </view>
       <view class="item-arrow">›</view>

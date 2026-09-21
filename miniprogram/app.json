@@ -15,6 +15,7 @@
     "pages/settings/settings",
     "pages/userHome/userHome",
     "pages/certificates/certificates",
+    "pages/shop/shop",
     "pages/wish-list/wish-list",
     "pages/wish-publish/wish-publish",
     "pages/wish-detail/wish-detail"

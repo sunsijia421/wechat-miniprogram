@@ -7,6 +7,10 @@ Page({
     item: null,
     isOwner: false,
     isCompleted: false,
+    // P7：待确认状态（发布者已送出，等待申请者确认收到）
+    isWaitingConfirm: false,
+    // P7：置顶中
+    topUntil: '',
 
     // 申请相关
     applications: [],
@@ -16,6 +20,7 @@ Page({
     // 举报相关
     showReportModal: false,
     reportReason: '',
+    reportTarget: 'item', // item=举报物品 user=举报用户
 
     // 当前用户（已登录才有值，游客为 null）
     currentUser: null,
@@ -37,6 +42,7 @@ Page({
     // 已申请状态（申请后按钮置灰显示"已申请"）
     hasApplied: false,
     applyStatus: '',
+    myApplicationId: '',
 
     // P2：猜你喜欢
     relatedItems: [],
@@ -113,11 +119,14 @@ Page({
         item,
         isOwner: res.isOwner,
         isCompleted: item.status === 'completed',
+        isWaitingConfirm: item.status === 'waiting_confirm',
         isOffline: item.status === 'offline',
+        topUntil: item.topUntil ? util.formatTime(item.topUntil) : '',
         currentUser: app.getUserInfo() || null,
         reports,
         hasApplied: !!res.hasApplied,
         applyStatus: res.applyStatus || '',
+        myApplicationId: res.applyId || '',
         relatedItems
       })
       if (res.isOwner) this.loadApplications()
@@ -136,7 +145,7 @@ Page({
     }
   },
 
-  // ========== 申请记录加载（仅发布者） ==========
+  // ========== 申请记录加载（仅发布者；P7：按积分降序，展示积分/等级） ==========
   loadApplications() {
     util.callApi('applications', { itemId: this.data.itemId })
       .then(res => {
@@ -230,13 +239,13 @@ Page({
       })
   },
 
-  // ========== 发布者确认送出 ==========
+  // ========== 发布者确认送出（P7：进入"待确认"状态，对方确认收到后才结算） ==========
   approveApplication(e) {
     const applicationId = e.currentTarget.dataset.id
     const that = this
     wx.showModal({
       title: '确认送出',
-      content: '确认将物品送给这位申请者吗？确认后物品状态将变为"已完成"。',
+      content: '确认将物品送给这位申请者吗？确认后等待对方"确认收到"，对方确认后才结算积分与证书；对方3天内未确认将自动重新上架。',
       confirmText: '确认送出',
       cancelText: '再想想',
       success: function (res) {
@@ -251,7 +260,7 @@ Page({
     const that = this
     wx.showModal({
       title: '确认已送出',
-      content: '确认该物品已成功送出吗？确认后您将获得10点公益积分。',
+      content: '确认该物品已成功送出吗？确认后等待对方"确认收到"，对方确认后才结算积分。',
       confirmText: '确认',
       cancelText: '取消',
       success: function (res) {
@@ -270,13 +279,65 @@ Page({
       action: applicationId ? 'approve' : 'complete'
     })
       .then(() => {
-        app.updateUserStats(10, 1)
         this.loadItem()
-        wx.showToast({ title: '已送出 +10分，公益证书已生成', icon: 'success' })
+        wx.showToast({ title: '已送出，等待对方确认', icon: 'success' })
       })
       .catch(e => {
         wx.showToast({ title: typeof e === 'string' ? e : '操作失败', icon: 'none' })
       })
+  },
+
+  // ========== P7：申请者确认收到（结算积分/证书/互评） ==========
+  confirmReceive(e) {
+    const applicationId = e.currentTarget.dataset.id
+    if (!applicationId) {
+      wx.showToast({ title: '参数缺失', icon: 'none' })
+      return
+    }
+    const that = this
+    wx.showModal({
+      title: '确认收到',
+      content: '确认已收到该物品吗？确认后本次赠送完成，双方获得积分，发布者生成公益证书。',
+      confirmText: '确认收到',
+      cancelText: '暂不确认',
+      success: function (res) {
+        if (!res.confirm) return
+        util.callApi('confirmReceive', {
+          itemId: that.data.itemId,
+          applicationId: applicationId
+        })
+          .then(() => {
+            app.updateUserStats(5, 0)
+            that.loadItem()
+            wx.showToast({ title: '已确认，公益+5分', icon: 'success' })
+          })
+          .catch(err => {
+            wx.showToast({ title: typeof err === 'string' ? err : '操作失败', icon: 'none' })
+          })
+      }
+    })
+  },
+
+  // ========== P7：物品置顶 24 小时（20 积分） ==========
+  topItem() {
+    const that = this
+    wx.showModal({
+      title: '置顶物品',
+      content: '花费20积分将物品置顶24小时（列表置前展示），让更多人看到它。',
+      confirmText: '置顶',
+      cancelText: '取消',
+      success: function (res) {
+        if (!res.confirm) return
+        util.callApi('topItem', { itemId: that.data.itemId })
+          .then(r => {
+            that.loadItem()
+            wx.showToast({ title: '已置顶24小时', icon: 'success' })
+          })
+          .catch(err => {
+            wx.showToast({ title: typeof err === 'string' ? err : '置顶失败', icon: 'none' })
+          })
+      }
+    })
   },
 
   // ========== 删除物品（仅发布者） ==========
@@ -488,7 +549,7 @@ Page({
   },
 
   closeReport() {
-    this.setData({ showReportModal: false, reportReason: '' })
+    this.setData({ showReportModal: false, reportReason: '', reportTarget: 'item' })
   },
 
   onReportReasonInput(e) {
@@ -518,6 +579,41 @@ Page({
         this.setData({ showReportModal: false, reportReason: '' })
         wx.showToast({ title: '已收到举报，我们会尽快处理', icon: 'none' })
         // P0：请求订阅授权（举报处理结果通知），授权失败不影响举报
+        util.requestSubscribe('reportResult').then(() => {}, () => {})
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '提交失败', icon: 'none' })
+      })
+  },
+
+  // ========== P7：举报用户（发布者违规/骚扰） ==========
+  openReportUser() {
+    if (!util.requireLogin()) return
+    this.setData({ showReportModal: true, reportReason: '', reportTarget: 'user' })
+  },
+
+  submitReportUser() {
+    if (!util.requireLogin()) return
+    const reason = this.data.reportReason.trim()
+    if (!reason) {
+      wx.showToast({ title: '请填写举报理由', icon: 'none' })
+      return
+    }
+    const textCheck = util.checkTextContent(reason)
+    if (!textCheck.passed) {
+      wx.showToast({ title: '举报理由包含敏感词', icon: 'none' })
+      return
+    }
+    const item = this.data.item
+    util.callApi('report', {
+      targetType: 'user',
+      targetOpenid: item._openid,
+      targetNickName: item.publisherNickName || '该用户',
+      reason: reason
+    })
+      .then(() => {
+        this.setData({ showReportModal: false, reportReason: '', reportTarget: 'item' })
+        wx.showToast({ title: '已收到举报，我们会尽快处理', icon: 'none' })
         util.requestSubscribe('reportResult').then(() => {}, () => {})
       })
       .catch(e => {

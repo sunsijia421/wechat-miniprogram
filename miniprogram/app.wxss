@@ -115,6 +115,16 @@ page {
   border-radius: 20rpx;
 }
 
+/* P7：待确认收到状态（发布者已送出、申请者未确认） */
+.status-waiting {
+  color: #1E88E5;
+  font-size: 12px;
+  background-color: #E3F2FD;
+  border: none;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;

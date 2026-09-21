@@ -1,14 +1,24 @@
 <!-- 会话详情（聊天窗口） -->
 <view class="chat-page">
 
-  <!-- 顶部物品条 -->
-  <view class="item-bar" wx:if="{{itemTitle}}">
-    <view class="item-bar-text">{{isWish ? '🙋' : '📦'}} {{itemTitle}}</view>
+  <!-- 顶部物品条 + 拉黑按钮（P7） -->
+  <view class="top-bar">
+    <view class="item-bar" wx:if="{{itemTitle}}">
+      <view class="item-bar-text">{{isWish ? '🙋' : '📦'}} {{itemTitle}}</view>
+    </view>
+    <view class="block-btn {{iBlocked ? 'blocked' : ''}}" bindtap="toggleBlock">
+      {{iBlocked ? '已拉黑' : '拉黑'}}
+    </view>
+  </view>
+
+  <!-- 拉黑状态横幅 -->
+  <view class="block-banner" wx:if="{{blockInputDisabled}}">
+    {{blockedBy ? '对方已拉黑你，无法继续发送消息' : '你已拉黑对方，可点击右上角"已拉黑"取消'}}
   </view>
 
   <!-- 消息列表 -->
   <scroll-view class="msg-scroll" scroll-y scroll-into-view="{{scrollIntoView}}"
-    scroll-with-animation="{{true}}" style="height: calc(100vh - 180rpx);">
+    scroll-with-animation="{{true}}" style="height: calc(100vh - 230rpx);">
     <view class="msg-list">
       <view class="msg-item {{msg.isMine ? 'mine' : 'theirs'}}"
         wx:for="{{messages}}" wx:key="id" id="msg-{{msg.id}}" wx:for-item="msg">
@@ -27,13 +37,13 @@
 
   <!-- 输入栏 -->
   <view class="input-bar">
-    <view class="send-limit-tip" wx:if="{{canSendOneOnly}}">
+    <view class="send-limit-tip" wx:if="{{canSendOneOnly && !blockInputDisabled}}">
       ⏳ 发布者回复前仅可发送一条消息
     </view>
-    <input class="msg-input" placeholder="输入消息..." value="{{inputValue}}"
+    <input class="msg-input" placeholder="{{blockInputDisabled ? '消息功能已禁用' : '输入消息...'}}" value="{{inputValue}}"
       bindinput="onInput" confirm-type="send" bindconfirm="sendMessage"
-      maxlength="500" cursor-spacing="20" />
-    <button class="send-btn" bindtap="sendMessage" disabled="{{sending || !inputValue.trim()}}">发送</button>
+      maxlength="500" cursor-spacing="20" disabled="{{blockInputDisabled}}" />
+    <button class="send-btn" bindtap="sendMessage" disabled="{{sending || !inputValue.trim() || blockInputDisabled}}">发送</button>
   </view>
 
 </view>

@@ -10,7 +10,8 @@ Page({
     evaluations: [],
     activeTab: 'items', // items | comments
     loading: false,
-    isMe: true
+    isMe: true,
+    myBadges: []
   },
 
   onLoad(options) {
@@ -54,12 +55,25 @@ Page({
           evaluations,
           loading: false
         })
+        // P7：加载已拥有徽章（徽章墙）
+        this.loadMyBadges()
       })
       .catch(e => {
         this.setData({ loading: false })
         wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
       })
       .then(() => wx.stopPullDownRefresh())
+  },
+
+  // P7：徽章墙（已拥有徽章）
+  loadMyBadges() {
+    util.callApi('badgeList', {})
+      .then(res => {
+        const myIds = (res.myBadges || []).map(b => b.badgeId)
+        const owned = (res.list || []).filter(b => myIds.indexOf(b.id) >= 0)
+        this.setData({ myBadges: owned })
+      })
+      .catch(() => {})
   },
 
   switchTab(e) {
