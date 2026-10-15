@@ -15,6 +15,9 @@ Page({
 
     // 管理员（登录后自动识别，无需密钥）
     isAdmin: false,
+    // 一次性激活：非管理员时显示「激活管理员」，输入密钥后永久生效
+    showAdminActivate: false,
+    adminSecret: '',
 
     // P1：积分等级
     level: { name: '初心者', icon: '🌱', progress: 0, isMax: false, nextMin: 20 },
@@ -152,6 +155,47 @@ Page({
   // 进入举报管理
   goAdmin() {
     wx.navigateTo({ url: '/pages/admin/admin' })
+  },
+
+  // 激活管理员（一次性操作：成功后云端永久标记，之后登录自动进管理后台）
+  openAdminActivate() {
+    this.setData({ showAdminActivate: true, adminSecret: '' })
+  },
+
+  closeAdminActivate() {
+    this.setData({ showAdminActivate: false, adminSecret: '' })
+  },
+
+  onAdminSecretInput(e) {
+    this.setData({ adminSecret: e.detail.value })
+  },
+
+  submitAdminActivate() {
+    const secret = (this.data.adminSecret || '').trim()
+    if (!secret) {
+      wx.showToast({ title: '请输入管理密钥', icon: 'none' })
+      return
+    }
+    wx.showLoading({ title: '验证中', mask: true })
+    util.callApi('becomeAdmin', { secret })
+      .then(() => {
+        wx.hideLoading()
+        app.setIsAdmin(true)
+        this.setData({ showAdminActivate: false, adminSecret: '', isAdmin: true })
+        wx.showModal({
+          title: '激活成功',
+          content: '你已成为管理员，之后登录会自动进入管理后台。',
+          showCancel: false,
+          confirmText: '立即进入',
+          success: (r) => {
+            if (r.confirm) wx.navigateTo({ url: '/pages/admin/admin' })
+          }
+        })
+      })
+      .catch(e => {
+        wx.hideLoading()
+        wx.showToast({ title: typeof e === 'string' ? e : '密钥不正确', icon: 'none' })
+      })
   },
 
   // 阻止弹窗冒泡（保留兼容）

@@ -53,10 +53,11 @@ const SUBSCRIBE_TEMPLATES = {
 // 把你的 openid 填入下方数组即可，如 ['oXxx...', 'oYyy...']
 const ADMIN_OPENIDS = []
 
-// 管理员密钥：已废弃的前端「输入密钥」流程保留的后门，仅供日后给协管员授权使用。
-// 安全改善：优先读取云开发环境变量 ADMIN_SECRET（云开发控制台 → 云函数 → 配置 → 环境变量）。
-// 若未配置环境变量则密钥校验不可用（避免密钥出现在公开仓库）。建议同时把 openid 填入 ADMIN_OPENIDS 白名单。
-const ADMIN_SECRET = process.env.ADMIN_SECRET || ''
+// 管理员激活密钥：在「我的 → 激活管理员」输入此密钥即可成为管理员（写入 users.isAdmin，永久生效）。
+// 优先读取云函数环境变量 ADMIN_SECRET（云开发控制台 → 云函数 → 配置 → 环境变量）；未配置时用下方默认值。
+// 注意：默认值会出现在公开仓库中，正式环境请在云开发控制台配置环境变量覆盖它。
+// 未配置环境变量时使用下方默认值，保证本地演示环境开箱可用（上线前建议改为环境变量或删掉默认值）。
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'jiahe-admin-2026'
 
 // 内容安全严格模式：SECURITY_STRICT=true 时，若 msgSecCheck/imgSecCheck 服务未开通或调用失败，直接拒绝发布/申请等写操作；
 // 默认 false（开发期兜底放行，生产环境务必开通内容安全并建议开启严格模式）。
@@ -1345,6 +1346,18 @@ async function handleApply(event, openid) {
       await notifyApplyResult(openid, appRes.data._openid, itemRes.data.title, '待确认收到')
     }
   } else if (action === 'complete') {
+    // 防刷分（安全修复）：必须存在真实申请记录才允许结算，
+    // 否则发布者可在无人申请的情况下反复「发布 → 标记完成」套取积分与公益证书。
+    const applyRes = await db.collection(COL.applications).where({ itemId }).get()
+    const apps = applyRes.data || []
+    // 已有通过记录的，必须由申请者本人确认收到（confirmReceive）后才结算，避免发布者单方面结算
+    if (apps.some(a => a.status === 'approved')) {
+      return { success: false, message: '已有申请通过，请等待对方确认收到' }
+    }
+    // 至少存在一条未被拒绝的真实申请
+    if (!apps.some(a => a.status && a.status !== 'rejected')) {
+      return { success: false, message: '该物品暂无申请记录，无法标记完成' }
+    }
     await db.collection(COL.items).doc(itemId).update({ data: { status: 'completed', completeTime: db.serverDate() } })
     await addPoints(openid, 10, 1, '物品成功送出', itemRes.data.title)
     // P4：送出即生成电子公益证书
@@ -1525,9 +1538,14 @@ async function handleReport(event, openid) {
 
   if (action === 'ignore') {
     if (!reportId) return { success: false, message: '举报ID缺失' }
+    const repRes = await db.collection(COL.reports).doc(reportId).get()
+    if (!repRes.data) return { success: false, message: '举报记录不存在' }
     if (!isAdmin) {
-      // 非管理员忽略单条举报：物品发布者可忽略本人物品的举报
+      // 非管理员忽略单条举报：仅物品发布者可忽略「针对本人物品」的举报。
+      // 安全修复：必须校验该举报确实指向 itemId，
+      // 否则可传入自己的 itemId + 他人的 reportId，把针对他人的举报压成「已忽略」。
       if (!itemId) return { success: false, message: '物品ID缺失' }
+      if (repRes.data.itemId !== itemId) return { success: false, message: '举报与物品不匹配' }
       const itemRes = await db.collection(COL.items).doc(itemId).get()
       if (!itemRes.data || itemRes.data._openid !== openid) return { success: false, message: '无权处理该举报' }
     }
@@ -1535,8 +1553,7 @@ async function handleReport(event, openid) {
       data: { status: 'handled', result: 'ignored', handleTime: db.serverDate() }
     })
     // 订阅消息：通知该条举报者"已忽略"
-    const repRes = await db.collection(COL.reports).doc(reportId).get()
-    if (repRes.data) await notifyReportResult(openid, repRes.data._openid, repRes.data.reason, '已忽略')
+    await notifyReportResult(openid, repRes.data._openid, repRes.data.reason, '已忽略')
     return { success: true }
   }
 
@@ -1837,8 +1854,8 @@ async function becomeAdmin(event, openid) {
   if (!secret || secret !== ADMIN_SECRET) return { success: false, message: '管理密钥不正确' }
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   if (users.data.length === 0) return { success: false, message: '请先登录后再验证' }
-  await db.collection(COL.users).doc(users.data[0]._id).update({ data: { isAdmin: true } })
-  return { success: true }
+  await db.collection(COL.users).doc(users.data[0]._id).update({ data: { isAdmin: true, adminTime: db.serverDate() } })
+  return { success: true, isAdmin: true, message: '已激活管理员，下次登录将直接进入管理后台' }
 }
 
 // 查询当前用户是否管理员

@@ -108,6 +108,11 @@
           <view class="entry-label">举报管理</view>
           <view class="entry-arrow">›</view>
         </view>
+        <view class="entry-row" wx:if="{{userInfo && !isAdmin}}" bindtap="openAdminActivate">
+          <view class="entry-icon">🔑</view>
+          <view class="entry-label">激活管理员</view>
+          <view class="entry-arrow">›</view>
+        </view>
         <view class="entry-row" bindtap="goFeedback">
           <view class="entry-icon">💬</view>
           <view class="entry-label">意见反馈</view>
@@ -132,5 +137,19 @@
     </view>
 
   </block>
+
+  <!-- 激活管理员（一次性，成功后永久生效） -->
+  <view class="modal-overlay" wx:if="{{showAdminActivate}}" catchtap="closeAdminActivate">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">激活管理员</view>
+      <view class="modal-subtitle">输入管理密钥，激活后登录将自动进入管理后台</view>
+      <input class="modal-input" type="text" placeholder="请输入管理密钥"
+        value="{{adminSecret}}" bindinput="onAdminSecretInput" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeAdminActivate">取消</button>
+        <button class="modal-btn-confirm" bindtap="submitAdminActivate">激活</button>
+      </view>
+    </view>
+  </view>
 
 </view>
