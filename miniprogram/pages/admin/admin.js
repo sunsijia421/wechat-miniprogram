@@ -479,8 +479,8 @@ Page({
       cancelText: '取消',
       success: function (res) {
         if (!res.confirm) return
-        // 封禁用户：先封禁，再忽略该条举报
-        const doHandle = () => util.callApi('handleReport', { itemId: itemId, reportId: reportId, action: 'ignore' })
+        // 下架场景必须传 'offline'，否则后端只会把举报标记为已忽略、物品不会下架（P0-1 修复）
+        const doHandle = () => util.callApi('handleReport', { itemId: itemId, reportId: reportId, action: isOffline ? 'offline' : 'ignore' })
           .then(() => {
             that.loadReports(true)
             wx.showToast({ title: isOffline ? '物品已下架' : isBan ? '用户已封禁' : '已忽略', icon: 'success' })

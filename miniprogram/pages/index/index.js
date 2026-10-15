@@ -196,11 +196,13 @@ Page({
         this.setData({ hotKeywords: res.list || [] })
       })
       .catch(() => {})
-    // 热门物品：热度排序前 6 条可领取物品
+    // 热门物品：热度排序前 6 条可领取物品（同样需转临时 URL）
     util.callApi('list', { sort: 'hot', page: 1, pageSize: 6 })
       .then(res => {
         const list = (res.list || []).map(it => this.normalizeItem(it))
-        this.setData({ hotItems: list })
+        this.resolveListImages(list).then(hotItems => {
+          this.setData({ hotItems })
+        })
       })
       .catch(() => {})
   },
@@ -405,15 +407,18 @@ Page({
     this.setData({ loading: true })
     util.callApi('list', { category: currentCategory, page: page, pageSize: pageSize, keyword: keyword, barterOnly: barterOnly, sort: sortMode })
       .then(res => {
-        const newItems = res.list.map(it => this.normalizeItem(it))
-        const allItems = this.data.allItems.concat(newItems)
-        this.setData({
-          allItems: allItems,
-          hasMore: res.hasMore,
-          loading: false
+        const prev = this.data.allItems
+        const newItems = (res.list || []).map(it => this.normalizeItem(it))
+        this.resolveListImages(newItems).then(itemsWithUrls => {
+          const allItems = prev.concat(itemsWithUrls)
+          this.setData({
+            allItems: allItems,
+            hasMore: res.hasMore,
+            loading: false
+          })
+          this.filterItems()
+          this.updateMapMarkers()
         })
-        this.filterItems()
-        this.updateMapMarkers()
       })
       .catch(e => {
         this.setData({ loading: false })
@@ -430,6 +435,30 @@ Page({
       createTimeStr: util.formatTime(item.createTime),
       images: item.images || [],
       titleSegments: util.buildHighlightSegments(item.title, keyword)
+    })
+  },
+
+  // 批量把物品列表首图 cloud:// fileID 转为临时 URL（P0-2 修复：避免依赖云存储 ACL，他人/其他设备也能正常显示缩略图）
+  resolveListImages(items) {
+    const fileIDs = (items || []).map(it => (it.images && it.images[0]) || '').filter(Boolean)
+    if (!fileIDs.length) return Promise.resolve(items)
+    return new Promise((resolve) => {
+      wx.cloud.getTempFileURL({
+        fileList: fileIDs,
+        success: res => {
+          const urlMap = {}
+          ;(res.fileList || []).forEach(f => { if (f.tempFileURL) urlMap[f.fileID] = f.tempFileURL })
+          const list = items.map(it => {
+            const first = it.images && it.images[0]
+            if (first && urlMap[first]) {
+              return Object.assign({}, it, { images: [urlMap[first]].concat(it.images.slice(1)) })
+            }
+            return it
+          })
+          resolve(list)
+        },
+        fail: () => resolve(items)
+      })
     })
   },
 

@@ -1,5 +1,6 @@
-// 已开通的云开发环境ID（微信公众平台后台 -> 云服务 -> 云开发）
-const CLOUD_ENV = 'cloudbase-d4ghpbagzd02ea714'
+// 云开发环境：优先使用 DYNAMIC_CURRENT_ENV（自动解析当前小程序关联的云环境），
+// 避免换环境/部署环境 ID 不一致导致全站云函数调用失败；旧版基础库不支持该常量时回退到固定环境 ID（P0-3 修复）。
+const CLOUD_ENV = (wx.cloud && wx.cloud.DYNAMIC_CURRENT_ENV) || 'cloudbase-d4ghpbagzd02ea714'
 
 App({
   globalData: {
