@@ -8,6 +8,10 @@
     </view>
     <view class="wish-status {{wish.status === 'open' ? 'open' : 'done'}}">{{wish.statusText}}</view>
     <view class="wish-desc">{{wish.description}}</view>
+    <view class="wish-verified" wx:if="{{wish.verified}}">✅ 平台已核实</view>
+    <view class="wish-matched" wx:if="{{wish.status === 'fulfilled' && wish.matchedItemTitle}}">
+      🎁 已由「{{wish.matchedItemTitle}}」实现
+    </view>
   </view>
 
   <view class="publisher-card">
@@ -19,6 +23,23 @@
   </view>
 
   <view class="tip" wx:if="{{wish.isMine}}">这是你发布的求购，可在"我的求购"中标记已满足</view>
+
+  <view class="tip" wx:if="{{wish.isMine && wish.offersCount > 0}}">已有 {{wish.offersCount}} 位乡亲响应你的心愿</view>
+
+  <!-- 响应列表（第二批：心愿互通） -->
+  <view class="offers-card" wx:if="{{wish.offers && wish.offers.length > 0}}">
+    <view class="offers-title">🙋 响应列表（{{wish.offersCount}}）</view>
+    <view class="offer-item" wx:for="{{wish.offers}}" wx:key="index">
+      <image class="offer-avatar" src="{{item.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
+      <view class="offer-info">
+        <view class="offer-name">{{item.nickName}} <text class="offer-time">{{item.timeStr}}</text></view>
+        <view class="offer-msg">{{item.message}}</view>
+        <view class="offer-item-link" wx:if="{{item.itemId}}" data-id="{{item.itemId}}" bindtap="goOfferItem">
+          📦 查看TA的闲置：{{item.itemTitle}} →
+        </view>
+      </view>
+    </view>
+  </view>
 
   <view class="offer-btn" wx:if="{{!wish.isMine && wish.status === 'open' && isLoggedIn}}" bindtap="openOffer">
     🙋 我有闲置，联系TA
@@ -33,6 +54,14 @@
     <view class="modal-content" catchtap="stopPropagation">
       <view class="modal-title">我有闲置要帮忙</view>
       <view class="modal-subtitle">告诉求购者你手里有什么（如：我有这本教材，9成新）</view>
+      <!-- 选择我的闲置物资（可选，第二批心愿互通） -->
+      <view class="offer-item-picker" wx:if="{{myItems.length > 0}}">
+        <view class="picker-label">附上我的闲置物资（可选）：</view>
+        <picker mode="selector" range="{{myItemTitles}}" bindchange="onPickItem">
+          <view class="picker-value">{{offerItemIndex >= 0 ? myItemTitles[offerItemIndex] : '点击选择闲置物资'}}</view>
+        </picker>
+        <view class="picker-clear" wx:if="{{offerItemIndex >= 0}}" bindtap="clearPickItem">✕ 清除</view>
+      </view>
       <textarea class="modal-textarea" placeholder="写一段话给求购者吧~"
         value="{{offerMessage}}" bindinput="onOfferInput" maxlength="200" />
       <view class="modal-buttons">

@@ -6,7 +6,16 @@ Page({
     isAdmin: false,
     checked: false,
     loading: true,
-    activeTab: 'overview', // overview | items | users | reports
+    activeTab: 'overview', // overview | items | users | reports | wishes | stations | feedbacks
+
+    // 第二批：心愿审核
+    wishes: [],
+
+    // 第二批：代收点管理
+    stations: [],
+    showStationModal: false,
+    stationEditId: '',
+    stationForm: { name: '', contact: '', phone: '', address: '' },
 
     // 数据总览
     stats: null,
@@ -76,7 +85,140 @@ Page({
     else if (tab === 'items') this.loadItems(true)
     else if (tab === 'users') this.loadUsers(true)
     else if (tab === 'reports') this.loadReports(true)
+    else if (tab === 'wishes') this.loadWishes()
+    else if (tab === 'stations') this.loadStations()
     else if (tab === 'feedbacks') this.loadFeedbacks()
+  },
+
+  // ========== 第二批：心愿审核 ==========
+  loadWishes() {
+    util.callApi('adminWishes')
+      .then(res => {
+        const list = (res.list || []).map(w => Object.assign({}, w, {
+          statusText: w.status === 'open' ? '进行中' : w.status === 'fulfilled' ? '已达成' : w.status === 'offline' ? '已下架' : '已结束',
+          createTimeStr: util.formatTime(w.createTime)
+        }))
+        this.setData({ wishes: list, loading: false })
+      })
+      .catch(e => {
+        this.setData({ loading: false })
+        wx.showToast({ title: typeof e === 'string' ? e : '加载失败', icon: 'none' })
+      })
+  },
+
+  // 核实/取消核实标记
+  verifyWish(e) {
+    const id = e.currentTarget.dataset.id
+    const verified = e.currentTarget.dataset.verified === '1'
+    const that = this
+    wx.showModal({
+      title: verified ? '取消核实标记' : '标记已核实',
+      content: verified
+        ? '取消后，该心愿将不再展示"平台已核实"标识。'
+        : '确认该心愿信息真实后标记核实，捐赠者将看到"平台已核实"标识，提升信任。',
+      confirmText: verified ? '取消标记' : '确认核实',
+      success(res) {
+        if (!res.confirm) return
+        util.callApi('adminVerifyWish', { wishId: id, verified: !verified })
+          .then(() => {
+            wx.showToast({ title: '已更新', icon: 'success' })
+            that.loadWishes()
+          })
+          .catch(err => wx.showToast({ title: typeof err === 'string' ? err : '操作失败', icon: 'none' }))
+      }
+    })
+  },
+
+  // 下架心愿
+  offlineWish(e) {
+    const id = e.currentTarget.dataset.id
+    const that = this
+    wx.showModal({
+      title: '下架心愿',
+      content: '确认下架该心愿吗？下架后将不再公开展示（用于处理虚假心愿骗捐）。',
+      confirmText: '确认下架',
+      confirmColor: '#f44336',
+      success(res) {
+        if (!res.confirm) return
+        util.callApi('closeWish', { id })
+          .then(() => {
+            wx.showToast({ title: '心愿已下架', icon: 'success' })
+            that.loadWishes()
+          })
+          .catch(err => wx.showToast({ title: typeof err === 'string' ? err : '操作失败', icon: 'none' }))
+      }
+    })
+  },
+
+  // ========== 第二批：代收点管理 ==========
+  loadStations() {
+    util.callApi('stationList')
+      .then(res => {
+        this.setData({ stations: res.list || [], loading: false })
+      })
+      .catch(() => this.setData({ loading: false }))
+  },
+
+  openStationModal(e) {
+    const id = e && e.currentTarget ? e.currentTarget.dataset.id : ''
+    const st = id ? this.data.stations.find(s => s.id === id) : null
+    this.setData({
+      showStationModal: true,
+      stationEditId: id || '',
+      stationForm: st
+        ? { name: st.name || '', contact: st.contact || '', phone: st.phone || '', address: st.address || '' }
+        : { name: '', contact: '', phone: '', address: '' }
+    })
+  },
+
+  closeStationModal() {
+    this.setData({ showStationModal: false })
+  },
+
+  onStationField(e) {
+    const field = e.currentTarget.dataset.field
+    const stationForm = Object.assign({}, this.data.stationForm)
+    stationForm[field] = e.detail.value
+    this.setData({ stationForm })
+  },
+
+  saveStation() {
+    const f = this.data.stationForm
+    if (!f.name.trim()) {
+      wx.showToast({ title: '请填写代收点名称', icon: 'none' })
+      return
+    }
+    const that = this
+    util.callApi('adminSaveStation', {
+      id: this.data.stationEditId || '',
+      name: f.name,
+      contact: f.contact,
+      phone: f.phone,
+      address: f.address
+    })
+      .then(() => {
+        wx.showToast({ title: '已保存', icon: 'success' })
+        that.setData({ showStationModal: false })
+        that.loadStations()
+      })
+      .catch(err => wx.showToast({ title: typeof err === 'string' ? err : '保存失败', icon: 'none' }))
+  },
+
+  deleteStation(e) {
+    const id = e.currentTarget.dataset.id
+    const that = this
+    wx.showModal({
+      title: '删除代收点',
+      content: '确认删除该代收点吗？',
+      confirmText: '删除',
+      confirmColor: '#f44336',
+      success(res) {
+        if (!res.confirm) return
+        util.callApi('adminDeleteStation', { id })
+          .then(() => that.loadStations())
+          .catch(() => {})
+      }
+    })
   },
 
   // 切换 Tab
@@ -99,9 +241,12 @@ Page({
             { label: '物品总数', value: s.itemCount, icon: '📦' },
             { label: '可领取', value: s.availableCount, icon: '🟢' },
             { label: '已送出', value: s.completedCount, icon: '✅' },
-            { label: '已下架', value: s.offlineCount, icon: '📴' },
+            { label: '心愿总数', value: s.wishCount != null ? s.wishCount : '-', icon: '🙏' },
+            { label: '心愿达成', value: s.wishFulfilledCount != null ? s.wishFulfilledCount : '-', icon: '🎯' },
+            { label: '达成率', value: s.wishFulfilRate != null ? s.wishFulfilRate + '%' : '-', icon: '📈' },
+            { label: '流向公示', value: s.flowCount != null ? s.flowCount : '-', icon: '🌸' },
+            { label: '代收点', value: s.stationCount != null ? s.stationCount : '-', icon: '🏠' },
             { label: '申请记录', value: s.applicationCount, icon: '📋' },
-            { label: '举报总数', value: s.reportCount, icon: '🚨' },
             { label: '待处理举报', value: s.pendingReportCount, icon: '⏳' },
             { label: '已封禁用户', value: s.bannedCount, icon: '🔒' }
           ]
@@ -381,12 +526,16 @@ Page({
 
   normalizeReport(r) {
     const isUserReport = r.targetType === 'user'
+    const isWishReport = r.targetType === 'wish'
     return Object.assign({}, r, {
       id: r._id,
       createTimeStr: util.formatTime(r.createTime),
       isUserReport,
-      // 用户举报展示被举报人昵称，物品举报展示物品标题
-      title: isUserReport ? ('用户：' + (r.targetNickName || '匿名')) : r.itemTitle,
+      isWishReport,
+      // 用户举报展示被举报人昵称，心愿举报展示心愿标题，物品举报展示物品标题
+      title: isUserReport ? ('用户：' + (r.targetNickName || '匿名'))
+        : isWishReport ? ('心愿：' + (r.wishTitle || '未知心愿'))
+        : r.itemTitle,
       statusText: r.status === 'handled'
         ? (r.result === 'offline' ? '已下架' : '已忽略')
         : '待处理',

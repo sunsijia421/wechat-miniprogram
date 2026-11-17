@@ -26,6 +26,8 @@
         💬 反馈
         <view class="tab-badge" wx:if="{{feedbackUnread > 0}}">{{feedbackUnread}}</view>
       </view>
+      <view class="admin-tab {{activeTab === 'wishes' ? 'active' : ''}}" data-tab="wishes" bindtap="switchTab">🙏 心愿</view>
+      <view class="admin-tab {{activeTab === 'stations' ? 'active' : ''}}" data-tab="stations" bindtap="switchTab">🏠 代收点</view>
     </view>
 
     <!-- ===== 数据总览 ===== -->
@@ -160,6 +162,10 @@
               <view class="report-action danger" data-action="ban" data-targetopenid="{{r.targetOpenid}}" data-id="{{r.id}}" bindtap="handleReport">封禁用户</view>
               <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
             </block>
+            <block wx:elif="{{r.isWishReport}}">
+              <view class="report-action danger" data-action="offline" data-id="{{r.id}}" bindtap="handleReport">下架心愿</view>
+              <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
+            </block>
             <block wx:else>
               <view class="report-action danger" data-action="offline" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">下架物品</view>
               <view class="report-action normal" data-action="ignore" data-itemid="{{r.itemId}}" data-id="{{r.id}}" bindtap="handleReport">忽略</view>
@@ -196,7 +202,75 @@
       </view>
     </view>
 
+    <!-- ===== 第二批：心愿审核 ===== -->
+    <view wx:if="{{activeTab === 'wishes'}}">
+      <view class="empty-state" wx:if="{{!loading && wishes.length === 0}}">
+        <view class="icon">🙏</view>
+        <view class="text">暂无心愿</view>
+      </view>
+      <view class="wish-admin-list" wx:if="{{wishes.length > 0}}">
+        <view class="wish-admin-card card" wx:for="{{wishes}}" wx:key="id">
+          <view class="wa-head flex-between">
+            <view class="wa-title text-ellipsis">{{item.title}}</view>
+            <view class="status-tag {{item.status === 'open' ? 'status-pending' : 'status-handled'}}">{{item.statusText}}</view>
+          </view>
+          <view class="wa-meta">{{item.nickName || '乡亲'}} · {{item.createTimeStr}} · {{item.offersCount || 0}} 人响应
+            <text wx:if="{{item.verified}}" class="wa-verified">✅ 已核实</text>
+          </view>
+          <view class="wa-desc text-ellipsis">{{item.description}}</view>
+          <view class="wa-actions" wx:if="{{item.status === 'open'}}">
+            <view class="mini-btn {{item.verified ? 'warn' : 'green'}}" data-id="{{item.id}}" data-verified="{{item.verified ? '1' : ''}}" bindtap="verifyWish">
+              {{item.verified ? '取消核实' : '标记核实'}}
+            </view>
+            <view class="mini-btn danger" data-id="{{item.id}}" bindtap="offlineWish">下架</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ===== 第二批：代收点管理 ===== -->
+    <view wx:if="{{activeTab === 'stations'}}">
+      <view class="station-add-btn" bindtap="openStationModal">＋ 新增代收点</view>
+      <view class="empty-state" wx:if="{{!loading && stations.length === 0}}">
+        <view class="icon">🏠</view>
+        <view class="text">暂无代收点，点击上方按钮添加</view>
+      </view>
+      <view class="station-list" wx:if="{{stations.length > 0}}">
+        <view class="station-card card" wx:for="{{stations}}" wx:key="id">
+          <view class="wa-head flex-between">
+            <view class="wa-title text-ellipsis">🏠 {{item.name}}</view>
+          </view>
+          <view class="wa-meta" wx:if="{{item.address}}">📍 {{item.address}}</view>
+          <view class="wa-meta" wx:if="{{item.contact}}">联系人：{{item.contact}} {{item.phone}}</view>
+          <view class="wa-actions">
+            <view class="mini-btn green" data-id="{{item.id}}" bindtap="openStationModal">编辑</view>
+            <view class="mini-btn danger" data-id="{{item.id}}" bindtap="deleteStation">删除</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <view class="loading" wx:if="{{loading}}">加载中...</view>
   </block>
+
+  <!-- 代收点编辑弹窗（第二批） -->
+  <view class="modal-overlay" wx:if="{{showStationModal}}" catchtap="closeStationModal">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">{{stationEditId ? '编辑代收点' : '新增代收点'}}</view>
+      <view class="modal-subtitle">代收点是乡村物资流转的集散节点，发布物品时可选定</view>
+      <input class="modal-input" placeholder="代收点名称（如：张庄村村委会）"
+        value="{{stationForm.name}}" data-field="name" bindinput="onStationField" />
+      <input class="modal-input" placeholder="联系人（选填）"
+        value="{{stationForm.contact}}" data-field="contact" bindinput="onStationField" />
+      <input class="modal-input" placeholder="联系电话（选填）"
+        value="{{stationForm.phone}}" data-field="phone" bindinput="onStationField" />
+      <input class="modal-input" placeholder="详细地址（选填）"
+        value="{{stationForm.address}}" data-field="address" bindinput="onStationField" />
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeStationModal">取消</button>
+        <button class="modal-btn-confirm" bindtap="saveStation">保存</button>
+      </view>
+    </view>
+  </view>
 
 </view>

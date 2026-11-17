@@ -19,6 +19,11 @@ Page({
     showAdminActivate: false,
     adminSecret: '',
 
+    // 第二批：到货提醒（关键词订阅）
+    showKeywordSubs: false,
+    keywordSubs: [],
+    newKeyword: '',
+
     // P1：积分等级
     level: { name: '初心者', icon: '🌱', progress: 0, isMax: false, nextMin: 20 },
     levelNextName: '公益使者'
@@ -115,9 +120,62 @@ Page({
     wx.navigateTo({ url: '/pages/certificates/certificates' })
   },
 
-  // P7：跳转积分商城（徽章兑换/抽奖）
+  // P7：跳转积分商城（爱心申领/徽章兑换）
   goShop() {
     wx.navigateTo({ url: '/pages/shop/shop' })
+  },
+
+  // 第二批：跳转物资流向公示
+  goFlow() {
+    wx.navigateTo({ url: '/pages/flow/flow' })
+  },
+
+  // 第二批：到货提醒（关键词订阅管理）
+  openKeywordSubs() {
+    this.setData({ showKeywordSubs: true, newKeyword: '' })
+    this.loadKeywordSubs()
+  },
+
+  closeKeywordSubs() {
+    this.setData({ showKeywordSubs: false })
+  },
+
+  loadKeywordSubs() {
+    util.callApi('myKeywordSubs')
+      .then(res => {
+        this.setData({ keywordSubs: (res.list || []).map(s => s.keyword || s) })
+      })
+      .catch(() => {
+        this.setData({ keywordSubs: [] })
+      })
+  },
+
+  onNewKeywordInput(e) {
+    this.setData({ newKeyword: e.detail.value })
+  },
+
+  addKeywordSub() {
+    const kw = (this.data.newKeyword || '').trim()
+    if (!kw) {
+      wx.showToast({ title: '请输入物资关键词', icon: 'none' })
+      return
+    }
+    util.callApi('subscribeKeyword', { keyword: kw })
+      .then(() => {
+        wx.showToast({ title: '订阅成功', icon: 'success' })
+        this.setData({ newKeyword: '' })
+        this.loadKeywordSubs()
+      })
+      .catch(e => {
+        wx.showToast({ title: typeof e === 'string' ? e : '订阅失败', icon: 'none' })
+      })
+  },
+
+  removeKeywordSub(e) {
+    const kw = e.currentTarget.dataset.kw
+    util.callApi('unsubscribeKeyword', { keyword: kw })
+      .then(() => this.loadKeywordSubs())
+      .catch(() => {})
   },
 
   // 跳转"我的交易"独立列表页（published/applied/favorites/reported）

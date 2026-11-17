@@ -257,3 +257,57 @@
 .modal-btn-confirm::after {
   border: none;
 }
+
+/* ===== 第二批：爱心申领区 ===== */
+.claim-desc {
+  font-size: 24rpx;
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+}
+.claim-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+}
+.claim-img {
+  width: 110rpx;
+  height: 110rpx;
+  border-radius: 10rpx;
+  margin-right: 18rpx;
+  flex-shrink: 0;
+  background: #eee;
+}
+.claim-info { flex: 1; min-width: 0; }
+.claim-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.claim-meta { font-size: 22rpx; color: #999; margin-top: 4rpx; }
+.claim-cost {
+  font-size: 26rpx;
+  color: #e65100;
+  font-weight: bold;
+  margin-top: 8rpx;
+}
+.claim-btn {
+  font-size: 24rpx;
+  color: #fff;
+  background: #ff9800;
+  border-radius: 24rpx;
+  padding: 10rpx 24rpx;
+  flex-shrink: 0;
+}
+.claim-empty {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  padding: 40rpx 0;
+}

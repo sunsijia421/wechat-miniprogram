@@ -17,6 +17,13 @@ Page({
     handoverMethod: 'pickup',
     handoverIndex: 0,
 
+    // 第二批：积分申领专区 + 代收点
+    pointClaim: false,
+    pointCost: '10',
+    stations: [],
+    stationNames: [],
+    stationIndex: -1,
+
     categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '🍳 日常用品', '📦 其他'],
     categoryValues: ['books', 'clothes', 'electronics', 'daily', 'other'],
 
@@ -61,8 +68,13 @@ Page({
           locationName: item.locationName || '',
           handoverMethod: item.handoverMethod || 'pickup',
           handoverIndex: handoverIndex,
+          pointClaim: !!item.pointClaim,
+          pointCost: String(item.pointCost || 10),
+          stationId: item.stationId || '',
+          stationName: item.stationName || '',
           loading: false
         })
+        if (item.handoverMethod === 'station') this.loadStations()
         this.setImages(item.images || [])
       })
       .catch(e => {
@@ -119,6 +131,40 @@ Page({
       handoverIndex: index,
       handoverMethod: this.data.handoverValues[index]
     })
+    if (this.data.handoverValues[index] === 'station') this.loadStations()
+  },
+
+  // 加载村镇代收点（第二批）
+  loadStations() {
+    if (this.data.stations.length) return
+    util.callApi('stationList')
+      .then(res => {
+        const stations = res.list || []
+        const curIdx = stations.findIndex(s => s.name === this.data.stationName)
+        this.setData({
+          stations,
+          stationNames: stations.map(s => s.name + (s.address ? '（' + s.address + '）' : '')),
+          stationIndex: curIdx >= 0 ? curIdx : this.data.stationIndex
+        })
+      })
+      .catch(() => {})
+  },
+
+  onStationChange(e) {
+    const index = Number(e.detail.value)
+    this.setData({
+      stationIndex: index,
+      stationId: (this.data.stations[index] && this.data.stations[index]._id) || '',
+      stationName: (this.data.stations[index] && this.data.stations[index].name) || ''
+    })
+  },
+
+  onPointClaimChange(e) {
+    this.setData({ pointClaim: e.detail.value })
+  },
+
+  onPointCostInput(e) {
+    this.setData({ pointCost: e.detail.value })
   },
 
   // 选择新图片
@@ -245,7 +291,11 @@ Page({
           allowBarter: this.data.allowBarter,
           location: this.data.location,
           locationName: this.data.locationName || '',
-          handoverMethod: this.data.handoverMethod
+          handoverMethod: this.data.handoverMethod,
+          stationId: this.data.stationId || '',
+          stationName: this.data.stationName || '',
+          pointClaim: this.data.pointClaim,
+          pointCost: this.data.pointClaim ? parseInt(this.data.pointCost, 10) || 10 : 0
         })
       })
       .then(() => {

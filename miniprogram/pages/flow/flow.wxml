@@ -1,0 +1,34 @@
+<!-- 流向公示（第二批） -->
+<view class="container">
+
+  <view class="flow-banner">
+    <view class="flow-banner-title">🌸 物资流向公示</view>
+    <view class="flow-banner-desc">每一份爱心都有迹可循——捐赠人昵称与受助人均脱敏展示，保护双方隐私</view>
+  </view>
+
+  <view class="empty" wx:if="{{!loading && list.length === 0}}">
+    <view class="empty-icon">🌱</view>
+    <view class="empty-text">暂无流转记录，第一份温暖正在路上</view>
+  </view>
+
+  <view class="flow-list">
+    <view class="flow-card" wx:for="{{list}}" wx:key="id" data-id="{{item.itemId}}" bindtap="goItem">
+      <image class="flow-img" src="{{item.image || '/images/default-item.png'}}" mode="aspectFill" />
+      <view class="flow-info">
+        <view class="flow-title">
+          {{item.itemTitle}}
+          <text class="flow-wish" wx:if="{{item.wishTitle}}">🎯 实现心愿</text>
+        </view>
+        <view class="flow-meta">{{item.categoryName}} · {{item.handoverName}}</view>
+        <view class="flow-route">
+          <text class="flow-donor">{{item.donorNick}}</text>
+          <text class="flow-arrow">→</text>
+          <text class="flow-receiver">{{item.receiverNick}}</text>
+        </view>
+        <view class="flow-thanks" wx:if="{{item.thanks}}">💬 "{{item.thanks}}"</view>
+        <view class="flow-time">{{item.timeStr}}{{item.locationName ? ' · ' + item.locationName : ''}}</view>
+      </view>
+    </view>
+  </view>
+
+</view>

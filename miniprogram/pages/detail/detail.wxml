@@ -57,7 +57,11 @@
       </view>
       <view class="info-row">
         <text class="info-label">交接方式</text>
-        <text class="info-value">{{item.handoverName}}</text>
+        <text class="info-value">{{item.handoverName}}{{item.stationName ? '（' + item.stationName + '）' : ''}}</text>
+      </view>
+      <view class="info-row" wx:if="{{item.pointClaim}}">
+        <text class="info-label">积分申领</text>
+        <text class="info-value point-claim">⭐ 积分申领专区 · 需 {{item.pointCost}} 公益积分</text>
       </view>
       <view class="info-row">
         <text class="info-label">发布时间</text>
@@ -108,10 +112,17 @@
             </view>
           </view>
           <view class="app-message">"{{item.message}}"</view>
+          <!-- 第二批：物流登记信息 -->
+          <view class="app-delivery" wx:if="{{item.deliveryStr}}">🚚 {{item.deliveryStr}}</view>
           <!-- 发布者可见的确认按钮（P7：进入待确认状态） -->
           <view wx:if="{{isOwner && item.status === 'pending' && !isCompleted && !isWaitingConfirm}}"
             class="approve-btn" data-id="{{item.id}}" bindtap="approveApplication">
             确认送给TA
+          </view>
+          <!-- 第二批：已送出待确认 → 登记物流（运单号/捎带备注） -->
+          <view wx:if="{{isOwner && item.status === 'approved' && !item.delivery}}"
+            class="approve-btn delivery-btn" data-id="{{item.id}}" bindtap="openDelivery">
+            🚚 登记物流信息
           </view>
         </view>
       </view>

@@ -164,3 +164,87 @@
   border-radius: 44rpx;
   line-height: 2.4;
 }
+
+/* ===== 第二批：心愿互通 ===== */
+.wish-verified {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #2e7d32;
+}
+.wish-matched {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #e65100;
+  background: #fff3e0;
+  border-radius: 8rpx;
+  padding: 12rpx 16rpx;
+}
+.offers-card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-top: 20rpx;
+}
+.offers-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+.offer-item {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.offer-item:last-child { border-bottom: none; }
+.offer-avatar {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  margin-right: 16rpx;
+  flex-shrink: 0;
+}
+.offer-info { flex: 1; }
+.offer-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+.offer-time {
+  font-size: 22rpx;
+  color: #999;
+  font-weight: normal;
+  margin-left: 12rpx;
+}
+.offer-msg {
+  font-size: 26rpx;
+  color: #666;
+  margin-top: 6rpx;
+  line-height: 1.5;
+}
+.offer-item-link {
+  font-size: 24rpx;
+  color: #4caf50;
+  margin-top: 8rpx;
+}
+.offer-item-picker {
+  margin-bottom: 16rpx;
+}
+.picker-label {
+  font-size: 24rpx;
+  color: #888;
+  margin-bottom: 8rpx;
+}
+.picker-value {
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 14rpx 16rpx;
+  font-size: 26rpx;
+  color: #333;
+  background: #fafafa;
+}
+.picker-clear {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 6rpx;
+}

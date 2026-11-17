@@ -58,6 +58,31 @@
         </view>
       </picker>
       <view class="form-hint">跨村流转建议选择村镇代收点或邮寄到付</view>
+      <!-- 代收点选择（选"村镇代收点"时显示） -->
+      <view class="form-sub" wx:if="{{handoverMethod === 'station'}}">
+        <view class="form-label">选择代收点</view>
+        <picker wx:if="{{stationNames.length > 0}}" mode="selector" range="{{stationNames}}" bindchange="onStationChange">
+          <view class="picker-value">
+            {{stationIndex >= 0 ? stationNames[stationIndex] : '请选择代收点'}}
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+        <view class="form-hint" wx:else>暂无代收点数据，请联系管理员在后台添加</view>
+      </view>
+    </view>
+
+    <!-- 积分申领专区（第二批） -->
+    <view class="form-group form-switch-row">
+      <view class="form-label">⭐ 放入积分申领专区</view>
+      <switch checked="{{pointClaim}}" bindchange="onPointClaimChange" color="#e65100" />
+    </view>
+    <view class="form-hint" wx:if="{{pointClaim}}">
+      需要帮助的乡亲可用公益积分申领此物资，多人申请时高积分者优先
+    </view>
+    <view class="form-group" wx:if="{{pointClaim}}">
+      <view class="form-label">申领所需积分</view>
+      <input class="form-input" type="number" placeholder="默认 10 分"
+        value="{{pointCost}}" bindinput="onPointCostInput" maxlength="4" />
     </view>
 
     <!-- 上传图片 -->

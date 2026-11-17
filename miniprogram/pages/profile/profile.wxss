@@ -322,3 +322,32 @@ button.entry-row::after {
   text-align: center;
   padding: 80rpx 30rpx;
 }
+
+/* ===== 第二批：到货提醒 ===== */
+.kw-add-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.kw-input { flex: 1; }
+.kw-add-btn {
+  margin-left: 12rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+}
+.kw-list { max-height: 360rpx; overflow-y: auto; }
+.kw-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.kw-text { font-size: 28rpx; color: #333; }
+.kw-del { font-size: 24rpx; color: #e53935; }
+.kw-empty {
+  text-align: center;
+  color: #999;
+  font-size: 26rpx;
+  padding: 24rpx 0;
+}

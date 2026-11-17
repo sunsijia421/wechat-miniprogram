@@ -514,3 +514,21 @@
 .star-on {
   color: #FAAD14;
 }
+
+/* ===== 第二批 ===== */
+.point-claim {
+  color: #e65100;
+  font-weight: bold;
+}
+.app-delivery {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #1565c0;
+  background: #e3f2fd;
+  border-radius: 8rpx;
+  padding: 10rpx 14rpx;
+}
+.delivery-btn {
+  margin-top: 10rpx;
+  background: #1565c0;
+}

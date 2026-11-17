@@ -164,7 +164,8 @@ Page({
         const list = res.list.map(a => Object.assign({}, a, {
           applicantName: a.applicantNickName || '匿名',
           applicantAvatar: a.applicantAvatarUrl || '',
-          createTimeStr: util.formatTime(a.createTime)
+          createTimeStr: util.formatTime(a.createTime),
+          deliveryStr: a.delivery ? ('已寄出 · ' + (a.delivery.trackingNo || a.delivery.note || a.delivery.method || '待交接')) : ''
         }))
         this.setData({ applications: list })
       })
@@ -300,7 +301,7 @@ Page({
       })
   },
 
-  // ========== P7：申请者确认收到（结算积分/证书/互评） ==========
+  // ========== P7：申请者确认收到（结算积分/证书/互评；第二批：可附签收照片与感谢语） ==========
   confirmReceive(e) {
     const applicationId = e.currentTarget.dataset.id
     if (!applicationId) {
@@ -310,19 +311,92 @@ Page({
     const that = this
     wx.showModal({
       title: '确认收到',
-      content: '确认已收到该物品吗？确认后本次赠送完成，双方获得积分，发布者生成公益证书。',
-      confirmText: '确认收到',
+      content: '确认已收到该物品吗？可填写一句感谢语让捐赠者放心（额外+2公益积分）。',
+      editable: true,
+      placeholderText: '写一句感谢的话（可选）',
+      confirmText: '下一步',
       cancelText: '暂不确认',
       success: function (res) {
         if (!res.confirm) return
-        util.callApi('confirmReceive', {
+        that.chooseReceiptPhoto(applicationId, (res.content || '').trim())
+      }
+    })
+  },
+
+  // 可选上传签收照片（用户取消则跳过，不影响确认流程）
+  chooseReceiptPhoto(applicationId, thanks) {
+    const that = this
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sizeType: ['compressed'],
+      success(r) {
+        const filePath = r.tempFiles[0].tempFilePath
+        wx.showLoading({ title: '上传签收照片...' })
+        wx.cloud.uploadFile({
+          cloudPath: 'receipts/' + Date.now() + '-' + Math.floor(Math.random() * 10000) + '.jpg',
+          filePath,
+          success(up) {
+            wx.hideLoading()
+            that.doConfirmReceive(applicationId, up.fileID, thanks)
+          },
+          fail() {
+            wx.hideLoading()
+            that.doConfirmReceive(applicationId, '', thanks)
+          }
+        })
+      },
+      fail() {
+        that.doConfirmReceive(applicationId, '', thanks)
+      }
+    })
+  },
+
+  doConfirmReceive(applicationId, receiptPhoto, thanks) {
+    const that = this
+    util.callApi('confirmReceive', {
+      itemId: that.data.itemId,
+      applicationId: applicationId,
+      receiptPhoto: receiptPhoto || '',
+      thanks: thanks || ''
+    })
+      .then(res => {
+        app.updateUserStats(5, 0)
+        that.loadItem()
+        if (res && res.wishFulfilled) {
+          wx.showToast({ title: '心愿达成！额外+5分', icon: 'success' })
+        } else {
+          wx.showToast({ title: '已确认，公益+5分', icon: 'success' })
+        }
+      })
+      .catch(err => {
+        wx.showToast({ title: typeof err === 'string' ? err : '操作失败', icon: 'none' })
+      })
+  },
+
+  // ========== 第二批：赠送方登记物流（运单号/捎带备注，纯登记制） ==========
+  openDelivery(e) {
+    const applicationId = e.currentTarget.dataset.id
+    if (!applicationId) return
+    const that = this
+    wx.showModal({
+      title: '登记物流信息',
+      content: '填写运单号或捎带备注（如：张庄村代收点已到货），申请方会收到通知。',
+      editable: true,
+      placeholderText: '运单号 / 捎带备注',
+      confirmText: '登记',
+      cancelText: '取消',
+      success(res) {
+        if (!res.confirm) return
+        util.callApi('setDelivery', {
           itemId: that.data.itemId,
-          applicationId: applicationId
+          applicationId: applicationId,
+          trackingNo: (res.content || '').trim(),
+          note: ''
         })
           .then(() => {
-            app.updateUserStats(5, 0)
-            that.loadItem()
-            wx.showToast({ title: '已确认，公益+5分', icon: 'success' })
+            that.loadApplications()
+            wx.showToast({ title: '已登记并通知对方', icon: 'success' })
           })
           .catch(err => {
             wx.showToast({ title: typeof err === 'string' ? err : '操作失败', icon: 'none' })

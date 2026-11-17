@@ -20,7 +20,8 @@
     "pages/agreement/agreement",
     "pages/wish-list/wish-list",
     "pages/wish-publish/wish-publish",
-    "pages/wish-detail/wish-detail"
+    "pages/wish-detail/wish-detail",
+    "pages/flow/flow"
   ],
   "window": {
     "navigationBarBackgroundColor": "#4CAF50",

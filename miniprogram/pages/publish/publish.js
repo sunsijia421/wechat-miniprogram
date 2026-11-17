@@ -14,6 +14,15 @@ Page({
     handoverMethod: 'pickup',
     handoverIndex: 0,
 
+    // 第二批：积分申领专区
+    pointClaim: false,
+    pointCost: '10',
+
+    // 第二批：村镇代收点
+    stations: [],
+    stationNames: [],
+    stationIndex: -1,
+
     categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '🍳 日常用品', '📦 其他'],
     categoryValues: ['books', 'clothes', 'electronics', 'daily', 'other'],
 
@@ -70,6 +79,40 @@ Page({
       handoverIndex: index,
       handoverMethod: this.data.handoverValues[index]
     })
+    if (this.data.handoverValues[index] === 'station') {
+      this.loadStations()
+    }
+  },
+
+  // 加载村镇代收点（第二批）
+  loadStations() {
+    if (this.data.stations.length) return
+    util.callApi('stationList')
+      .then(res => {
+        this.setData({
+          stations: res.list || [],
+          stationNames: (res.list || []).map(s => s.name + (s.address ? '（' + s.address + '）' : ''))
+        })
+      })
+      .catch(() => {})
+  },
+
+  onStationChange(e) {
+    const index = Number(e.detail.value)
+    this.setData({
+      stationIndex: index,
+      stationId: (this.data.stations[index] && this.data.stations[index]._id) || '',
+      stationName: (this.data.stations[index] && this.data.stations[index].name) || ''
+    })
+  },
+
+  // 切换积分申领专区（第二批）
+  onPointClaimChange(e) {
+    this.setData({ pointClaim: e.detail.value })
+  },
+
+  onPointCostInput(e) {
+    this.setData({ pointCost: e.detail.value })
   },
 
   // 选择图片
@@ -219,6 +262,10 @@ Page({
           location: this.data.location,
           locationName: this.data.locationName || '',
           handoverMethod: this.data.handoverMethod,
+          stationId: this.data.stationId || '',
+          stationName: this.data.stationName || '',
+          pointClaim: this.data.pointClaim,
+          pointCost: this.data.pointClaim ? parseInt(this.data.pointCost, 10) || 10 : 0,
           publisherNickName: (userInfo && userInfo.nickName) || '公益参与者',
           publisherAvatarUrl: (userInfo && userInfo.avatarUrl) || ''
         })
@@ -275,6 +322,11 @@ Page({
       locationName: '',
       handoverMethod: 'pickup',
       handoverIndex: 0,
+      pointClaim: false,
+      pointCost: '10',
+      stationIndex: -1,
+      stationId: '',
+      stationName: '',
       submitting: false
     })
   }

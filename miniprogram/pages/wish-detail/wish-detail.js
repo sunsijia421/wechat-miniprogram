@@ -8,7 +8,11 @@ Page({
     showOfferModal: false,
     offerMessage: '',
     submitting: false,
-    isLoggedIn: false
+    isLoggedIn: false,
+    // 第二批：心愿互通——响应可挂靠自己的闲置物资
+    myItems: [],
+    myItemTitles: [],
+    offerItemIndex: -1
   },
 
   onLoad(options) {
@@ -48,7 +52,35 @@ Page({
       wx.showToast({ title: '该求购已结束', icon: 'none' })
       return
     }
-    this.setData({ showOfferModal: true, offerMessage: '' })
+    this.setData({ showOfferModal: true, offerMessage: '', offerItemIndex: -1 })
+    this.loadMyItems()
+  },
+
+  // 加载我的可领取闲置（响应心愿时可挂靠）
+  loadMyItems() {
+    util.callApi('myPublish', { status: 'available' })
+      .then(res => {
+        const items = (res.list || []).filter(it => it.status === 'available')
+        this.setData({
+          myItems: items,
+          myItemTitles: items.map(it => it.title)
+        })
+      })
+      .catch(() => {})
+  },
+
+  onPickItem(e) {
+    this.setData({ offerItemIndex: Number(e.detail.value) })
+  },
+
+  clearPickItem() {
+    this.setData({ offerItemIndex: -1 })
+  },
+
+  // 查看响应者挂靠的闲置物资
+  goOfferItem(e) {
+    const id = e.currentTarget.dataset.id
+    if (id) wx.navigateTo({ url: '/pages/detail/detail?id=' + id })
   },
 
   closeOffer() {
@@ -85,7 +117,13 @@ Page({
   },
 
   doSubmitOffer(msg) {
-    util.callApi('offerWish', { wishId: this.data.id, message: msg })
+    const pick = this.data.offerItemIndex
+    const item = (pick >= 0 && this.data.myItems[pick]) ? this.data.myItems[pick] : null
+    util.callApi('offerWish', {
+      wishId: this.data.id,
+      message: msg,
+      itemId: item ? item._id : ''
+    })
       .then(res => {
         this.setData({ showOfferModal: false, submitting: false })
         wx.showToast({ title: '已联系求购者', icon: 'success' })

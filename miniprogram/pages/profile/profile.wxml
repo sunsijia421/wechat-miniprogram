@@ -103,6 +103,16 @@
           <view class="entry-label">我的公益证书</view>
           <view class="entry-arrow">›</view>
         </view>
+        <view class="entry-row" bindtap="goFlow">
+          <view class="entry-icon">🌸</view>
+          <view class="entry-label">物资流向公示</view>
+          <view class="entry-arrow">›</view>
+        </view>
+        <view class="entry-row" bindtap="openKeywordSubs">
+          <view class="entry-icon">🔔</view>
+          <view class="entry-label">到货提醒</view>
+          <view class="entry-arrow">›</view>
+        </view>
         <view class="entry-row" wx:if="{{isAdmin}}" bindtap="goAdmin">
           <view class="entry-icon">🛡️</view>
           <view class="entry-label">举报管理</view>
@@ -148,6 +158,27 @@
       <view class="modal-buttons">
         <button class="modal-btn-cancel" bindtap="closeAdminActivate">取消</button>
         <button class="modal-btn-confirm" bindtap="submitAdminActivate">激活</button>
+      </view>
+    </view>
+  <!-- 到货提醒：关键词订阅管理（第二批） -->
+  <view class="modal-overlay" wx:if="{{showKeywordSubs}}" catchtap="closeKeywordSubs">
+    <view class="modal-content" catchtap="stopPropagation">
+      <view class="modal-title">🔔 到货提醒</view>
+      <view class="modal-subtitle">订阅物资关键词，有人捐出匹配物资时第一时间通知你</view>
+      <view class="kw-add-row">
+        <input class="modal-input kw-input" type="text" placeholder="如：棉衣、童书、轮椅"
+          value="{{newKeyword}}" bindinput="onNewKeywordInput" />
+        <button class="modal-btn-confirm kw-add-btn" bindtap="addKeywordSub">添加</button>
+      </view>
+      <view class="kw-list">
+        <view class="kw-item" wx:for="{{keywordSubs}}" wx:key="*this">
+          <text class="kw-text">{{item}}</text>
+          <text class="kw-del" data-kw="{{item}}" bindtap="removeKeywordSub">删除</text>
+        </view>
+        <view class="kw-empty" wx:if="{{keywordSubs.length === 0}}">暂无订阅，添加一个关键词吧</view>
+      </view>
+      <view class="modal-buttons">
+        <button class="modal-btn-cancel" bindtap="closeKeywordSubs">关闭</button>
       </view>
     </view>
   </view>

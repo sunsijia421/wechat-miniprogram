@@ -1,24 +1,22 @@
 const app = getApp()
 const util = require('../../utils/util')
 
-// P7：积分商城——徽章兑换 + 幸运抽奖 + 抽奖记录
+// 积分商城（第二批改造）：爱心申领区（受助方凭公益积分申领物资）+ 荣誉徽章
+// 幸运抽奖已移除——娱乐化功能与"积分实质化"定位相悖
 Page({
   data: {
     points: 0,
     badges: [],
     myBadgeIds: [],
-    // 抽奖
-    showLotteryModal: false,
-    lotteryResult: null,
-    lotteryRecords: [],
-    drawing: false
+    claimItems: [],
+    loadingClaim: true
   },
 
   onShow() {
     const userInfo = app.getUserInfo() || {}
     this.setData({ points: userInfo.points || 0 })
     this.loadBadges()
-    this.loadLotteries()
+    this.loadClaimItems()
   },
 
   // 徽章目录 + 已拥有
@@ -35,16 +33,46 @@ Page({
       .catch(() => {})
   },
 
-  // 抽奖记录
-  loadLotteries() {
-    util.callApi('myLotteries', {})
+  // 爱心申领区：积分申领物资列表
+  loadClaimItems() {
+    util.callApi('list', { pointClaimOnly: true, page: 1, pageSize: 20 })
       .then(res => {
-        this.setData({ lotteryRecords: res.list || [] })
+        const items = (res.list || []).map(it => Object.assign({}, it, {
+          categoryName: util.getCategoryName(it.category)
+        }))
+        this.setData({ claimItems: items, loadingClaim: false })
+        this.resolveImages(items)
       })
-      .catch(() => {})
+      .catch(() => {
+        this.setData({ loadingClaim: false })
+      })
   },
 
-  // 兑换徽章
+  // cloud:// fileID 批量转临时 URL
+  resolveImages(items) {
+    const fileIDs = items.map(it => it.image).filter(u => u && u.indexOf('cloud://') === 0)
+    if (!fileIDs.length) return
+    wx.cloud.getTempFileURL({
+      fileList: fileIDs,
+      success: res => {
+        const urlMap = {}
+        ;(res.fileList || []).forEach(f => { urlMap[f.fileID] = f.tempFileURL || f.fileID })
+        const claimItems = this.data.claimItems.map(it => Object.assign({}, it, {
+          image: urlMap[it.image] || it.image
+        }))
+        this.setData({ claimItems })
+      },
+      fail: () => {}
+    })
+  },
+
+  // 查看申领物资详情（申领 = 正常申请流程，积分在确认收到时结算扣除）
+  goClaim(e) {
+    const id = e.currentTarget.dataset.id
+    if (id) wx.navigateTo({ url: '/pages/detail/detail?id=' + id })
+  },
+
+  // 兑换荣誉徽章
   exchangeBadge(e) {
     const id = e.currentTarget.dataset.id
     const badge = (this.data.badges || []).find(b => b.id === id)
@@ -77,51 +105,6 @@ Page({
           })
       }
     })
-  },
-
-  // 打开抽奖弹窗
-  openLottery() {
-    if (this.data.points < 10) {
-      wx.showToast({ title: '积分不足10分，无法抽奖', icon: 'none' })
-      return
-    }
-    this.setData({ showLotteryModal: true, lotteryResult: null })
-  },
-
-  closeLottery() {
-    if (this.data.drawing) return
-    this.setData({ showLotteryModal: false })
-  },
-
-  // 执行抽奖（10分/次）
-  doLottery() {
-    if (this.data.drawing) return
-    if (this.data.points < 10) {
-      wx.showToast({ title: '积分不足10分', icon: 'none' })
-      return
-    }
-    this.setData({ drawing: true })
-    util.callApi('lottery', {})
-      .then(res => {
-        const r = res.result || {}
-        const net = res.netPoints != null ? res.netPoints : -10
-        app.updateUserStats(net, 0)
-        const points = (this.data.points || 0) + net
-        this.setData({
-          points,
-          lotteryResult: {
-            text: r.text || '谢谢参与',
-            points: r.points || 0,
-            title: r.title || ''
-          },
-          drawing: false
-        })
-        this.loadLotteries()
-      })
-      .catch(err => {
-        this.setData({ drawing: false })
-        wx.showToast({ title: typeof err === 'string' ? err : '抽奖失败', icon: 'none' })
-      })
   },
 
   // 查看积分获取方式说明
