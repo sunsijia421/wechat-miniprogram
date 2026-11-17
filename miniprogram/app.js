@@ -35,7 +35,7 @@ App({
     const isAdmin = wx.getStorageSync('isAdmin')
     if (isAdmin) this.globalData.isAdmin = true
 
-    console.log('佳禾换物小站小程序启动')
+    console.log('春泥小站小程序启动')
   },
 
   // 检查是否已同意协议

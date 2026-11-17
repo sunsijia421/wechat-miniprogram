@@ -111,7 +111,7 @@ Page({
       // 落款
       ctx.fillStyle = '#555'
       ctx.font = '13px sans-serif'
-      ctx.fillText('佳禾换物小站', w / 2, h - 46)
+      ctx.fillText('春泥小站', w / 2, h - 46)
 
       // 印章
       ctx.save()
@@ -122,7 +122,7 @@ Page({
       ctx.stroke()
       ctx.fillStyle = 'rgba(183,28,28,0.75)'
       ctx.font = 'bold 12px sans-serif'
-      ctx.fillText('佳禾公益', w / 2, h - 48)
+      ctx.fillText('春泥公益', w / 2, h - 48)
       ctx.fillText('· 诚信 ·', w / 2, h - 28)
       ctx.restore()
     })
