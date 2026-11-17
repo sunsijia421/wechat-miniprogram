@@ -160,6 +160,7 @@
         <button class="modal-btn-confirm" bindtap="submitAdminActivate">激活</button>
       </view>
     </view>
+  </view>
   <!-- 到货提醒：关键词订阅管理（第二批） -->
   <view class="modal-overlay" wx:if="{{showKeywordSubs}}" catchtap="closeKeywordSubs">
     <view class="modal-content" catchtap="stopPropagation">
