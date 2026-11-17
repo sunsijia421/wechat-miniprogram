@@ -324,7 +324,7 @@ Page({
             type: 'bar',
             data: counts,
             barWidth: '55%',
-            itemStyle: { color: '#4CAF50', borderRadius: [6, 6, 0, 0] }
+            itemStyle: { color: '#0F6E56', borderRadius: [6, 6, 0, 0] }
           }]
         })
         return chart
@@ -486,7 +486,7 @@ Page({
         ? '确认解封该用户吗？解封后可正常发布、申请、举报。'
         : '确认封禁该用户吗？封禁后仅可浏览，不能发布/申请/举报。',
       confirmText: banned ? '解封' : '封禁',
-      confirmColor: banned ? '#4CAF50' : '#f44336',
+      confirmColor: banned ? '#0F6E56' : '#f44336',
       success: function (r) {
         if (!r.confirm) return
         util.callApi('adminBanUser', { userId, ban: !banned })
@@ -606,7 +606,7 @@ Page({
 
     let content = ''
     let confirmText = ''
-    let confirmColor = '#4CAF50'
+    let confirmColor = '#0F6E56'
     if (isOffline) {
       content = '确认下架该物品吗？下架后将从公开列表隐藏。'
       confirmText = '确认下架'

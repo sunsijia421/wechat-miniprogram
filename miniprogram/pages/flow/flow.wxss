@@ -6,7 +6,7 @@ page {
   padding: 20rpx;
 }
 .flow-banner {
-  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  background: linear-gradient(135deg, #0F6E56, #1D9E75);
   border-radius: 16rpx;
   padding: 32rpx;
   color: #fff;
@@ -63,7 +63,7 @@ page {
   align-items: center;
 }
 .flow-donor {
-  color: #2e7d32;
+  color: #085041;
   font-weight: bold;
 }
 .flow-arrow {

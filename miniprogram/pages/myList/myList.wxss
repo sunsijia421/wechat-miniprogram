@@ -46,8 +46,8 @@
 }
 
 .tag {
-  background: #F1F8E9;
-  color: #4CAF50;
+  background: #E3F0E6;
+  color: #0F6E56;
   font-size: 10px;
   padding: 4rpx 14rpx;
   border-radius: 8rpx;
@@ -65,8 +65,8 @@
 }
 
 .status-completed {
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: #E3F0E6;
+  color: #085041;
 }
 
 .status-offline {
@@ -86,8 +86,8 @@
 }
 
 .apply-confirmed {
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: #E3F0E6;
+  color: #085041;
 }
 
 .apply-missed {
@@ -101,8 +101,8 @@
 }
 
 .status-handled {
-  background: #E8F5E9;
-  color: #2E7D32;
+  background: #E3F0E6;
+  color: #085041;
 }
 
 .item-reason {

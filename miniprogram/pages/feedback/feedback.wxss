@@ -52,7 +52,7 @@
 }
 
 .feedback-tips {
-  background: #F1F8E9;
+  background: #E3F0E6;
   border-radius: 14rpx;
   padding: 20rpx;
   margin: 24rpx 0;
@@ -61,7 +61,7 @@
 .tips-title {
   font-size: 13px;
   font-weight: 600;
-  color: #4CAF50;
+  color: #0F6E56;
   margin-bottom: 8rpx;
 }
 
@@ -72,7 +72,7 @@
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #fff;
   border-radius: 44rpx;
   font-size: 16px;

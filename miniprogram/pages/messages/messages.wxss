@@ -29,7 +29,7 @@
   margin-top: 40rpx;
   width: 240rpx;
   font-size: 28rpx;
-  background: #4CAF50;
+  background: #0F6E56;
   color: #fff;
   border-radius: 44rpx;
 }
@@ -114,8 +114,8 @@
   flex-shrink: 0;
   max-width: 220rpx;
   font-size: 22rpx;
-  color: #4CAF50;
-  background: rgba(76, 175, 80, 0.08);
+  color: #0F6E56;
+  background: rgba(15, 110, 86, 0.08);
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
   margin-left: 12rpx;

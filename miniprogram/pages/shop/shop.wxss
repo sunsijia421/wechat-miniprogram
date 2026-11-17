@@ -6,7 +6,7 @@
 
 /* 积分余额卡 */
 .points-card {
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   border-radius: 20rpx;
   padding: 40rpx 32rpx;
   color: #fff;
@@ -89,13 +89,13 @@
 
 .badge-own {
   font-size: 12px;
-  color: #4CAF50;
+  color: #0F6E56;
   margin-top: 8rpx;
 }
 
 .badge-btn {
   margin-top: 12rpx;
-  background: linear-gradient(135deg, #43A047, #5CB85C);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #fff;
   font-size: 13px;
   padding: 10rpx 0;

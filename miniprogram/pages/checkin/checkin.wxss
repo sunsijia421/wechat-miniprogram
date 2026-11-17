@@ -9,7 +9,7 @@
 .stat-card {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   border-radius: 20rpx;
   padding: 36rpx 0;
   margin-bottom: 24rpx;
@@ -103,12 +103,12 @@
 }
 .cal-day-mark {
   font-size: 14rpx;
-  color: #4CAF50;
+  color: #0F6E56;
   line-height: 1;
   margin-top: 2rpx;
 }
 .cal-day.signed {
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
 }
 .cal-day.signed .cal-day-num {
   color: #fff;
@@ -117,7 +117,7 @@
   color: #fff;
 }
 .cal-day.today {
-  box-shadow: 0 0 0 3rpx rgba(76, 175, 80, 0.3);
+  box-shadow: 0 0 0 3rpx rgba(15, 110, 86, 0.3);
 }
 .cal-day.future .cal-day-num {
   color: #ccc;
@@ -129,12 +129,12 @@
   height: 96rpx;
   line-height: 96rpx;
   border-radius: 48rpx;
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #fff;
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 24rpx;
-  box-shadow: 0 8rpx 20rpx rgba(76, 175, 80, 0.3);
+  box-shadow: 0 8rpx 20rpx rgba(15, 110, 86, 0.3);
 }
 .checkin-btn.done {
   background: #eee;

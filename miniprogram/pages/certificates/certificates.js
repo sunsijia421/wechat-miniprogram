@@ -65,17 +65,17 @@ Page({
 
       // 背景渐变
       const grad = ctx.createLinearGradient(0, 0, w, h)
-      grad.addColorStop(0, '#e8f5e9')
-      grad.addColorStop(1, '#c8e6c9')
+      grad.addColorStop(0, '#E3F0E6')
+      grad.addColorStop(1, '#CBE4D2')
       ctx.fillStyle = grad
       ctx.fillRect(0, 0, w, h)
 
       // 外框
-      ctx.strokeStyle = '#2e7d32'
+      ctx.strokeStyle = '#085041'
       ctx.lineWidth = 2
       ctx.strokeRect(10, 10, w - 20, h - 20)
       ctx.lineWidth = 1
-      ctx.strokeStyle = 'rgba(46,125,50,0.4)'
+      ctx.strokeStyle = 'rgba(8,80,65,0.4)'
       ctx.strokeRect(16, 16, w - 32, h - 32)
 
       // 标题
@@ -104,7 +104,7 @@ Page({
       ctx.fillText('无偿转赠给需要的人', w / 2, 254)
 
       // 感谢语
-      ctx.fillStyle = '#2e7d32'
+      ctx.fillStyle = '#085041'
       ctx.font = '14px sans-serif'
       ctx.fillText('感谢你的公益善举，让闲置继续发光', w / 2, 298)
 

@@ -50,7 +50,7 @@
 
 .submit-btn {
   margin-top: 40rpx;
-  background: #4CAF50;
+  background: #0F6E56;
   color: #fff;
   font-size: 30rpx;
   border-radius: 48rpx;

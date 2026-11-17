@@ -7,11 +7,11 @@
 .summary-card {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #43A047, #66BB6A);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   border-radius: 20rpx;
   padding: 36rpx 20rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 6rpx 20rpx rgba(76, 175, 80, 0.25);
+  box-shadow: 0 6rpx 20rpx rgba(15, 110, 86, 0.25);
 }
 
 .summary-item {
@@ -73,7 +73,7 @@
 }
 
 .log-points.plus {
-  color: #43A047;
+  color: #12805C;
 }
 
 .log-time {

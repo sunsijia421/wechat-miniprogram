@@ -24,14 +24,14 @@
     "pages/flow/flow"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#4CAF50",
+    "navigationBarBackgroundColor": "#0F6E56",
     "navigationBarTitleText": "春泥小站",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#f5f5f5"
+    "backgroundColor": "#F6F8F3"
   },
   "tabBar": {
     "color": "#999999",
-    "selectedColor": "#4CAF50",
+    "selectedColor": "#0F6E56",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [

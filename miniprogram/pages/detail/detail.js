@@ -465,7 +465,7 @@ Page({
         ? '确认将该物品重新上架（公开可见）吗？'
         : '确认下架该物品吗？下架后将从公开列表隐藏，可在详情页重新上架。',
       confirmText: isOffline ? '重新上架' : '确认下架',
-      confirmColor: isOffline ? '#4CAF50' : '#f44336',
+      confirmColor: isOffline ? '#0F6E56' : '#f44336',
       cancelText: '取消',
       success: function (res) {
         if (!res.confirm) return
@@ -496,7 +496,7 @@ Page({
         ? '确认因该举报下架此物品吗？下架后将不在公开列表展示。'
         : '确认忽略该举报（认为物品合规）吗？',
       confirmText: isOffline ? '确认下架' : '确认忽略',
-      confirmColor: isOffline ? '#f44336' : '#4CAF50',
+      confirmColor: isOffline ? '#f44336' : '#0F6E56',
       cancelText: '取消',
       success: function (res) {
         if (!res.confirm) return

@@ -53,42 +53,51 @@
   <!-- 主内容（登录后显示） -->
   <block wx:if="{{isLoggedIn && !showAgreement}}">
 
-    <!-- 顶部：品牌 + 搜索框（闲鱼风） -->
+    <!-- 顶部：品牌分层 + 搜索框 -->
     <view class="home-header">
-      <view class="brand">🌱 春泥小站</view>
+      <view class="header-top">
+        <view class="brand-wrap">
+          <view class="brand">🌱 春泥小站</view>
+          <view class="brand-sub">乡村闲置物资 · 免费公益流转</view>
+        </view>
+      </view>
       <view class="search-input-wrap home-search">
         <text class="search-icon">🔍</text>
-        <input class="search-input" placeholder="搜索物品名称" value="{{keyword}}"
+        <input class="search-input" placeholder="搜索你需要的物品" value="{{keyword}}"
           bindinput="onSearchInput" confirm-type="search" />
         <text wx:if="{{keyword}}" class="search-clear" bindtap="clearSearch">✕</text>
       </view>
     </view>
 
-    <!-- 功能宫格（闲鱼风） -->
+    <!-- 功能宫格（2×2 大卡） -->
     <view class="quick-grid">
       <view class="quick-item" bindtap="goPublish">
-        <view class="quick-icon publish">📦</view>
-        <view class="quick-label">发布闲置</view>
-      </view>
-      <view class="quick-item" bindtap="goCheckin">
-        <view class="quick-icon checkin">📅</view>
-        <view class="quick-label">每日签到</view>
-      </view>
-      <view class="quick-item" bindtap="goRank">
-        <view class="quick-icon rank">🏆</view>
-        <view class="quick-label">公益排行</view>
-      </view>
-      <view class="quick-item" bindtap="goPointLogs">
-        <view class="quick-icon points">📜</view>
-        <view class="quick-label">积分明细</view>
-      </view>
-      <view class="quick-item" bindtap="goFavorites">
-        <view class="quick-icon fav">❤️</view>
-        <view class="quick-label">我的收藏</view>
+        <view class="quick-icon">📦</view>
+        <view class="quick-text">
+          <view class="quick-label">发布闲置</view>
+          <view class="quick-sub">免费送出</view>
+        </view>
       </view>
       <view class="quick-item" bindtap="goWish">
-        <view class="quick-icon wish">🙋</view>
-        <view class="quick-label">心愿求购</view>
+        <view class="quick-icon">🙋</view>
+        <view class="quick-text">
+          <view class="quick-label">心愿求物</view>
+          <view class="quick-sub">说出你缺啥</view>
+        </view>
+      </view>
+      <view class="quick-item" bindtap="goRank">
+        <view class="quick-icon">🏆</view>
+        <view class="quick-text">
+          <view class="quick-label">公益排行</view>
+          <view class="quick-sub">爱心榜</view>
+        </view>
+      </view>
+      <view class="quick-item" bindtap="goFavorites">
+        <view class="quick-icon">❤️</view>
+        <view class="quick-text">
+          <view class="quick-label">我的收藏</view>
+          <view class="quick-sub">想领的先存着</view>
+        </view>
       </view>
     </view>
 
@@ -159,7 +168,7 @@
 
     <!-- 猜你喜欢 + 排序筛选（闲鱼风） -->
     <view class="guess-head" wx:if="{{viewMode === 'list'}}">
-      <view class="guess-title">猜你喜欢</view>
+      <view class="guess-title">最新闲置</view>
       <view class="guess-filters">
         <view class="gf {{sortMode === 'new' ? 'active' : ''}}" data-sort="new" bindtap="onSortChange">最新发布</view>
         <view class="gf {{sortMode === 'hot' ? 'active' : ''}}" data-sort="hot" bindtap="onSortChange">最热物品</view>

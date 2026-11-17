@@ -23,7 +23,7 @@
 }
 
 .rank-tab.active {
-  background: linear-gradient(135deg, #43A047, #5CB85C);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #fff;
   font-weight: 600;
 }
@@ -44,7 +44,7 @@
 }
 
 .rank-item.me {
-  border-color: #4CAF50;
+  border-color: #0F6E56;
   background: #f6fff6;
 }
 
@@ -80,7 +80,7 @@
 
 .me-tag {
   display: inline-block;
-  background: #4CAF50;
+  background: #0F6E56;
   color: #fff;
   font-size: 10px;
   padding: 2rpx 10rpx;
@@ -98,7 +98,7 @@
 .rank-points {
   font-size: 16px;
   font-weight: 700;
-  color: #4CAF50;
+  color: #0F6E56;
   flex-shrink: 0;
 }
 

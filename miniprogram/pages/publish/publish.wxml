@@ -42,7 +42,7 @@
     <!-- 是否允许以物易物 -->
     <view class="form-group form-switch-row">
       <view class="form-label">是否允许以物易物</view>
-      <switch checked="{{allowBarter}}" bindchange="onBarterChange" color="#4CAF50" />
+      <switch checked="{{allowBarter}}" bindchange="onBarterChange" color="#0F6E56" />
     </view>
     <view class="form-hint" wx:if="{{allowBarter}}">
       开启后，您可以用此物品与他人交换其他物品

@@ -116,8 +116,8 @@
 }
 
 .status-handled {
-  background-color: #E8F5E9;
-  color: #4CAF50;
+  background-color: #E3F0E6;
+  color: #0F6E56;
 }
 
 .status-read {
@@ -126,8 +126,8 @@
 }
 
 .status-done {
-  background-color: #E8F5E9;
-  color: #4CAF50;
+  background-color: #E3F0E6;
+  color: #0F6E56;
 }
 
 /* Tab 未读角标 */
@@ -205,8 +205,8 @@
   font-size: 12px;
 }
 .feedback-action.normal {
-  background: #E8F5E9;
-  color: #4CAF50;
+  background: #E3F0E6;
+  color: #0F6E56;
 }
 
 /* 空状态 */
@@ -258,7 +258,7 @@
   border-radius: 12rpx;
 }
 .admin-tab.active {
-  background: linear-gradient(135deg, #43A047, #5CB85C);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #fff;
   font-weight: 600;
 }
@@ -351,9 +351,9 @@
   border: 1rpx solid #eee;
 }
 .filter-chip.active {
-  background: #E8F5E9;
-  color: #43A047;
-  border-color: #43A047;
+  background: #E3F0E6;
+  color: #12805C;
+  border-color: #12805C;
   font-weight: 600;
 }
 
@@ -418,8 +418,8 @@
   color: #FF9800;
 }
 .mini-btn.green {
-  background: #E8F5E9;
-  color: #43A047;
+  background: #E3F0E6;
+  color: #12805C;
 }
 
 /* 用户列表 */
@@ -458,8 +458,8 @@
   margin-top: 8rpx;
 }
 .admin-tag {
-  background: #E8F5E9;
-  color: #43A047;
+  background: #E3F0E6;
+  color: #12805C;
   padding: 2rpx 12rpx;
   border-radius: 16rpx;
 }
@@ -489,11 +489,11 @@
 .wa-head { display: flex; align-items: center; }
 .wa-title { font-size: 28rpx; font-weight: bold; color: #333; flex: 1; min-width: 0; }
 .wa-meta { font-size: 24rpx; color: #888; margin-top: 8rpx; }
-.wa-verified { color: #2e7d32; margin-left: 12rpx; }
+.wa-verified { color: #085041; margin-left: 12rpx; }
 .wa-desc { font-size: 24rpx; color: #666; margin-top: 8rpx; }
 .wa-actions { display: flex; gap: 16rpx; margin-top: 14rpx; }
 .station-add-btn {
-  background: #4caf50;
+  background: #0F6E56;
   color: #fff;
   text-align: center;
   border-radius: 12rpx;

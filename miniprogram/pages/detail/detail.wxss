@@ -27,7 +27,7 @@
 .guest-banner {
   margin: 0 20rpx 16rpx;
   padding: 18rpx 24rpx;
-  background: linear-gradient(135deg, #E3F2FD, #F1F8E9);
+  background: linear-gradient(135deg, #E3F2FD, #E3F0E6);
   border: 1rpx solid #BBDEFB;
   border-radius: 16rpx;
   font-size: 13px;
@@ -152,7 +152,7 @@
 
 /* 可交换标识 */
 .info-value.barter-yes {
-  color: #2E7D32;
+  color: #085041;
   font-weight: 600;
 }
 
@@ -189,9 +189,9 @@
   padding: 10rpx 24rpx;
   border-radius: 30rpx;
   font-size: 13px;
-  background: linear-gradient(135deg, #43A047, #5CB85C);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #ffffff;
-  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.25);
+  box-shadow: 0 4rpx 12rpx rgba(15, 110, 86, 0.25);
 }
 .follow-btn.followed {
   background: #f0f0f0;
@@ -227,9 +227,9 @@
 /* P7：申请者积分/等级徽标 */
 .app-points {
   font-size: 11px;
-  color: #43A047;
-  background-color: #E8F5E9;
-  border: 1rpx solid #C8E6C9;
+  color: #12805C;
+  background-color: #E3F0E6;
+  border: 1rpx solid #CBE4D2;
   padding: 2rpx 12rpx;
   border-radius: 20rpx;
   margin-left: 12rpx;
@@ -247,8 +247,8 @@
 }
 
 .app-status-approved {
-  background-color: #E8F5E9;
-  color: #4CAF50;
+  background-color: #E3F0E6;
+  color: #0F6E56;
 }
 
 .app-status-rejected {
@@ -274,11 +274,11 @@
   margin-top: 12rpx;
   text-align: center;
   padding: 14rpx 0;
-  background: linear-gradient(135deg, #43A047, #5CB85C);
+  background: linear-gradient(135deg, #12805C, #1D9E75);
   color: #ffffff;
   border-radius: 30rpx;
   font-size: 13px;
-  box-shadow: 0 4rpx 12rpx rgba(76, 175, 80, 0.28);
+  box-shadow: 0 4rpx 12rpx rgba(15, 110, 86, 0.28);
   transition: transform 0.12s ease;
 }
 
@@ -320,7 +320,7 @@
   font-weight: 600;
   padding: 26rpx 0;
   letter-spacing: 1rpx;
-  box-shadow: 0 8rpx 20rpx rgba(76, 175, 80, 0.3);
+  box-shadow: 0 8rpx 20rpx rgba(15, 110, 86, 0.3);
 }
 
 .bottom-btn:active {
@@ -340,14 +340,14 @@
   padding: 16rpx 24rpx;
   border-radius: 40rpx;
   font-size: 14px;
-  border: 2rpx solid #4CAF50;
-  color: #4CAF50;
+  border: 2rpx solid #0F6E56;
+  color: #0F6E56;
   white-space: nowrap;
 }
 .fav-btn.fav-active {
-  background: #E8F5E9;
-  color: #43A047;
-  border-color: #43A047;
+  background: #E3F0E6;
+  color: #12805C;
+  border-color: #12805C;
 }
 .msg-btn {
   font-size: 12px;
@@ -430,7 +430,7 @@
 
 .modal-btn-confirm {
   flex: 2;
-  background-color: #4CAF50;
+  background-color: #0F6E56;
   color: #ffffff;
   border-radius: 30rpx;
   font-size: 15px;
@@ -490,11 +490,11 @@
   margin: 12rpx 0;
 }
 .eval-done {
-  color: #4CAF50;
+  color: #0F6E56;
 }
 .eval-btn {
   display: inline-block;
-  background: #4CAF50;
+  background: #0F6E56;
   color: #fff;
   font-size: 28rpx;
   border-radius: 40rpx;
