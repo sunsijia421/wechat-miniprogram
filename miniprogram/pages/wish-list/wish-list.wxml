@@ -33,7 +33,7 @@
       <view class="wish-foot">
         <view class="wish-publisher">
           <image class="wish-avatar" src="{{item.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
-          <text class="wish-nick">{{item.nickName || '同学'}}</text>
+          <text class="wish-nick">{{item.nickName || '乡亲'}}</text>
         </view>
         <view class="wish-time">{{item.createTimeStr}}</view>
       </view>

@@ -11,9 +11,14 @@ Page({
     images: [],
     location: null,
     locationName: '',
+    handoverMethod: 'pickup',
+    handoverIndex: 0,
 
     categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '🍳 日常用品', '📦 其他'],
     categoryValues: ['books', 'clothes', 'electronics', 'daily', 'other'],
+
+    handoverOptions: ['🤝 当面自取', '🏠 村镇代收点', '🚗 志愿者捎带', '📮 邮寄到付'],
+    handoverValues: ['pickup', 'station', 'volunteer', 'mail'],
 
     submitting: false,
 
@@ -56,6 +61,15 @@ Page({
   // 切换以物易物
   onBarterChange(e) {
     this.setData({ allowBarter: e.detail.value })
+  },
+
+  // 选择交接方式
+  onHandoverChange(e) {
+    const index = e.detail.value
+    this.setData({
+      handoverIndex: index,
+      handoverMethod: this.data.handoverValues[index]
+    })
   },
 
   // 选择图片
@@ -204,6 +218,7 @@ Page({
           allowBarter: this.data.allowBarter,
           location: this.data.location,
           locationName: this.data.locationName || '',
+          handoverMethod: this.data.handoverMethod,
           publisherNickName: (userInfo && userInfo.nickName) || '公益参与者',
           publisherAvatarUrl: (userInfo && userInfo.avatarUrl) || ''
         })
@@ -214,7 +229,7 @@ Page({
         if (res && res.matchWishCount > 0) {
           setTimeout(() => {
             wx.showModal({
-              title: '🎉 有同学在找这类物品',
+              title: '🎉 有乡亲在找这类物资',
               content: `当前有 ${res.matchWishCount} 条求购和你发布的物品匹配，快去心愿求购页看看谁需要它吧！`,
               confirmText: '去看看',
               cancelText: '知道了',
@@ -258,6 +273,8 @@ Page({
       images: [],
       location: null,
       locationName: '',
+      handoverMethod: 'pickup',
+      handoverIndex: 0,
       submitting: false
     })
   }

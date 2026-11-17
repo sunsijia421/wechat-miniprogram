@@ -26,7 +26,7 @@
       <view class="agreement-title">🌿 公益互助公约</view>
       <scroll-view scroll-y class="agreement-text">
         <text>欢迎加入佳禾换物小站！\n\n</text>
-        <text>1. 本平台仅用于校园内闲置物品的免费流转，禁止任何形式的金钱交易。\n\n</text>
+        <text>1. 本平台仅用于乡村地区闲置物资的免费流转，禁止任何形式的金钱交易。\n\n</text>
         <text>2. 请如实描述物品状况，不得发布违禁物品（如烟酒、管制刀具等）。\n\n</text>
         <text>3. 物品流转由双方自行协商交接，本平台仅提供信息展示服务。\n\n</text>
         <text>4. 发布物品即视为同意无偿赠送给有需要的人。\n\n</text>
@@ -259,7 +259,7 @@
         <view class="guide-title" wx:if="{{guideStep === 1}}">浏览闲置好物</view>
         <view class="guide-title" wx:if="{{guideStep === 2}}">发布闲置物品</view>
         <view class="guide-title" wx:if="{{guideStep === 3}}">申请领取</view>
-        <view class="guide-desc" wx:if="{{guideStep === 1}}">逛逛首页，看看同学们在分享什么闲置好物，支持分类筛选和关键词搜索～</view>
+        <view class="guide-desc" wx:if="{{guideStep === 1}}">逛逛首页，看看乡亲们在分享什么闲置好物，支持分类筛选和关键词搜索～</view>
         <view class="guide-desc" wx:if="{{guideStep === 2}}">点击底部"发布"，把闲置物品免费送出或交换，让资源流动起来～</view>
         <view class="guide-desc" wx:if="{{guideStep === 3}}">看到需要的物品，点击"我要申请"，写清理由等待发布者确认即可～</view>
       </view>

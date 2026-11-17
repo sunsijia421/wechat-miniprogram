@@ -14,9 +14,14 @@ Page({
     imageUrls: [],
     location: null,
     locationName: '',
+    handoverMethod: 'pickup',
+    handoverIndex: 0,
 
     categories: ['📚 书籍', '👔 衣物', '💻 电子产品', '🍳 日常用品', '📦 其他'],
     categoryValues: ['books', 'clothes', 'electronics', 'daily', 'other'],
+
+    handoverOptions: ['🤝 当面自取', '🏠 村镇代收点', '🚗 志愿者捎带', '📮 邮寄到付'],
+    handoverValues: ['pickup', 'station', 'volunteer', 'mail'],
 
     submitting: false,
     loading: true
@@ -45,6 +50,7 @@ Page({
           return
         }
         const categoryIndex = Math.max(0, this.data.categoryValues.indexOf(item.category || 'books'))
+        const handoverIndex = Math.max(0, this.data.handoverValues.indexOf(item.handoverMethod || 'pickup'))
         this.setData({
           title: item.title || '',
           description: item.description || '',
@@ -53,6 +59,8 @@ Page({
           allowBarter: !!item.allowBarter,
           location: item.location || null,
           locationName: item.locationName || '',
+          handoverMethod: item.handoverMethod || 'pickup',
+          handoverIndex: handoverIndex,
           loading: false
         })
         this.setImages(item.images || [])
@@ -102,6 +110,15 @@ Page({
 
   onBarterChange(e) {
     this.setData({ allowBarter: e.detail.value })
+  },
+
+  // 选择交接方式
+  onHandoverChange(e) {
+    const index = e.detail.value
+    this.setData({
+      handoverIndex: index,
+      handoverMethod: this.data.handoverValues[index]
+    })
   },
 
   // 选择新图片
@@ -227,7 +244,8 @@ Page({
           images: fileIDs,
           allowBarter: this.data.allowBarter,
           location: this.data.location,
-          locationName: this.data.locationName || ''
+          locationName: this.data.locationName || '',
+          handoverMethod: this.data.handoverMethod
         })
       })
       .then(() => {

@@ -11,7 +11,7 @@
       <view class="home-top">
         <view class="home-id">
           <view class="home-name">{{user.nickName}}</view>
-          <view class="home-active">积极参与校园公益流转</view>
+          <view class="home-active">积极参与乡村公益流转</view>
         </view>
         <image class="home-avatar" src="{{user.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
       </view>

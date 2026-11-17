@@ -74,12 +74,24 @@ Page({
     }
   },
 
+  // 交接方式 code → 展示名
+  handoverName(code) {
+    const map = {
+      pickup: '🤝 当面自取',
+      station: '🏠 村镇代收点',
+      volunteer: '🚗 志愿者捎带',
+      mail: '📮 邮寄到付'
+    }
+    return map[code] || '🤝 当面自取'
+  },
+
   // 统一处理云端返回的物品字段
   normalizeItem(item) {
     return Object.assign({}, item, {
       id: item._id,
       categoryName: util.getCategoryName(item.category),
-      createTimeStr: util.formatTime(item.createTime)
+      createTimeStr: util.formatTime(item.createTime),
+      handoverName: this.handoverName(item.handoverMethod)
     })
   },
 

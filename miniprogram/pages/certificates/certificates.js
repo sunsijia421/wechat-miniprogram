@@ -82,7 +82,7 @@ Page({
       ctx.fillStyle = '#1b5e20'
       ctx.font = 'bold 24px sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('校园公益捐赠证书', w / 2, 58)
+      ctx.fillText('乡村公益捐赠证书', w / 2, 58)
 
       // 编号
       ctx.fillStyle = '#4e7a52'
@@ -99,7 +99,7 @@ Page({
       ctx.font = 'bold 20px sans-serif'
       ctx.fillText(name, w / 2, 164)
       ctx.font = '15px sans-serif'
-      ctx.fillText('同学，于 ' + dateStr, w / 2, 198)
+      ctx.fillText('，于 ' + dateStr, w / 2, 198)
       ctx.fillText('将「' + (cert.itemTitle || '闲置物品') + '」', w / 2, 226)
       ctx.fillText('无偿转赠给需要的人', w / 2, 254)
 

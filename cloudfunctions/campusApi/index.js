@@ -34,7 +34,7 @@ const COL = {
 const BADGES = [
   { id: 'eco', name: '环保卫士', icon: '🌱', price: 20, desc: '完成1次物品流转，为地球减负' },
   { id: 'helper', name: '公益帮手', icon: '🤝', price: 50, desc: '累计捐赠3件闲置物品' },
-  { id: 'star', name: '校园公益之星', icon: '⭐', price: 100, desc: '累计捐赠10件闲置物品' },
+  { id: 'star', name: '乡村公益之星', icon: '⭐', price: 100, desc: '累计捐赠10件闲置物品' },
   { id: 'legend', name: '公益传奇', icon: '🏆', price: 200, desc: '平台的公益精神图腾' }
 ]
 
@@ -201,7 +201,7 @@ async function notifyApplyResult(openid, touser, itemTitle, statusText) {
 async function notifyApplyNotice(openid, touser, applicantNickName, applyMessage) {
   if (!touser) return
   await sendSubscribeMessage(SUBSCRIBE_TEMPLATES.applyNotice, touser, 'pages/index/index', {
-    thing1: { value: (applicantNickName || '某同学').slice(0, 20) },
+    thing1: { value: (applicantNickName || '爱心人士').slice(0, 20) },
     thing2: { value: (applyMessage || '有人申请了你的物品').slice(0, 20) },
     time1: { value: getNowStr() }
   })
@@ -359,11 +359,12 @@ async function conversationMessages(event, openid) {
     peerName: conv.ownerOpenid === openid ? conv.applicantNickName : conv.ownerNickName,
     peerAvatar: conv.ownerOpenid === openid ? (conv.applicantAvatarUrl || '') : (conv.ownerAvatarUrl || ''),
     itemTitle: conv.itemTitle,
+    itemId: conv.itemId || '',
     wishId: conv.wishId || ''
   }
 }
 
-// 发送消息（仅会话双方可发；申请者在发布者回复前最多发一条）
+// 发送消息（仅会话双方可发；防骚扰由拉黑机制兜底）
 async function sendMessage(event, openid) {
   const { convId, content } = event
   if (!convId) return { success: false, message: '会话ID缺失' }
@@ -385,19 +386,6 @@ async function sendMessage(event, openid) {
   // P7：拉黑校验——任一方拉黑另一方，双方均不能再发消息
   if (await hasBlockRelation(openid, toOpenid)) {
     return { success: false, message: '你们已处于拉黑状态，无法发送消息' }
-  }
-
-  // 申请者限发规则：发布者回复前，申请者最多发一条（类抖音私信）
-  if (conv.applicantOpenid === openid) {
-    const ownerReplied = await db.collection(COL.messages)
-      .where({ convId, fromOpenid: conv.ownerOpenid }).count()
-    if (ownerReplied.total === 0) {
-      const mySent = await db.collection(COL.messages)
-        .where({ convId, fromOpenid: openid }).count()
-      if (mySent.total >= 1) {
-        return { success: false, code: 'LIMIT_ONE', message: '发布者回复前仅可发送一条消息' }
-      }
-    }
   }
 
   const res = await db.collection(COL.messages).add({
@@ -777,7 +765,7 @@ async function userProfile(event, openid) {
     id: ev._id,
     rating: ev.rating || 5,
     comment: ev.comment || '',
-    fromNickName: ev.fromNickName || '同学',
+    fromNickName: ev.fromNickName || '乡亲',
     itemTitle: ev.itemTitle || '',
     createTimeStr: formatServerTime(ev.createTime)
   }))
@@ -825,7 +813,7 @@ async function publish(event, openid) {
   if (await isBannedUser(openid)) return { success: false, message: '账号已被封禁，无法发布物品' }
   const {
     title, description, category, images, allowBarter, location, locationName,
-    publisherNickName, publisherAvatarUrl
+    handoverMethod, publisherNickName, publisherAvatarUrl
   } = event
 
   if (!title || !title.trim()) return { success: false, message: '标题不能为空' }
@@ -847,6 +835,7 @@ async function publish(event, openid) {
       allowBarter: !!allowBarter,
       location: location || null,
       locationName: locationName || '',
+      handoverMethod: handoverMethod || 'pickup',
       status: 'available',
       publisherNickName: publisherNickName || '匿名',
       publisherAvatarUrl: publisherAvatarUrl || '',
@@ -1048,7 +1037,7 @@ async function deleteItem(event, openid) {
 
 // 编辑物品（仅发布者，已完成物品不可编辑）
 async function updateItem(event, openid) {
-  const { id, title, description, category, images, allowBarter, location, locationName } = event
+  const { id, title, description, category, images, allowBarter, location, locationName, handoverMethod } = event
   if (!id) return { success: false, message: '物品ID缺失' }
   const res = await db.collection(COL.items).doc(id).get()
   if (!res.data || res.data._openid !== openid) return { success: false, message: '无权编辑该物品' }
@@ -1069,7 +1058,8 @@ async function updateItem(event, openid) {
       images: images || [],
       allowBarter: !!allowBarter,
       location: location || null,
-      locationName: locationName || ''
+      locationName: locationName || '',
+      handoverMethod: handoverMethod || 'pickup'
     }
   })
   return { success: true }
@@ -1288,7 +1278,7 @@ async function submitEvaluation(event, openid) {
     const app = await db.collection(COL.applications).where({ itemId, status: _.in(['approved', 'confirmed']) }).limit(1).get()
     if (!app.data.length) return { success: false, message: '未找到接收者' }
     toOpenid = app.data[0]._openid
-    toNickName = app.data[0].applicantNickName || '同学'
+    toNickName = app.data[0].applicantNickName || '乡亲'
   } else {
     // 非发布者必须是该物品被选中的申请者
     const app = await db.collection(COL.applications).where({ itemId, _openid: openid, status: _.in(['approved', 'confirmed']) }).get()
@@ -2022,7 +2012,7 @@ async function publishWish(event, openid) {
       description: description.trim(),
       category: category || 'other',
       status: 'open',
-      nickName: (u && u.nickName) || '同学',
+      nickName: (u && u.nickName) || '乡亲',
       avatarUrl: (u && u.avatarUrl) || '',
       createTime: db.serverDate()
     }
@@ -2063,7 +2053,7 @@ async function wishDetail(event, openid) {
       description: w.description,
       category: w.category,
       status: w.status,
-      nickName: w.nickName || '同学',
+      nickName: w.nickName || '乡亲',
       avatarUrl: w.avatarUrl || '',
       createTimeStr: formatServerTime(w.createTime),
       isMine: w._openid === openid
@@ -2106,7 +2096,7 @@ async function offerWish(event, openid) {
 
   const users = await db.collection(COL.users).where({ _openid: openid }).get()
   const u = users.data[0]
-  const nickName = (u && u.nickName) || '同学'
+  const nickName = (u && u.nickName) || '乡亲'
   const avatarUrl = (u && u.avatarUrl) || ''
   try {
     const conv = await getOrCreateConversation(openid, {

@@ -56,6 +56,10 @@
         <text class="info-value">📍 {{item.locationName}}</text>
       </view>
       <view class="info-row">
+        <text class="info-label">交接方式</text>
+        <text class="info-value">{{item.handoverName}}</text>
+      </view>
+      <view class="info-row">
         <text class="info-label">发布时间</text>
         <text class="info-value">{{item.createTimeStr}}</text>
       </view>
@@ -303,7 +307,7 @@
           class="star {{evalRating >= item ? 'star-on' : ''}}"
           data-star="{{item}}" bindtap="onEvalRating">{{evalRating >= item ? '★' : '☆'}}</view>
       </view>
-      <textarea class="modal-textarea" placeholder="写一句评价（选填，如：靠谱的同学，交接很顺利~）"
+      <textarea class="modal-textarea" placeholder="写一句评价（选填，如：交接顺利，信任可靠~）"
         value="{{evalComment}}" bindinput="onEvalComment" maxlength="200" />
       <view class="modal-buttons">
         <button class="modal-btn-cancel" bindtap="closeEval">取消</button>

@@ -13,7 +13,7 @@
   <view class="publisher-card">
     <image class="avatar" src="{{wish.avatarUrl || '/images/default-item.png'}}" mode="aspectFill" />
     <view class="pub-info">
-      <view class="pub-name">{{wish.nickName || '同学'}}</view>
+      <view class="pub-name">{{wish.nickName || '乡亲'}}</view>
       <view class="pub-time">发布于 {{wish.createTimeStr}}</view>
     </view>
   </view>

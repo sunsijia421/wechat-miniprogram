@@ -9,6 +9,7 @@ Page({
     peerAvatar: '',
     peerOpenid: '',
     itemTitle: '',
+    itemId: '',
     isWish: false,
     sending: false,
     scrollIntoView: '',
@@ -48,13 +49,6 @@ Page({
     util.callApi('conversationMessages', { convId: this.data.convId })
       .then(res => {
         const list = res.list || []
-        // 限发判断：我是申请者 && 对方（发布者）尚未回复 && 我已发过至少 1 条 → 显示"仅可再发一条"提示
-        let canSendOneOnly = false
-        if (res.role === 'applicant') {
-          const peerReplied = list.some(m => !m.isMine)
-          const mySent = list.filter(m => m.isMine).length
-          canSendOneOnly = !peerReplied && mySent >= 1
-        }
         this.setData({
           messages: list,
           peerName: res.peerName || '',
@@ -62,9 +56,10 @@ Page({
           peerOpenid: res.peerOpenid || '',
           myAvatar: myInfo.avatarUrl || '',
           itemTitle: res.itemTitle || '',
+          itemId: res.itemId || '',
           isWish: !!res.wishId,
-          loaded: true,
-          canSendOneOnly
+          wishId: res.wishId || '',
+          loaded: true
         })
         // 导航栏标题改成对方昵称
         if (res.peerName) {
@@ -189,9 +184,12 @@ Page({
     }
   },
 
-  // 跳转物品详情
+  // 跳转物品/心愿详情（心愿望话跳 wish-detail，物品会话跳 detail）
   goItem() {
-    // 会话页没有直接拿 itemId，从消息列表进入已携带；这里通过页面栈拿不到就返回列表
-    wx.navigateBack()
+    if (this.data.isWish && this.data.wishId) {
+      wx.navigateTo({ url: '/pages/wish-detail/wish-detail?id=' + this.data.wishId })
+    } else if (!this.data.isWish && this.data.itemId) {
+      wx.navigateTo({ url: '/pages/detail/detail?id=' + this.data.itemId })
+    }
   }
 })

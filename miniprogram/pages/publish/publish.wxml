@@ -48,6 +48,18 @@
       开启后，您可以用此物品与他人交换其他物品
     </view>
 
+    <!-- 交接方式 -->
+    <view class="form-group">
+      <view class="form-label">交接方式</view>
+      <picker mode="selector" range="{{handoverOptions}}" value="{{handoverIndex}}" bindchange="onHandoverChange">
+        <view class="picker-value">
+          {{handoverOptions[handoverIndex]}}
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+      <view class="form-hint">跨村流转建议选择村镇代收点或邮寄到付</view>
+    </view>
+
     <!-- 上传图片 -->
     <view class="form-group">
       <view class="form-label">上传图片（最多4张）</view>

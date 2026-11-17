@@ -135,7 +135,7 @@ Page({
   onShareAppMessage() {
     const openid = app.getOpenid() || ''
     return {
-      title: '🌱 佳禾换物小站——校园闲置免费流转，一起做公益',
+      title: '🌱 佳禾换物小站——乡村闲置物资免费流转，一起做公益',
       path: '/pages/index/index?inviteBy=' + openid,
       imageUrl: ''
     }
